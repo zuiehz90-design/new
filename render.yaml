@@ -1,0 +1,23 @@
+services:
+  - type: web
+    name: nour
+    runtime: node
+    plan: free
+    region: frankfurt
+    buildCommand: npm ci && npm run build
+    startCommand: npm start
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: NODE_VERSION
+        value: 24.19.0
+      - key: OPENROUTER_MODEL
+        value: openrouter/free
+      - key: DATABASE_URL
+        sync: false
+      - key: SITE_URL
+        sync: false
+      - key: CORS_ORIGIN
+        sync: false

@@ -1,0 +1,13 @@
+{
+  "name": "Nour — Chat islamique avec IA",
+  "short_name": "Nour",
+  "description": "Chat islamique avec IA : Coran, hadiths, jurisprudence, horaires de prière et Qibla.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#06201a",
+  "theme_color": "#06201a",
+  "lang": "fr",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}
