@@ -112,7 +112,7 @@ export function translateExec(raw: string): string[] {
       if (/^(begin|commit|rollback)\b/i.test(statement)) return statement.toUpperCase();
       return translateDatetime(statement).replace(
         /\bint(?:eger)?\s+primary\s+key\s+autoincrement\b/gi,
-        'GENERATED ALWAYS AS IDENTITY PRIMARY KEY',
+        'INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY',
       );
     })
     .filter(Boolean);
