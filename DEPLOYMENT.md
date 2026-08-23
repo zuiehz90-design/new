@@ -5,6 +5,7 @@ Cette procédure publie Nour sur une URL gratuite Render, par exemple `https://n
 ## Ce qui reste gratuit
 
 - **Render Free** héberge le serveur Express et le frontend compilé. Le service peut s'endormir après une période sans trafic ; le premier chargement suivant peut prendre quelques secondes.
+- Le service actuel reste dans sa région Render existante. Pour réduire la latence avec Neon US, il faudrait créer un nouveau service Render en région **Ohio** ; Render ne permet pas de déplacer une instance existante.
 - **Neon Free** héberge la base PostgreSQL persistante.
 - **OpenRouter** est utilisé avec les quotas gratuits disponibles. Chaque utilisateur associe sa propre clé dans son compte Nour ; aucune clé utilisateur n'est envoyée au navigateur ni partagée avec un autre compte.
 - L'URL `onrender.com` est fournie gratuitement. Un domaine personnalisé n'est pas nécessaire pour être indexé par Google.
@@ -37,7 +38,7 @@ Le serveur crée automatiquement les tables et les index au premier démarrage. 
 7. Ouvrir `https://<nom-du-service>.onrender.com/api/health`. La réponse doit contenir `"ok":true`.
 8. Ouvrir l'URL publique, vérifier l'inscription, la création du profil fantôme, une prière, une quête et l'ouverture du Coran.
 
-Le build utilisé par Render est `npm ci && npm run build` et le démarrage est `npm start`. Le serveur sert l'API et `client/dist` sur le même domaine.
+Le build utilisé par Render est `npm ci --include=dev && npm run build` et le démarrage est `npm start`. Le serveur sert l'API et `client/dist` sur le même domaine.
 
 ## Vérification des données
 
@@ -81,6 +82,7 @@ npm start
 ## Dépannage
 
 - **Erreur Node ou `node:sqlite`** : utiliser Node `22.5.0` ou plus récent.
+- **Chargement lent après veille** : c'est le comportement du plan Render Free. Le shell local est mis en cache après la première visite. Pour aligner le serveur avec Neon US, créer un nouveau service en région Ohio ; Render ne déplace pas le service existant.
 - **Page blanche après déploiement** : vérifier que le build a bien produit `client/dist` et que le service démarre avec `npm start`.
 - **404 sur `/quran`** : vérifier que le service utilise bien la dernière version et que le fallback SPA Express est actif.
 - **Erreur de base au démarrage** : vérifier `DATABASE_URL`, le mot de passe Neon et `sslmode=require`.

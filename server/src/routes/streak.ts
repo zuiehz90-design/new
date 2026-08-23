@@ -43,11 +43,21 @@ export function streakFromActiveDays(
   return { current, best };
 }
 
+export interface PrayerDayRow {
+  date: string;
+  n: number;
+}
+
+/** Une seule lecture agrégée est réutilisée par les calculs de streak et de badges. */
+export function prayerDayRows(userId: number): PrayerDayRow[] {
+  return db
+    .prepare('SELECT date, COUNT(DISTINCT prayer) as n FROM prayers WHERE user_id = ? GROUP BY date')
+    .all(userId) as PrayerDayRow[];
+}
+
 /** Série de jours « complets » (5/5 prières cochées) — pour les badges exigeants. */
 export function computeFullDayStreak(userId: number, today: string): number {
-  const rows = db
-    .prepare('SELECT date, COUNT(DISTINCT prayer) as n FROM prayers WHERE user_id = ? GROUP BY date')
-    .all(userId) as { date: string; n: number }[];
+  const rows = prayerDayRows(userId);
   const full = new Set(rows.filter((r) => r.n >= 5).map((r) => r.date));
   const todayDate = new Date(today + 'T00:00:00');
   let current = 0;
@@ -62,17 +72,13 @@ export function computeFullDayStreak(userId: number, today: string): number {
 
 /** Nombre total de journées « complètes » (5/5 prières) jamais réalisées. */
 export function countFullDays(userId: number): number {
-  const rows = db
-    .prepare('SELECT date, COUNT(DISTINCT prayer) as n FROM prayers WHERE user_id = ? GROUP BY date')
-    .all(userId) as { date: string; n: number }[];
+  const rows = prayerDayRows(userId);
   return rows.filter((r) => r.n >= 5).length;
 }
 
 /** Streak d'un utilisateur depuis la table prayers (source de vérité). */
 export function computeStreak(userId: number, today: string): { current: number; best: number } {
-  const rows = db
-    .prepare('SELECT date, COUNT(DISTINCT prayer) as n FROM prayers WHERE user_id = ? GROUP BY date')
-    .all(userId) as { date: string; n: number }[];
+  const rows = prayerDayRows(userId);
   const active = new Set(rows.filter((r) => r.n >= 1).map((r) => r.date));
   return streakFromActiveDays(active, today);
 }

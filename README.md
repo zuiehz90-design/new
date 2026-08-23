@@ -57,7 +57,7 @@ Le chemin recommandé est **Render Free + Neon Free** :
 1. Pousser le projet sur GitHub.
 2. Créer une base PostgreSQL gratuite sur Neon et copier sa `DATABASE_URL`.
 3. Créer un Blueprint Render depuis le dépôt ; `render.yaml` contient le build, le démarrage et le health check.
-4. Renseigner `DATABASE_URL`, `SITE_URL` et `CORS_ORIGIN` avec l'URL gratuite Render.
+4. Renseigner `DATABASE_URL`, `SITE_URL` et `CORS_ORIGIN` avec l'URL gratuite Render. Pour une nouvelle instance, choisir la même région que Neon afin de réduire la latence.
 5. Vérifier `https://<service>.onrender.com/api/health`.
 6. Ajouter cette URL dans Google Search Console et soumettre `/sitemap.xml`.
 

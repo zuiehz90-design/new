@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db, publicUser, type UserRow } from '../db.js';
-import { getSessionUser } from '../auth.js';
+import { getSessionUser, invalidateSessionCache } from '../auth.js';
 import { authMiddleware as auth } from './auth.js';
 
 export const profileRouter = Router();
@@ -20,6 +20,7 @@ profileRouter.put('/', auth, (req: any, res) => {
   if (profile && typeof profile === 'object') {
     db.prepare('UPDATE users SET profile_json = ? WHERE id = ?').run(JSON.stringify(profile), userId);
   }
+  invalidateSessionCache(req.token, userId);
   const row = db.prepare('SELECT * FROM users WHERE id = ?').get(userId) as UserRow | undefined;
   res.json({ user: row ? publicUser(row) : null });
 });

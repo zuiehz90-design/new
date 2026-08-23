@@ -34,7 +34,11 @@ function writePayload(value: unknown, status: number): void {
   Atomics.notify(view, 0, 1);
 }
 
-const COUNT_KEYS = new Set(['n', 'count', 'total', 'cnt']);
+const COUNT_KEYS = new Set([
+  'n', 'count', 'total', 'cnt',
+  'total_prayers', 'quest_points', 'quests_done',
+  'today_prayers', 'lifetime_quests', 'lifetime_prayers',
+]);
 function coerceRows(rows: Record<string, unknown>[]): Record<string, unknown>[] {
   return rows.map((row) => {
     for (const key of Object.keys(row)) {
@@ -50,7 +54,8 @@ let client: pg.Client;
 
 async function execute(kind: string, rawSql: string, params: unknown[]): Promise<unknown> {
   if (kind === 'exec') {
-    for (const statement of translateExec(rawSql)) await client.query(statement);
+    const statements = translateExec(rawSql);
+    if (statements.length > 0) await client.query(statements.join(';\n'));
     return { ok: true };
   }
 

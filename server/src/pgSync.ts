@@ -105,9 +105,12 @@ export function createPgDb(databaseUrl: string): SyncDb {
   }
 
   function runExec(sql: string): void {
-    // Les transactions sont traitées statement par statement pour conserver
-    // la compatibilité avec les appels db.exec existants.
-    for (const statement of translateExec(sql)) call({ kind: 'exec', sql: statement, params: [] });
+    // Les DDL sans paramètres sont regroupés en une seule requête réseau.
+    // C'est important avec Neon : le schéma contient plusieurs tables et index.
+    const statements = translateExec(sql);
+    if (statements.length > 0) {
+      call({ kind: 'exec', sql: statements.join(';\n'), params: [] });
+    }
   }
 
   const startedAt = Date.now();

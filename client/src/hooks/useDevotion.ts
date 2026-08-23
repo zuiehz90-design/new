@@ -4,6 +4,7 @@ import { useToast } from '../context/ToastContext';
 import {
   apiCheckPrayer,
   apiCompleteQuest,
+  apiGetAchievements,
   apiPrayers,
   apiQuests,
   apiUncheckPrayer,
@@ -80,14 +81,17 @@ export function useDevotion() {
     }
     setBusy(true);
     try {
-      const [p, q] = await Promise.all([apiPrayers(), apiQuests()]);
-      setPrayers(p);
-      setQuests(q);
-      // Load achievements
-      try {
-        const res = await fetch('/api/achievements', { headers: { Authorization: 'Bearer ' + localStorage.getItem('nour:token') } });
-        if (res.ok) setAchievements(await res.json() as Achievements);
-      } catch { /* ignore */ }
+      // Les trois blocs sont indépendants : ne pas attendre prières/quêtes
+      // avant de demander les badges et le rang.
+      const achievementsRequest = apiGetAchievements<Achievements>();
+      // Chaque bloc s'affiche dès qu'il est disponible ; les quêtes IA lentes
+      // ne doivent pas retenir les prières et les badges déjà calculés.
+      const prayerRequest = apiPrayers().then((value) => setPrayers(value)).catch(() => undefined);
+      const questRequest = apiQuests().then((value) => setQuests(value)).catch(() => undefined);
+      const achievementRequest = achievementsRequest.then((value) => {
+        if (value) setAchievements(value);
+      });
+      await Promise.all([prayerRequest, questRequest, achievementRequest]);
     } finally {
       setBusy(false);
     }

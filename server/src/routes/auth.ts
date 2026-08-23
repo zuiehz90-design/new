@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { db, publicUser, type UserRow } from '../db.js';
-import { hashPassword, verifyPassword, createSession, getSessionUser, deleteSession, createAnonymousUser, touchAnonymous, cleanupAnonymousProfiles, deleteAnonymousUser } from '../auth.js';
+import { hashPassword, verifyPassword, createSession, getSessionUser, deleteSession, createAnonymousUser, touchAnonymous, deleteAnonymousUser, invalidateSessionCache } from '../auth.js';
 
 export const authRouter = Router();
 
@@ -17,8 +17,6 @@ function auth(req: any, res: any, next: any) {
 }
 
 authRouter.post('/anonymous', (_req, res) => {
-  // Purge opportuniste des anciens fantomes avant d'en creer un nouveau
-  cleanupAnonymousProfiles();
   const user = createAnonymousUser();
   const token = createSession(user.id);
   res.status(201).json({ token, user });
@@ -42,6 +40,7 @@ authRouter.post('/register', (req, res) => {
   const current = token ? getSessionUser(token) : null;
   if (current && current.isAnonymous) {
     db.prepare("UPDATE users SET name = ?, password_hash = ?, is_anonymous = 0, last_seen = datetime('now') WHERE id = ?").run(name.trim(), hashPassword(password), current.id);
+    invalidateSessionCache(token, current.id);
     const user = publicUser(db.prepare('SELECT * FROM users WHERE id = ?').get(current.id) as UserRow);
     return res.json({ token, user });
   }

@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'nour-shell-v4';
+const CACHE_VERSION = 'nour-shell-v5';
 const QURAN_CACHE = 'nour-quran-v1';
 const QURAN_PREFIX = 'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api';
 
@@ -36,6 +36,28 @@ self.addEventListener('fetch', (event) => {
 
   // Les réponses API sont privées et ne doivent jamais être persistées dans le SW.
   if (url.origin !== self.location.origin || url.pathname.startsWith('/api/')) return;
+
+  // Après une première visite, affiche immédiatement le shell en cache pendant
+  // que Render se réveille, puis remplace-le par la version réseau.
+  if (event.request.mode === 'navigate') {
+    event.respondWith((async () => {
+      const cache = await caches.open(CACHE_VERSION);
+      const cached = await cache.match(event.request) || await cache.match('/');
+      const network = fetch(event.request)
+        .then(async (response) => {
+          if (response.ok) await cache.put(event.request, response.clone());
+          return response;
+        })
+        .catch(() => null);
+      if (!cached) return (await network) || new Response('Hors ligne', { status: 503 });
+      const fast = await Promise.race([
+        network,
+        new Promise((resolve) => setTimeout(() => resolve(null), 1500)),
+      ]);
+      return fast || cached;
+    })());
+    return;
+  }
 
   event.respondWith(
     fetch(event.request)

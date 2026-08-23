@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { useLocalStorage } from './useLocalStorage';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
@@ -17,6 +18,7 @@ function uid(): string {
 
 export function useChat() {
   const { scope, user } = useAuth();
+  const { pathname } = useLocation();
   // Les profils fantomes demarrent toujours avec un chat vide et ne persistent
   // rien : seul un compte connecte garde ses anciennes conversations.
   const isAnon = user?.isAnonymous === true;
@@ -37,8 +39,9 @@ export function useChat() {
 
   // Hydratation : au chargement d'un compte, on compare avec le serveur
   useEffect(() => {
-    // Fantome : aucune hydratation depuis le serveur (chat vide)
-    if (scope === 'guest' || isAnon || hydratedRef.current) return;
+    // L'historique n'est utile que dans Chat : ne pas bloquer les autres pages
+    // avec une requête Neon supplémentaire au premier affichage.
+    if (pathname !== '/chat' || scope === 'guest' || isAnon || hydratedRef.current) return;
     let cancelled = false;
     (async () => {
       try {
@@ -64,7 +67,7 @@ export function useChat() {
     return () => {
       cancelled = true;
     };
-  }, [scope, isAnon, setConversations, setActiveId]);
+  }, [pathname, scope, isAnon, setConversations, setActiveId]);
 
   // Envoi differe : chaque modification est poussee au serveur (debounce 800 ms)
   useEffect(() => {

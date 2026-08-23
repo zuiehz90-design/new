@@ -134,7 +134,8 @@ async function aiQuests(userId: number, profile: Record<string, unknown>): Promi
   const apiKey = getUserApiKey(userId);
   if (!apiKey) return null;
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 15_000);
+  // L'IA personnalise les quêtes, mais ne doit jamais bloquer l'écran quotidien.
+  const timer = setTimeout(() => controller.abort(), 4_000);
   try {
     const res = await fetch('https://openrouter.ai/api/v1/chat/completions', {
       method: 'POST',
@@ -198,14 +199,19 @@ questsRouter.get('/', auth, async (req: any, res) => {
     let templates = pickTemplates(goals, date);
     const ai = await aiQuests(req.user.id, req.user.profile ?? {});
     if (ai) templates = ai;
-    const insert = db.prepare(
-      'INSERT INTO quests (user_id, date, quest_id, title, description, type, points) VALUES (?, ?, ?, ?, ?, ?, ?)',
-    );
-    for (let i = 0; i < templates.length; i++) {
-      const t = templates[i];
+    // Un seul INSERT multi-lignes au lieu d'un aller-retour Neon par quête.
+    const values: unknown[] = [];
+    const placeholders = templates.map((t, i) => {
       const questId = `${t.type}-${i}`;
-      insert.run(req.user.id, date, questId, t.title, t.description, t.type, t.points);
-    }
+      values.push(req.user.id, date, questId, t.title, t.description, t.type, t.points);
+      const offset = i * 7;
+      return `(${Array.from({ length: 7 }, (_, j) => '?' + (offset + j)).join(', ')})`;
+    });
+    const params = values;
+    const sqlPlaceholders = placeholders.map((row) => row.replace(/\?(\d+)/g, '?')).join(', ');
+    db.prepare(
+      `INSERT INTO quests (user_id, date, quest_id, title, description, type, points) VALUES ${sqlPlaceholders}`,
+    ).run(...params);
     rows = db.prepare('SELECT quest_id, title, description, type, points, done FROM quests WHERE user_id = ? AND date = ?').all(req.user.id, date) as QuestRow[];
   }
 

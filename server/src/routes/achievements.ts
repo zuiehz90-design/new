@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { authMiddleware } from './auth.js';
-import { computeStreak, countFullDays, toLocalDate } from './streak.js';
+import { prayerDayRows, streakFromActiveDays, toLocalDate } from './streak.js';
 import { computeNewBadges, BADGE_FAMILIES, badgeId, familyProgress, type BadgeInputs } from './badges.js';
 
 export const achievementsRouter = Router();
@@ -110,10 +110,9 @@ achievementsRouter.get('/', authMiddleware, (req: any, res) => {
   try {
     const userId = (req as any).user?.id;
     if (!userId) { res.status(401).json({ error: 'Non autorisé.' }); return; }
-    // Auto-réparation : re-déclenche la logique de badges (idempotente) pour attribuer
-    // les badges gagnés avant cette mise à jour ou manqués par un ancien serveur.
-    const healed = checkAchievements(userId);
+    // Calcule les statistiques une fois puis réutilise-les pour l'auto-réparation.
     const stats = computeStats(userId);
+    const healed = checkAchievements(userId, stats);
     const rank = getRank(stats.points);
     const nextRank = RANKS[RANKS.findIndex((r) => r.id === rank.id) + 1] ?? null;
     const badges = getUserBadges(userId);
@@ -149,10 +148,13 @@ achievementsRouter.get('/', authMiddleware, (req: any, res) => {
 });
 
 export function userPoints(userId: number): number {
-  // Source de vérité : prières cochées (10 pts) + quêtes terminées (points)
-  const prayers = db.prepare('SELECT COUNT(*) as n FROM prayers WHERE user_id = ?').get(userId) as { n: number };
-  const quests = db.prepare('SELECT COALESCE(SUM(points), 0) as n FROM quests WHERE user_id = ? AND done = 1').get(userId) as { n: number };
-  return (prayers?.n ?? 0) * 10 + (quests?.n ?? 0);
+  // Une seule requête au lieu d'un COUNT prières + un SUM quêtes séparés.
+  const row = db.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM prayers WHERE user_id = ?) * 10
+      + (SELECT COALESCE(SUM(points), 0) FROM quests WHERE user_id = ? AND done = 1) AS n
+  `).get(userId, userId) as { n: number } | undefined;
+  return row?.n ?? 0;
 }
 
 function getUserBadges(userId: number): string[] {
@@ -160,7 +162,7 @@ function getUserBadges(userId: number): string[] {
   return rows.map(r => r.badge_id);
 }
 
-interface Stats {
+export interface Stats {
   points: number;
   totalPrayers: number;
   fullDays: number;
@@ -168,17 +170,28 @@ interface Stats {
   questsDone: number;
 }
 
-/** Statistiques monotones d'un utilisateur — source de vérité pour les badges. */
-function computeStats(userId: number): Stats {
-  const totalPrayers = db.prepare('SELECT COUNT(*) as n FROM prayers WHERE user_id = ?').get(userId) as { n: number };
-  const streak = computeStreak(userId, toLocalDate());
-  const questsDone = db.prepare('SELECT COUNT(*) as n FROM quests WHERE user_id = ? AND done = 1').get(userId) as { n: number };
+/** Statistiques monotones avec deux lectures Neon au lieu de six. */
+export function computeStats(userId: number): Stats {
+  const totals = db.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM prayers WHERE user_id = ?) AS total_prayers,
+      (SELECT COALESCE(SUM(points), 0) FROM quests WHERE user_id = ? AND done = 1) AS quest_points,
+      (SELECT COUNT(*) FROM quests WHERE user_id = ? AND done = 1) AS quests_done
+  `).get(userId, userId, userId) as {
+    total_prayers: number;
+    quest_points: number;
+    quests_done: number;
+  };
+  const days = prayerDayRows(userId);
+  const streak = streakFromActiveDays(new Set(days.filter((r) => r.n >= 1).map((r) => r.date)), toLocalDate());
+  const totalPrayers = totals?.total_prayers ?? 0;
+  const questPoints = totals?.quest_points ?? 0;
   return {
-    points: userPoints(userId),
-    totalPrayers: totalPrayers?.n ?? 0,
-    fullDays: countFullDays(userId),
+    points: totalPrayers * 10 + questPoints,
+    totalPrayers,
+    fullDays: days.filter((r) => r.n >= 5).length,
     streakBest: streak.best,
-    questsDone: questsDone?.n ?? 0,
+    questsDone: totals?.quests_done ?? 0,
   };
 }
 
@@ -198,7 +211,10 @@ const LEGACY_TO_TIERED: Record<string, string> = {
   levelUp3: 'rank_gold',
 };
 
+let legacyMigrationDone = false;
+
 function migrateLegacyBadges(): void {
+  if (legacyMigrationDone) return;
   try {
     const rows = db.prepare('SELECT user_id, badge_id FROM achieved_badges').all() as { user_id: number; badge_id: string }[];
     for (const r of rows) {
@@ -207,16 +223,17 @@ function migrateLegacyBadges(): void {
       db.prepare('INSERT OR IGNORE INTO achieved_badges (user_id, badge_id, earned_at) VALUES (?, ?, ?)').run(r.user_id, target, new Date().toISOString());
       db.prepare('DELETE FROM achieved_badges WHERE user_id = ? AND badge_id = ?').run(r.user_id, r.badge_id);
     }
+    legacyMigrationDone = true;
   } catch { /* base vide ou déjà migrée */ }
 }
 migrateLegacyBadges();
 
 // Called after every check-in / quest completion
-export function checkAchievements(userId: number): string[] {
+export function checkAchievements(userId: number, statsOverride?: Stats): string[] {
   migrateLegacyBadges();
   const unlocked: string[] = [];
   const existing = new Set(getUserBadges(userId));
-  const stats = computeStats(userId);
+  const stats = statsOverride ?? computeStats(userId);
   const inputs: BadgeInputs = {
     existing,
     points: stats.points,

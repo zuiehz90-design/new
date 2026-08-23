@@ -76,7 +76,7 @@ export async function chatStream(opts: {
 export async function fetchModels(): Promise<ModelOption[]> {
   try {
     const token = getToken();
-    const res = await fetch('/api/models', {
+    const res = await fetchWithTimeout('/api/models', {
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });
     if (!res.ok) return [];
@@ -92,9 +92,23 @@ export async function fetchHealth(): Promise<{ aiConfigured: boolean; hasUserKey
     const token = getToken();
     const headers: Record<string, string> = {};
     if (token) headers['Authorization'] = `Bearer ${token}`;
-    const res = await fetch('/api/health', { headers });
+    const res = await fetchWithTimeout('/api/health', { headers });
     if (!res.ok) return null;
     return (await res.json()) as { aiConfigured: boolean; hasUserKey: boolean; model: string };
+  } catch {
+    return null;
+  }
+}
+
+export async function apiGetAchievements<T>(): Promise<T | null> {
+  try {
+    const token = getToken();
+    if (!token) return null;
+    const res = await fetchWithTimeout('/api/achievements', {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) return null;
+    return await res.json() as T;
   } catch {
     return null;
   }
@@ -147,6 +161,37 @@ export interface QuestsData {
 }
 
 const TOKEN_KEY = 'nour:token';
+const DEFAULT_API_TIMEOUT_MS = 12_000;
+const AUTH_API_TIMEOUT_MS = 60_000;
+
+class ApiRequestError extends Error {
+  status?: number;
+}
+
+async function fetchWithTimeout(
+  input: RequestInfo | URL,
+  init: RequestInit = {},
+  timeoutMs = DEFAULT_API_TIMEOUT_MS,
+): Promise<Response> {
+  const controller = new AbortController();
+  const forwardAbort = () => controller.abort();
+  if (init.signal) {
+    if (init.signal.aborted) controller.abort();
+    else init.signal.addEventListener('abort', forwardAbort, { once: true });
+  }
+  const timer = window.setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(input, { ...init, signal: controller.signal });
+  } catch (error) {
+    if ((error as DOMException)?.name === 'AbortError') {
+      throw new Error('Le serveur met trop de temps à répondre. Réessaie dans quelques secondes.');
+    }
+    throw error;
+  } finally {
+    window.clearTimeout(timer);
+    init.signal?.removeEventListener('abort', forwardAbort);
+  }
+}
 
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
@@ -157,16 +202,20 @@ export function setToken(token: string | null): void {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-async function apiFetch<T>(path: string, opts: RequestInit = {}): Promise<T> {
+async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEFAULT_API_TIMEOUT_MS): Promise<T> {
   const headers: Record<string, string> = {
     ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
     ...(opts.headers as Record<string, string> | undefined),
   };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-  const res = await fetch(path, { ...opts, headers });
+  const res = await fetchWithTimeout(path, { ...opts, headers }, timeoutMs);
   const data = (await res.json().catch(() => ({}))) as { error?: string };
-  if (!res.ok) throw new Error(data.error ?? `Erreur ${res.status}`);
+  if (!res.ok) {
+    const error = new ApiRequestError(data.error ?? `Erreur ${res.status}`);
+    error.status = res.status;
+    throw error;
+  }
   return data as T;
 }
 
@@ -189,11 +238,11 @@ export async function apiLogin(name: string, password: string): Promise<{ token:
 }
 
 /** Cree (ou reutilise) un profil fantome : compte anonyme temporaire. */
-export async function apiAnonymous(): Promise<{ token: string; user: User }> {
+export async function apiAnonymous(options?: { persist?: boolean }): Promise<{ token: string; user: User }> {
   const res = await apiFetch<{ token: string; user: User }>('/api/auth/anonymous', {
     method: 'POST',
-  });
-  setToken(res.token);
+  }, AUTH_API_TIMEOUT_MS);
+  if (options?.persist !== false) setToken(res.token);
   return res;
 }
 
@@ -208,10 +257,11 @@ export async function apiLogout(): Promise<void> {
 export async function apiMe(): Promise<User | null> {
   if (!getToken()) return null;
   try {
-    const res = await apiFetch<{ user: User }>('/api/auth/me');
+    const res = await apiFetch<{ user: User }>('/api/auth/me', {}, AUTH_API_TIMEOUT_MS);
     return res.user;
-  } catch {
-    setToken(null);
+  } catch (error) {
+    // Une panne ou un réveil lent ne doit pas déconnecter un compte valide.
+    if ((error as ApiRequestError).status === 401) setToken(null);
     return null;
   }
 }
