@@ -84,7 +84,7 @@ async function main(): Promise<void> {
     });
     await client.connect();
   } catch (error) {
-    const err = error as NodeJS.ErrnoException & { message?: string };
+    const err = error as Error & { code?: string };
     writePayload({ error: err.message || err.code || String(error) }, 6);
     return;
   }
