@@ -10,17 +10,6 @@ const LANGUAGES = [
   { id: 'ar', label: 'العربية' },
 ];
 
-const PRAYER_METHODS = [
-  { id: 'uoif', label: 'UOIF (France, 12°)' },
-  { id: 'mosquee-paris', label: 'Mosquée de Paris (18°)' },
-  { id: 'muslim-world-league', label: 'Muslim World League' },
-  { id: 'egyptian', label: 'Egyptian' },
-  { id: 'karachi', label: 'Karachi' },
-  { id: 'umm-al-qura', label: 'Umm al-Qura' },
-  { id: 'north-america', label: 'North America (ISNA)' },
-  { id: 'moonsighting', label: 'Moonsighting Committee' },
-];
-
 export function SettingsModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { t } = useI18n();
   const { settings, setSettings } = useSettings();
@@ -94,19 +83,6 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             >
               {RECITERS.map((r) => (
                 <option key={r.id} value={r.id}>{r.name}</option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="mb-1 block text-xs text-stone-500">{t('settings.prayerMethod')}</label>
-            <select
-              value={settings.prayerMethod}
-              onChange={(e) => setSettings((s) => ({ ...s, prayerMethod: e.target.value }))}
-              className="input text-sm"
-            >
-              {PRAYER_METHODS.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
               ))}
             </select>
           </div>

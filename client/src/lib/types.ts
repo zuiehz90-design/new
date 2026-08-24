@@ -25,7 +25,10 @@ export interface Settings {
   lang: 'fr' | 'en' | 'ar';
   theme: 'dark' | 'light';
   model: string;
-  prayerMethod: string;
+  /** UUID de la mosquée MAWAQIT sélectionnée (null = non configurée). */
+  mawaqitMosqueId: string | null;
+  /** Nom de la mosquée sélectionnée (affiché dans l'UI). */
+  mawaqitMosqueName: string | null;
   reciter: string;
   translation: 'fr' | 'en';
   prayerNotifications: boolean;

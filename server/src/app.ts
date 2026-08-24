@@ -14,6 +14,7 @@ import { questsRouter } from './routes/quests.js';
 import { setupRouter } from './routes/setup.js';
 import { achievementsRouter } from './routes/achievements.js';
 import { conversationsRouter } from './routes/conversations.js';
+import { mawaqitRouter } from './routes/mawaqit.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -48,6 +49,7 @@ app.use('/api/quests', questsRouter);
 app.use('/api/setup', setupRouter);
 app.use('/api/achievements', achievementsRouter);
 app.use('/api/conversations', conversationsRouter);
+app.use('/api/mawaqit', mawaqitRouter);
 
 function publicSiteUrl(req: express.Request): string {
   if (config.siteUrl) return config.siteUrl;

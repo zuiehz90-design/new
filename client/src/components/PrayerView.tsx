@@ -1,12 +1,10 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
-import { useGeolocation } from '../hooks/useGeolocation';
-import { searchCity, shortPlaceName, type GeocodeResult } from '../lib/geocode';
-import { Coordinates, CalculationMethod, PrayerTimes, Madhab } from 'adhan';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
-import { usePrayerTimes } from '../hooks/usePrayerTimes';
+import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
+import { searchMawaqitMosques, type MawaqitMosque } from '../lib/mawaqit';
 import { PrayerCircles } from './PrayerCircles';
 import { PrayerPauseModal } from './PrayerPauseModal';
 
@@ -15,93 +13,57 @@ const PRAYER_LABELS: Record<string, string> = {
   asr: 'prayer.asr', maghrib: 'prayer.maghrib', isha: 'prayer.isha',
 };
 
-const PRAYER_METHODS: { id: string; label: string; make: () => ReturnType<typeof CalculationMethod.Other> }[] = [
-  { id: 'aladhan-api', label: 'AlAdhan API (recommandé)', make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 12; p.ishaAngle = 12; return p; } },
-  { id: 'uoif', label: 'UOIF (France, 12°)', make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 12; p.ishaAngle = 12; return p; } },
-  { id: 'mosquee-paris', label: 'Mosquée de Paris (18°)', make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 18; p.ishaAngle = 18; return p; } },
-  { id: 'muslim-world-league', label: 'Muslim World League', make: () => CalculationMethod.MuslimWorldLeague() },
-  { id: 'egyptian', label: 'Egyptian', make: () => CalculationMethod.Egyptian() },
-  { id: 'karachi', label: 'Karachi', make: () => CalculationMethod.Karachi() },
-  { id: 'umm-al-qura', label: 'Umm al-Qura', make: () => CalculationMethod.UmmAlQura() },
-  { id: 'north-america', label: 'North America (ISNA)', make: () => CalculationMethod.NorthAmerica() },
-  { id: 'moonsighting', label: 'Moonsighting Committee', make: () => CalculationMethod.MoonsightingCommittee() },
-];
-
-function formatTime(date: Date): string {
-  return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-}
-
 export function PrayerView() {
   const { t } = useI18n();
   const { settings, setSettings } = useSettings();
   const { user } = useAuth();
   const { prayers, togglePrayer } = useDevotion();
-  const { coords, error, loading, request, confirmCoords } = useGeolocation();
   const [now, setNow] = useState(Date.now());
-  const [lat, setLat] = useState(coords?.lat?.toString() ?? '');
-  const [lng, setLng] = useState(coords?.lng?.toString() ?? '');
   const [pauseOpen, setPauseOpen] = useState(false);
 
-  // Vérifier si la pause est active
+  // État de la recherche de mosquée
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState<MawaqitMosque[]>([]);
+  const [searching, setSearching] = useState(false);
+  const [message, setMessage] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
   const pauseRemaining = isPaused ? formatPauseRemaining(settings.prayerPauseUntil! - Date.now()) : null;
 
-  useEffect(() => {
-    if (coords) {
-      setLat(coords.lat.toString());
-      setLng(coords.lng.toString());
-    }
-  }, [coords]);
+  const times = useMawaqitTimes(settings.mawaqitMosqueId, now);
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(timer);
   }, []);
 
-  const manualCoords = useMemo(() => {
-    const nlat = parseFloat(lat);
-    const nlng = parseFloat(lng);
-    if (isNaN(nlat) || isNaN(nlng) || nlat < -90 || nlat > 90 || nlng < -180 || nlng > 180) return null;
-    return { lat: nlat, lng: nlng };
-  }, [lat, lng]);
-
-  const active = coords ?? manualCoords;
-  const times = usePrayerTimes(active, settings.prayerMethod, now);
-
   // La pause des prières est disponible uniquement pour les femmes
   const canPause = user?.profile?.gender === 'female';
 
-  const applyManual = () => {
-    if (manualCoords) void confirmCoords(manualCoords);
-  };
-
-  const [cityQuery, setCityQuery] = useState('');
-  const [cityResults, setCityResults] = useState<GeocodeResult[]>([]);
-  const [cityLoading, setCityLoading] = useState(false);
-  const [cityMessage, setCityMessage] = useState<string | null>(null);
-
-  const onCitySearch = async (e: FormEvent) => {
+  const onSearch = async (e: FormEvent) => {
     e.preventDefault();
-    const q = cityQuery.trim();
-    if (!q || cityLoading) return;
-    setCityLoading(true);
-    setCityMessage(null);
-    setCityResults([]);
+    const q = query.trim();
+    if (!q || searching) return;
+    setSearching(true);
+    setMessage(null);
+    setResults([]);
     try {
-      const results = await searchCity(q);
-      setCityResults(results);
-      if (results.length === 0) setCityMessage(t('prayer.noResults'));
+      const mosques = await searchMawaqitMosques(q);
+      setResults(mosques);
+      if (mosques.length === 0) setMessage(t('prayer.mosqueNoResults'));
     } catch {
-      setCityMessage(t('prayer.searchError'));
+      setMessage(t('prayer.mosqueError'));
     } finally {
-      setCityLoading(false);
+      setSearching(false);
     }
   };
 
-  const selectCity = (r: GeocodeResult) => {
-    setCityResults([]);
-    setCityQuery('');
-    void confirmCoords({ lat: r.lat, lng: r.lng }, shortPlaceName(r.name));
+  const selectMosque = (m: MawaqitMosque) => {
+    setSettings((s) => ({ ...s, mawaqitMosqueId: m.uuid, mawaqitMosqueName: m.name }));
+    setResults([]);
+    setQuery('');
+    setShowSearch(false);
   };
 
   const missed = useMemo(() => {
@@ -154,18 +116,18 @@ export function PrayerView() {
             )}
           </div>
 
-            {missed.length > 0 && (
-              <div className="mb-3 rounded-xl border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-center gap-2">
-                <span className="text-lg">⚠️</span>
-                <span>
-                  Prières manquées :{' '}
-                  <strong>
-                    {missed.map((k) => t(PRAYER_LABELS[k as keyof typeof PRAYER_LABELS] ?? '').split(' ')[0]).join(', ')}
-                  </strong>
-                  {' '}— touchez pour rattraper
-                </span>
-              </div>
-            )}
+          {missed.length > 0 && (
+            <div className="mb-3 rounded-xl border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-center gap-2">
+              <span className="text-lg">⚠️</span>
+              <span>
+                {t('prayer.missed')} :{' '}
+                <strong>
+                  {missed.map((k) => t(PRAYER_LABELS[k as keyof typeof PRAYER_LABELS] ?? '').split(' ')[0]).join(', ')}
+                </strong>
+                {' '}— {t('prayer.missedHint')}
+              </span>
+            </div>
+          )}
 
           <PrayerCircles
             prayers={prayers}
@@ -182,6 +144,7 @@ export function PrayerView() {
         </section>
       )}
 
+      {/* Horaires de prière (MAWAQIT) */}
       {times && (
         <>
           {times.next && (
@@ -198,95 +161,72 @@ export function PrayerView() {
               </div>
             ))}
           </div>
+          <p className="mt-2 text-center text-[10px] text-stone-500">
+            🕌 {t('prayer.mawaqitSource')}
+          </p>
         </>
       )}
 
-      {!active && !loading && (
-        <p className="text-center text-sm text-stone-500">{t('prayer.geoError')}</p>
-      )}
+      {/* Sélection de la mosquée */}
+      <div className="card mt-4 p-4 space-y-3">
+        <h3 className="text-sm font-bold text-gold-400">🕌 {t('prayer.mosque')}</h3>
 
-
-      {/* Localisation */}
-      <div className="card mb-4 p-4 space-y-3">
-        <h3 className="text-sm font-bold text-gold-400">📍 {t('prayer.location')}</h3>
-        <div className="flex flex-wrap items-center gap-2">
-          <button onClick={request} disabled={loading} className="btn-primary text-xs">
-            {loading ? t('prayer.geolocating') : t('prayer.geolocate')}
-          </button>
-        </div>
-        {error && (
-          <p className="rounded-xl border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs text-red-300" role="alert">
-            {error}
-          </p>
-        )}
-
-        {/* Recherche par ville / code postal */}
-        <form onSubmit={onCitySearch} className="space-y-2">
-          <label className="block text-[10px] text-stone-500" htmlFor="city-search">{t('prayer.searchCity')}</label>
-          <div className="flex gap-2">
-            <input
-              id="city-search"
-              value={cityQuery}
-              onChange={(e) => setCityQuery(e.target.value)}
-              placeholder={t('prayer.cityPlaceholder')}
-              className="input flex-1 text-xs"
-              dir="auto"
-            />
-            <button type="submit" disabled={cityLoading || !cityQuery.trim()} className="btn-ghost shrink-0 text-xs">
-              {cityLoading ? t('prayer.searching') : t('prayer.search')}
-            </button>
+        {/* Mosquée actuelle */}
+        {settings.mawaqitMosqueId && !showSearch ? (
+          <div className="rounded-xl border border-emerald-700/40 bg-emerald-900/20 p-3">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🕌</span>
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-semibold text-emerald-300">{settings.mawaqitMosqueName}</p>
+                <p className="text-[10px] text-stone-500">{t('prayer.mawaqitSource')}</p>
+              </div>
+              <button
+                onClick={() => setShowSearch(true)}
+                className="shrink-0 rounded-lg border border-stone-700/50 px-2.5 py-1.5 text-[10px] text-stone-400 transition hover:border-gold-500/40 hover:text-gold-300"
+              >
+                {t('prayer.changeMosque')}
+              </button>
+            </div>
           </div>
-        </form>
-        {cityResults.length > 0 && (
-          <ul className="space-y-1" aria-label={t('prayer.results')}>
-            {cityResults.map((r) => (
-              <li key={r.lat + '-' + r.lng + '-' + r.name}>
-                <button
-                  onClick={() => selectCity(r)}
-                  className="w-full rounded-xl border border-emerald-900/50 px-3 py-2 text-left text-xs text-stone-300 transition hover:border-gold-500/60 hover:text-gold-300"
-                >
-                  📍 {r.name}
+        ) : (
+          <div className="space-y-2">
+            <p className="text-xs text-stone-400">{t('prayer.mosqueHint')}</p>
+            <form onSubmit={onSearch} className="space-y-2">
+              <div className="flex gap-2">
+                <input
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  placeholder={t('prayer.mosquePlaceholder')}
+                  className="input flex-1 text-xs"
+                  dir="auto"
+                  autoFocus
+                />
+                <button type="submit" disabled={searching || !query.trim()} className="btn-ghost shrink-0 text-xs">
+                  {searching ? t('prayer.searching') : t('prayer.search')}
                 </button>
-              </li>
-            ))}
-          </ul>
-        )}
-        {cityMessage && <p className="text-xs text-stone-400">{cityMessage}</p>}
+              </div>
+            </form>
 
-        {/* Saisie manuelle avancée */}
-        <details className="text-xs text-stone-400">
-          <summary className="cursor-pointer select-none">{t('prayer.manual')}</summary>
-          <div className="mt-2 flex gap-2">
-            <div className="flex-1">
-              <label className="text-[10px] text-stone-500">{t('prayer.lat')}</label>
-              <input value={lat} onChange={(e) => setLat(e.target.value)} className="input text-xs" placeholder="48.8566" inputMode="decimal" />
-            </div>
-            <div className="flex-1">
-              <label className="text-[10px] text-stone-500">{t('prayer.lng')}</label>
-              <input value={lng} onChange={(e) => setLng(e.target.value)} className="input text-xs" placeholder="2.3522" inputMode="decimal" />
-            </div>
-            <button onClick={applyManual} className="btn-ghost mt-4 text-xs">{t('prayer.apply')}</button>
+            {results.length > 0 && (
+              <ul className="space-y-1">
+                {results.map((m) => (
+                  <li key={m.uuid}>
+                    <button
+                      onClick={() => selectMosque(m)}
+                      className="w-full rounded-xl border border-emerald-900/50 px-3 py-2 text-left transition hover:border-gold-500/60"
+                    >
+                      <p className="text-xs font-semibold text-stone-200">🕌 {m.name}</p>
+                      <p className="mt-0.5 text-[10px] text-stone-500">
+                        {[m.city, m.country].filter(Boolean).join(', ')}
+                      </p>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            )}
+            {message && <p className="text-xs text-stone-400">{message}</p>}
           </div>
-        </details>
-        {active && (
-          <p className="text-xs text-stone-400">
-            📍 {active.lat.toFixed(4)}, {active.lng.toFixed(4)}
-          </p>
         )}
-      </div>
-
-      {/* Méthode */}
-      <div className="card mb-4 p-4">
-        <label className="mb-1 block text-xs text-stone-500">{t('prayer.method')}</label>
-        <select
-          value={settings.prayerMethod}
-          onChange={(e) => setSettings((s) => ({ ...s, prayerMethod: e.target.value }))}
-          className="input text-xs"
-        >
-          {PRAYER_METHODS.map((m) => (
-            <option key={m.id} value={m.id}>{m.label}</option>
-          ))}
-        </select>
       </div>
 
       {/* Modal de pause */}

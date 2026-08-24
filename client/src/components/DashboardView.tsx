@@ -5,9 +5,8 @@ import { useSettings } from '../context/SettingsContext';
 import { useChatContext } from '../App';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
-import { useGeolocation } from '../hooks/useGeolocation';
-import { formatTime, PRAYER_KEYS, prayerLabel } from '../lib/prayer';
-import { usePrayerTimes } from '../hooks/usePrayerTimes';
+import { PRAYER_KEYS, prayerLabel } from '../lib/prayer';
+import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
 import { useAiSetup } from '../hooks/useAiSetup';
 import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
@@ -18,7 +17,6 @@ const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export function DashboardView() {
   const { t } = useI18n();
   const { settings } = useSettings();
-  const { coords, error, loading, request } = useGeolocation();
   const chat = useChatContext();
   const navigate = useNavigate();
   const { user, loading: authLoading } = useAuth();
@@ -52,7 +50,7 @@ export function DashboardView() {
   }, []);
 
 
-  const pt = usePrayerTimes(coords, settings.prayerMethod, now);
+  const pt = useMawaqitTimes(settings.mawaqitMosqueId, now);
 
   const countdown = useMemo(() => {
     if (!pt?.next) return null;
@@ -152,18 +150,12 @@ export function DashboardView() {
           </>
         ) : (
           <div>
-            <p className="text-sm text-stone-400">{t('dashboard.noLocation')}</p>
-            <button onClick={request} disabled={loading} className="btn-primary mt-3 text-xs">
-              {loading ? t('prayer.geolocating') : t('prayer.geolocate')}
-            </button>
-            {error && (
-              <p className="mt-2 text-xs text-red-400" role="alert">{error}</p>
-            )}
+            <p className="text-sm text-stone-400">{t('dashboard.noMosque')}</p>
             <Link
               to="/prayer"
-              className="btn-ghost mt-3 w-full justify-center border border-stone-700/50 text-xs hover:border-gold-500/30 hover:text-gold-400"
+              className="btn-gold mt-3 inline-block text-sm"
             >
-              📍 {t('prayer.dashboardFallback')}
+              🕌 {t('prayer.mosqueSelect')}
             </Link>
           </div>
         )}
