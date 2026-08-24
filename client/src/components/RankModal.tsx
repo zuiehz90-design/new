@@ -61,9 +61,9 @@ export function RankModal({
   const currentEntry = tiers.find((r) => r.id === currentRank.id);
 
   return (
-    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-3" onClick={onClose}>
+    <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm p-0 sm:p-3" onClick={onClose}>
       <div
-        className="w-full max-w-md max-h-[90vh] overflow-y-auto rounded-2xl animate-fade-in"
+        className="w-full max-w-md h-[100dvh] sm:h-auto sm:max-h-[90vh] overflow-y-auto rounded-none sm:rounded-2xl animate-fade-in"
         style={{
           background: 'linear-gradient(180deg, #0f1a18 0%, #081210 100%)',
           border: '1px solid rgba(207, 161, 74, 0.15)',
@@ -95,8 +95,8 @@ export function RankModal({
                 border: '1px solid ' + (TIER_COLOR[currentEntry.tier] ?? '#e8a24f') + '30',
               }}
             >
-              <span className="text-4xl">{currentEntry.icon}</span>
-              <p className="mt-1 text-xl font-bold" style={{ color: TIER_COLOR[currentEntry.tier] ?? '#e8a24f' }}>
+              <span className="text-5xl">{currentEntry.icon}</span>
+              <p className="mt-2 text-xl font-bold" style={{ color: TIER_COLOR[currentEntry.tier] ?? '#e8a24f' }}>
                 {currentEntry.name}
               </p>
               <p className="text-sm text-stone-300">{points} pts</p>

@@ -13,7 +13,7 @@ const TIER_COLOR: Record<string, string> = {
 };
 
 /**
- * Carte de rang compacte : nom du palier, points, barre de progression, pips.
+ * Carte de rang mobile-first : icône grande + nom + barre + bouton.
  */
 export function RankCard({
   achievements,
@@ -33,14 +33,13 @@ export function RankCard({
 
   return (
     <>
-      <div className="card mb-4 border p-4" style={{ borderColor: color + '40' }}>
-        <div className="flex items-center gap-3">
-          {/* Icône */}
-          <span className="text-2xl">{r.icon}</span>
-
+      <div className="card mb-4" style={{ borderColor: color + '40' }}>
+        {/* Top section: icon + rank name + pips */}
+        <div className="flex items-center gap-3 px-4 pt-4 pb-2">
+          <span className="text-3xl flex-shrink-0">{r.icon}</span>
           <div className="flex-1 min-w-0">
-            <div className="flex items-baseline gap-2">
-              <span className="text-sm font-bold" style={{ color }}>{r.name}</span>
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-sm font-bold truncate" style={{ color }}>{r.name}</span>
               {r.division != null && (
                 <div className="flex gap-0.5">
                   {[0, 1, 2].map((i) => (
@@ -53,34 +52,41 @@ export function RankCard({
                 </div>
               )}
             </div>
-
-            {/* Barre de progression */}
-            <div className="mt-1.5 flex items-center gap-2">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
-                <div
-                  className="h-full rounded-full transition-all duration-700"
-                  style={{ width: (rp.maxed ? 100 : rp.pct) + '%', background: color }}
-                />
-              </div>
+            <p className="text-[10px] text-stone-500 mt-0.5">
+              {points} pts
               {!rp.maxed && (
-                <span className="text-[10px] tabular-nums text-stone-500">{rp.pct}%</span>
+                <span className="text-stone-600"> · {t('rank.next')} : {rp.pointsNeeded} pts</span>
               )}
-            </div>
-
-            <p className="mt-1 text-[10px] text-stone-500">
-              {points} pts {!rp.maxed && <span className="text-stone-600">· {t('rank.next')} : {rp.pointsNeeded} pts</span>}
             </p>
           </div>
-
-          {/* Debouton voir tous les rangs */}
-          <button
-            onClick={() => setRanksOpen(true)}
-            className="shrink-0 rounded-lg border px-2.5 py-1.5 text-[10px] font-bold text-stone-400 transition hover:border-gold-500/40 hover:text-gold-300"
-            style={{ borderColor: 'rgba(255,255,255,0.1)' }}
-          >
-            ⚔️ {t('rank.viewAll')}
-          </button>
         </div>
+
+        {/* Progress bar */}
+        <div className="px-4 pb-3">
+          <div className="flex items-center gap-2">
+            <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
+              <div
+                className="h-full rounded-full transition-all duration-700"
+                style={{ width: (rp.maxed ? 100 : rp.pct) + '%', background: color }}
+              />
+            </div>
+            {!rp.maxed && (
+              <span className="text-xs tabular-nums font-semibold" style={{ color }}>{rp.pct}%</span>
+            )}
+            {rp.maxed && (
+              <span className="text-xs font-bold" style={{ color }}>MAX</span>
+            )}
+          </div>
+        </div>
+
+        {/* Button */}
+        <button
+          onClick={() => setRanksOpen(true)}
+          className="w-full border-t px-4 py-3 text-xs font-bold text-stone-400 transition active:scale-[0.98] active:bg-white/5"
+          style={{ borderColor: 'rgba(255,255,255,0.06)' }}
+        >
+          ⚔️ {t('rank.viewAll')}
+        </button>
       </div>
 
       <RankModal open={ranksOpen} onClose={() => setRanksOpen(false)} currentRank={r} points={points} />
