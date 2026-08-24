@@ -102,7 +102,7 @@ export function ChatView() {
           </button>
           <button
             onClick={() => { chat.newChat(); setListOpen(false); }}
-            className="chip hover:!border-emerald-500/50 hover:!text-emerald-300"
+            className="chip hover:!border-emerald-500/50 hover:!text-emerald-300 hidden sm:inline-flex"
             title={t('chat.newChat')}
           >
             ➕ {t('chat.newChat')}
@@ -127,9 +127,24 @@ export function ChatView() {
       {listOpen && (
         <div className="mb-3 max-h-60 overflow-y-auto rounded-xl p-2" style={{border:"1px solid var(--border-subtle)",background:"var(--bg-card)"}}>
           {chat.conversations.length === 0 ? (
-            <p className="p-2 text-center text-xs text-stone-500">{t('chat.noConversations')}</p>
+            <div className="flex flex-col items-center gap-2 p-3">
+              <p className="text-xs text-stone-500">{t('chat.noConversations')}</p>
+              <button
+                onClick={() => { chat.newChat(); setListOpen(false); }}
+                className="chip !border-emerald-500/50 !text-emerald-300"
+              >
+                ➕ {t('chat.newChat')}
+              </button>
+            </div>
           ) : (
             <>
+              <button
+                onClick={() => { chat.newChat(); setListOpen(false); }}
+                className="mb-2 w-full rounded-lg py-2 text-xs font-bold transition active:scale-95"
+                style={{ background: 'rgba(4,120,87,0.15)', color: 'var(--accent-primary)' }}
+              >
+                ➕ Nouvelle conversation
+              </button>
               {/* Barre d'actions */}
               <div className="mb-2 flex items-center gap-1 px-1">
                 <button

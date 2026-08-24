@@ -146,12 +146,6 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
           <MoonIcon className="h-6 w-6" style={{ color: "var(--accent-gold)" }} />
           <span className="font-quran text-lg font-bold" style={{ color: "var(--accent-gold)" }}>Nour</span>
         </div>
-        <button
-          onClick={() => { chat.newChat(); navigate('/chat'); }}
-          className="btn-gold shrink-0 text-xs"
-        >
-          <PlusIcon className="h-3.5 w-3.5" /> Chat
-        </button>
       </header>
 
       <div className="flex flex-1 overflow-hidden">

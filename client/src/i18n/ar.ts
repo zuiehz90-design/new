@@ -326,4 +326,24 @@ export const ar: Record<string, string> = {
   'quiz.replay': 'إعادة',
   'quiz.home': 'الرئيسية',
   'quran.backToSearch': 'العودة للبحث',
+  // Greetings based on time of day
+  'dashboard.greeting.dawn': 'صباح الخير، بارك الله فيك 🌅',
+  'dashboard.greeting.morning': 'صباح النور، بارك الله فيك ☀️',
+  'dashboard.greeting.noon': 'ظهر مبارك، لا تنسَ الظهر 🌞',
+  'dashboard.greeting.afternoon': 'مساء الخير 🌤️',
+  'dashboard.greeting.evening': 'مساء النور، بعد المغرب 🌇',
+  'dashboard.greeting.night': 'تصبح على خير، بعد العشاء 🌙',
+  // Dashboard suggestions
+  'dashboard.suggest.morningDhikr': 'أذكار الصباح',
+  'dashboard.suggest.eveningDhikr': 'أذكار المساء',
+  'dashboard.suggest.dhikr': 'عداد الذكر',
+  'dashboard.suggest.readQuran': 'قراءة القرآن',
+  'dashboard.suggest.quiz': 'اختبار اليوم',
+  'dashboard.suggest.learnNames': 'أسماء الله الحسنى',
+  'dashboard.suggest.prophets': 'قصص الأنبياء',
+  'dashboard.suggest.checkPrayers': 'تحقق من الصلوات',
+  'dashboard.suggest.hijriCalendar': 'التقويم الهجري',
+  'dashboard.suggest.glossary': 'المسرد الإسلامي',
+  'dashboard.suggest.allPrayersDone': '🎉 اكتملت الصلوات!',
+
 };

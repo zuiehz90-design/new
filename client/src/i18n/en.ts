@@ -372,4 +372,24 @@ export const en: Record<string, string> = {
   'quiz.replay': 'Replay',
   'quiz.home': 'Home',
   'quran.backToSearch': 'Back to search',
+  // Greetings based on time of day
+  'dashboard.greeting.dawn': 'Good Fajr morning 🌅',
+  'dashboard.greeting.morning': 'Good morning, Baraka Allahou fik ☀️',
+  'dashboard.greeting.noon': "Good noon, don't forget Dhuhr 🌞",
+  'dashboard.greeting.afternoon': 'Good afternoon 🌤️',
+  'dashboard.greeting.evening': 'Good evening, after Maghrib 🌇',
+  'dashboard.greeting.night': 'Good night, after Isha 🌙',
+  // Dashboard suggestions
+  'dashboard.suggest.morningDhikr': 'Morning Dhikr',
+  'dashboard.suggest.eveningDhikr': 'Evening Dhikr',
+  'dashboard.suggest.dhikr': 'Dhikr Counter',
+  'dashboard.suggest.readQuran': 'Read Quran',
+  'dashboard.suggest.quiz': 'Daily Quiz',
+  'dashboard.suggest.learnNames': '99 Names of Allah',
+  'dashboard.suggest.prophets': "Prophets' Stories",
+  'dashboard.suggest.checkPrayers': 'Check Prayers',
+  'dashboard.suggest.hijriCalendar': 'Hijri Calendar',
+  'dashboard.suggest.glossary': 'Islamic Glossary',
+  'dashboard.suggest.allPrayersDone': '🎉 All prayers done!',
+
 };

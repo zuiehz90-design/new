@@ -25,6 +25,7 @@ export function PrayerCircles({
 }) {
   const { t } = useI18n();
   const [lateModal, setLateModal] = useState<{ key: string; prayerTime: Date } | null>(null);
+  const [justToggled, setJustToggled] = useState<string | null>(null);
 
   return (
     <>
@@ -39,7 +40,11 @@ export function PrayerCircles({
         const stateKey = done ? 'done' : isMissed ? 'missed' : blocked ? 'blocked' : 'pending';
 
         let circle = 'border-2 border-dashed border-stone-500/70 text-stone-500';
-        if (done) circle = 'border-2 border-emerald-400 bg-emerald-500 text-emerald-950 shadow-[0_0_22px_-8px_rgba(52,211,153,0.8)] animate-pop';
+        if (done) {
+          const isFresh = justToggled === key;
+          circle = 'border-2 border-emerald-400 bg-emerald-500 text-emerald-950 shadow-[0_0_22px_-8px_rgba(52,211,153,0.8)]';
+          if (isFresh) circle += ' animate-pop prayer-pulse';
+        }
         else if (isMissed) circle = 'border-2 border-red-400/70 bg-red-500/15 text-red-300';
         else if (blocked) circle = 'border-2 border-dashed border-stone-700/60 text-stone-600 opacity-60';
 
@@ -53,14 +58,18 @@ export function PrayerCircles({
             key={key}
             onClick={() => {
               if (done) {
-                // Already done, uncheck directly
                 onToggle(key);
+                setJustToggled(null);
               } else if (hasPassed && time) {
-                // Prayer has passed, show late modal
                 setLateModal({ key, prayerTime: time });
               } else {
-                // Not yet passed, check directly
                 onToggle(key);
+                // Trigger confirmation animation
+                setJustToggled(key);
+                // Vibrate on mobile
+                try { navigator.vibrate?.(30); } catch {}
+                // Clear animation after delay
+                setTimeout(() => setJustToggled(null), 600);
               }
             }}
             disabled={blocked}
@@ -98,6 +107,9 @@ export function PrayerCircles({
           onClose={() => setLateModal(null)}
           onConfirm={(late, lateMinutes) => {
             onToggle(lateModal.key, { late, lateMinutes });
+            setJustToggled(lateModal.key);
+            try { navigator.vibrate?.(30); } catch {}
+            setTimeout(() => setJustToggled(null), 600);
             setLateModal(null);
           }}
         />

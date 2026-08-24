@@ -372,4 +372,24 @@ export const fr: Record<string, string> = {
   'quiz.replay': 'Rejouer',
   'quiz.home': 'Accueil',
   'quran.backToSearch': 'Retour à la recherche',
+  // Greetings based on time of day
+  'dashboard.greeting.dawn': 'Bon réveil, bon Fajr 🌅',
+  'dashboard.greeting.morning': 'Bonjour et Baraka Allahou fik ☀️',
+  'dashboard.greeting.noon': 'Bon midi, ne oublie pas Dhuhr 🌞',
+  'dashboard.greeting.afternoon': 'Bon après-midi 🌤️',
+  'dashboard.greeting.evening': 'Bonsoir, après le Maghrib 🌇',
+  'dashboard.greeting.night': 'Bonne nuit, après Isha 🌙',
+  // Dashboard suggestions
+  'dashboard.suggest.morningDhikr': 'Dhikr du matin',
+  'dashboard.suggest.eveningDhikr': 'Dhikr du soir',
+  'dashboard.suggest.dhikr': 'Compteur Dhikr',
+  'dashboard.suggest.readQuran': 'Lire le Coran',
+  'dashboard.suggest.quiz': 'Quiz du jour',
+  'dashboard.suggest.learnNames': "99 Noms d'Allah",
+  'dashboard.suggest.prophets': 'Histoires des prophètes',
+  'dashboard.suggest.checkPrayers': 'Vérifier les prières',
+  'dashboard.suggest.hijriCalendar': 'Calendrier hégirien',
+  'dashboard.suggest.glossary': 'Lexique islamique',
+  'dashboard.suggest.allPrayersDone': '🎉 Toutes les prières faites !',
+
 };

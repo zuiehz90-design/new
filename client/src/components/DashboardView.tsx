@@ -11,6 +11,7 @@ import { useAiSetup } from '../hooks/useAiSetup';
 import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
 import { DailyVerse } from './DailyVerse';
+import { DashboardSuggestions } from './DashboardSuggestions';
 import { MoonIcon } from './icons';
 import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
@@ -91,7 +92,7 @@ export function DashboardView() {
       </div>
 
       {/* Bannière app desktop (web uniquement) */}
-      {!isDesktop && !desktopBannerDismissed && (
+      {!isDesktop && !desktopBannerDismissed && typeof window !== "undefined" && window.innerWidth >= 768 && (
         <section className="card mb-4 border-gold-500/50 bg-gradient-to-br from-emerald-900/40 to-gold-900/20 p-4 animate-fade-in shadow-glow">
           <div className="flex items-start gap-3">
             <span className="text-3xl shrink-0">🖥️</span>
@@ -161,6 +162,9 @@ export function DashboardView() {
           </div>
         )}
       </section>
+
+      {/* Suggestions contextuelles (basées sur lheure et les prières) */}
+      <DashboardSuggestions />
 
       {/* Citation du jour */}
       <DailyVerse />
