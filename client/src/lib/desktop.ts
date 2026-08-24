@@ -18,6 +18,11 @@ const win = window as typeof window & { nourDesktop?: NourDesktop };
 /** true si l'app tourne dans Electron (app desktop native) */
 export const isDesktop = !!win.nourDesktop?.isDesktop;
 
+/** true si l'app tourne dans Capacitor (iOS/Android) */
+let _isMobile = false;
+try { _isMobile = !!(window as any).Capacitor?.isNativePlatform?.(); } catch {}
+export const isMobile = _isMobile;
+
 /** API desktop sécurisée, null si mode web */
 export const desktop: NourDesktop | null = win.nourDesktop ?? null;
 
@@ -26,6 +31,14 @@ export const desktop: NourDesktop | null = win.nourDesktop ?? null;
 /** Envoie une notification native via le desktop.
  *  Sur le web, utilise l'API Notification standard. */
 export async function notify(opts: { title: string; body: string; clickUrl?: string }): Promise<void> {
+  // Capacitor (iOS) — use native local notifications
+  if (isMobile) {
+    try {
+      const { scheduleNotification, requestNotificationPermission } = await import('./capacitor');
+      await requestNotificationPermission();
+      await scheduleNotification({ title: opts.title, body: opts.body });
+    } catch { /* fallback to browser */ }
+  }
   if (desktop) {
     await desktop.showNotification(opts);
   } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {

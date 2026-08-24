@@ -14,3 +14,6 @@ dist-desktop/
 
 # Exe téléchargement direct (trop lourd pour git, copié par script)
 public/downloads/
+
+# Capacitor iOS project (rebuild with npx cap sync ios)
+ios/
