@@ -5,6 +5,14 @@ import { getSessionUser } from '../auth.js';
 
 export const healthRouter = Router();
 
+/**
+ * Endpoint ultra-léger pour les moniteurs de disponibilité (UptimeRobot, cron-job.org, etc.).
+ * Aucune connexion DB, aucune vérification d'auth → répond en < 5ms.
+ */
+healthRouter.get('/ping', (_req, res) => {
+  res.json({ ok: true });
+});
+
 healthRouter.get('/', (req, res) => {
   const header = req.headers.authorization ?? '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';

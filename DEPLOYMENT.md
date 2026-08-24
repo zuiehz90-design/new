@@ -52,6 +52,29 @@ Après avoir créé un compte réel, vérifier :
 
 Neon est la source persistante. Ne pas remplacer `DATABASE_URL` par SQLite sur Render : le disque d'un service gratuit peut être éphémère.
 
+## Supprimer le délai de réveil (keep-alive)
+
+Sur le plan gratuit, Render éteint l'instance après ~15 minutes sans trafic. Le prochain chargement prend alors 50+ secondes (le message « SERVICE WAKING UP… »). On peut éliminer ce délai **gratuitement** en empêchant l'instance de s'endormir.
+
+### Solution : moniteur de disponibilité externe
+
+1. Créer un compte gratuit sur [UptimeRobot](https://uptimerobot.com) (ou [cron-job.org](https://cron-job.org)).
+2. Ajouter un moniteur HTTP :
+   - **URL** : `https://<ton-service>.onrender.com/api/ping`
+   - **Intervalle** : 5 minutes
+   - **Type** : GET
+3. Enregistrer. L'instance restera éveillée 24h/24.
+
+### Pourquoi ça marche
+
+- Un ping toutes les 5 minutes génère ~288 requêtes/jour, soit **744 heures/mois** — dans la limite des 750h gratuites de Render.
+- L'endpoint `/api/ping` est ultra-léger (aucune DB, aucune auth) : il répond en < 5ms.
+- L'instance ne s'éteint jamais, donc aucun délai de réveil.
+
+### Alternative : passer au plan payant
+
+Render Pro ($7/mois) désactive le spin-down. Utile si le trafic le justifie.
+
 ## Google Search Console
 
 1. Ouvrir [Google Search Console](https://search.google.com/search-console).
@@ -82,7 +105,7 @@ npm start
 ## Dépannage
 
 - **Erreur Node ou `node:sqlite`** : utiliser Node `22.5.0` ou plus récent.
-- **Chargement lent après veille** : c'est le comportement du plan Render Free. Le shell local est mis en cache après la première visite. Pour aligner le serveur avec Neon US, créer un nouveau service en région Ohio ; Render ne déplace pas le service existant.
+- **Chargement lent après veille** : c'est le comportement du plan Render Free. Voir la section « Supprimer le délai de réveil (keep-alive) » pour configurer un moniteur UptimeRobot gratuit.
 - **Page blanche après déploiement** : vérifier que le build a bien produit `client/dist` et que le service démarre avec `npm start`.
 - **404 sur `/quran`** : vérifier que le service utilise bien la dernière version et que le fallback SPA Express est actif.
 - **Erreur de base au démarrage** : vérifier `DATABASE_URL`, le mot de passe Neon et `sslmode=require`.
