@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { config } from '../config.js';
 import { getUserApiKey } from './setup.js';
 import { getSessionUser } from '../auth.js';
+import { getSyncStatus } from '../sync.js';
 
 export const healthRouter = Router();
 
@@ -11,6 +12,10 @@ export const healthRouter = Router();
  */
 healthRouter.get('/ping', (_req, res) => {
   res.json({ ok: true });
+});
+
+healthRouter.get('/sync', (_req, res) => {
+  res.json(getSyncStatus());
 });
 
 healthRouter.get('/', (req, res) => {

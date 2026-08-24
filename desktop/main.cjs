@@ -34,25 +34,6 @@ function getDatabaseUrl() {
   return process.env.DATABASE_URL || cfg.databaseUrl || '';
 }
 
-async function askForDatabaseUrl() {
-  const result = await dialog.showMessageBox(mainWindow || undefined, {
-    type: 'question',
-    title: 'Configuration — Base de données',
-    message: 'Pour synchroniser vos données entre le desktop et le web,\nNour doit se connecter à votre base PostgreSQL Neon.',
-    detail: 'Collez votre DATABASE_URL (Neon) dans le champ ci-dessous.\n\nExemple : postgresql://...@ep-....neon.tech/...\n\nSi vous ne l\'avez pas, vous pouvez utiliser l\'app en mode hors-ligne\n(sans synchronisation).',
-    buttons: ['Configurer', 'Mode hors-ligne'],
-    defaultId: 0,
-    cancelId: 1,
-  });
-
-  if (result.response === 0) {
-    // L'utilisateur veut configurer → on lit depuis le presse-papier ou on demande
-    // Electron ne permet pas un vrai input dans showMessageBox, donc on crée une fenêtre temporaire
-    return promptForUrl();
-  }
-  return ''; // Mode hors-ligne
-}
-
 async function promptForUrl() {
   return new Promise((resolve) => {
     // Écouter l'IPC AVANT d'ouvrir la fenêtre
@@ -224,7 +205,7 @@ function startServer() {
         require.resolve('tsx/dist/cli.mjs'),
         [tsEntry],
         {
-          env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl },
+          env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl, ENABLE_SYNC: databaseUrl ? 'true' : '' },
           stdio: 'pipe',
           silent: true,
         },
@@ -234,7 +215,7 @@ function startServer() {
   } else {
     // Mode production : node direct
     serverProcess = fork(serverEntry, [], {
-      env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl },
+      env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl, ENABLE_SYNC: databaseUrl ? 'true' : '' },
       stdio: 'pipe',
       silent: true,
     });
@@ -283,17 +264,6 @@ function waitForServer(maxRetries = 40) {
 app.whenReady().then(async () => {
   buildMenu();
 
-  // Premier lancement : demander la DATABASE_URL
-  const cfg = loadConfig();
-  if (cfg.databaseUrl === undefined) {
-    const url = await askForDatabaseUrl();
-    // promptForUrl a déjà sauvegardé via IPC si une URL a été saisie.
-    // On n'écrase que si aucune URL n'a été sauvegardée.
-    const afterCfg = loadConfig();
-    if (!afterCfg.databaseUrl) {
-      saveConfig({ databaseUrl: url || '' });
-    }
-  }
 
   startServer();
   try {
