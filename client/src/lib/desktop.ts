@@ -38,6 +38,7 @@ export async function notify(opts: { title: string; body: string; clickUrl?: str
       await requestNotificationPermission();
       await scheduleNotification({ title: opts.title, body: opts.body });
     } catch { /* fallback to browser */ }
+    return;
   }
   if (desktop) {
     await desktop.showNotification(opts);

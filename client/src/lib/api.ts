@@ -162,6 +162,15 @@ export interface QuestsData {
 }
 
 const TOKEN_KEY = 'nour:token';
+
+// Mobile cache: dynamic import (tree-shaken on web)
+let _mobileCache: typeof import('./mobileCache') | null = null;
+async function mobileCache() {
+  if (!_mobileCache) {
+    try { _mobileCache = await import('./mobileCache'); } catch { return null; }
+  }
+  return _mobileCache;
+}
 const DEFAULT_API_TIMEOUT_MS = 12_000;
 const AUTH_API_TIMEOUT_MS = 60_000;
 
@@ -210,6 +219,15 @@ async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEF
   };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
+
+  // Mobile: use cache for GET, invalidate cache on POST/PUT/DELETE
+  const isGet = !opts.method || opts.method === 'GET';
+  const mc = await mobileCache();
+
+  if (mc && isGet) {
+    return mc.cachedGet<T>(path, () => fetchWithTimeout(path, { ...opts, headers }, timeoutMs));
+  }
+
   const res = await fetchWithTimeout(path, { ...opts, headers }, timeoutMs);
   const data = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) {
@@ -217,6 +235,12 @@ async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEF
     error.status = res.status;
     throw error;
   }
+
+  // Invalidate cache on mutations
+  if (mc && !isGet) {
+    mc.invalidatePrefix(path);
+  }
+
   return data as T;
 }
 

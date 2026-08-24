@@ -7,6 +7,7 @@ import { useChat, type ChatStore } from './hooks/useChat';
 import { usePrayerNotifications } from './hooks/usePrayerNotifications';
 import { useQuestNotifications } from './hooks/useQuestNotifications';
 import { useKeyboardHeight } from './hooks/useKeyboard';
+import { initMobileCache } from './lib/mobileCache';
 import { DashboardView } from './components/DashboardView';
 import { ChatView } from './components/ChatView';
 import { QuranView } from './components/QuranView';
@@ -227,6 +228,7 @@ export default function App() {
 }
 
 function AppInner() {
+  useEffect(() => { initMobileCache().catch(() => {}); }, []);
   const { settings } = useSettings();
   return (
     <I18nProvider lang={settings.lang}>
