@@ -16,12 +16,18 @@ import { SettingsModal } from './components/SettingsModal';
 import { AiSetupModal } from './components/AiSetupModal';
 import { ProfileView } from './components/ProfileView';
 import { QuestsView } from './components/QuestsView';
+import { ProphetsView } from './components/ProphetsView';
+import { NamesView } from './components/NamesView';
+import { HijriCalendarView } from './components/HijriCalendarView';
+import { GlossaryView } from './components/GlossaryView';
+import { DhikrCounterView } from './components/DhikrCounterView';
+import { QuizView } from './components/QuizView';
 import { MiniPlayer } from './components/MiniPlayer';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AiSetupProvider } from './hooks/useAiSetup';
 import { AudioPlayerProvider } from './context/AudioPlayerContext';
 import { ToastProvider } from './context/ToastContext';
-import { MoonIcon, PlusIcon, HomeIcon, ChatIcon, BookIcon, MosqueIcon, SwordsIcon, UserIcon, type IconProps } from './components/icons';
+import { MoonIcon, PlusIcon, HomeIcon, ChatIcon, BookIcon, MosqueIcon, SwordsIcon, UserIcon, ProphetsIcon, NamesIcon, CalendarIcon, BookOpenIcon, BeadsIcon, QuizIcon, type IconProps } from './components/icons';
 
 /* ---- Scroll position memory ----
    Stored at module level (not in refs) so the values survive React re-renders
@@ -89,14 +95,25 @@ function Shell() {
   usePrayerNotifications();
   useQuestNotifications();
 
-  const navItems = [
+  // Navigation mobile : 5 principaux + bouton Plus
+  const primaryNav = [
     { to: '/', label: 'Accueil', icon: 'home' },
     { to: '/chat', label: 'Chat', icon: 'chat' },
     { to: '/quran', label: 'Coran', icon: 'quran' },
     { to: '/prayer', label: 'Prières', icon: 'prayer' },
     { to: '/quests', label: 'Quêtes', icon: 'quests' },
+  ];
+  const secondaryNav = [
+    { to: '/prophets', label: 'Prophètes', icon: 'prophets' },
+    { to: '/names', label: '99 Noms', icon: 'names' },
+    { to: '/hijri', label: 'Calendrier', icon: 'calendar' },
+    { to: '/glossary', label: 'Lexique', icon: 'glossary' },
+    { to: '/dhikr', label: 'Dhikr', icon: 'dhikr' },
+    { to: '/quiz', label: 'Quiz', icon: 'quiz' },
     { to: '/profile', label: 'Profil', icon: 'profile' },
   ];
+  const navItems = [...primaryNav, ...secondaryNav];
+  const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (path: string) => (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path));
 
@@ -106,11 +123,17 @@ const NAV_ICONS: Record<string, (p: IconProps) => ReactElement> = {
   quran: BookIcon,
   prayer: MosqueIcon,
   quests: SwordsIcon,
+  prophets: ProphetsIcon,
+  names: NamesIcon,
+  calendar: CalendarIcon,
+  glossary: BookOpenIcon,
+  dhikr: BeadsIcon,
+  quiz: QuizIcon,
   profile: UserIcon,
 };
-function NavIcon({ name, className }: { name: string; className?: string }) {
+function NavIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
   const Icon = NAV_ICONS[name];
-  return Icon ? <Icon className={className} /> : null;
+  return Icon ? <Icon className={className} style={style} /> : null;
 }
 
 
@@ -118,7 +141,7 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
   return (
     <div className="flex h-dvh flex-col overflow-hidden" style={{ paddingBottom: kb, transition: 'padding-bottom 200ms ease' }}>
       {/* ====== HEADER MOBILE ====== */}
-      <header className="nav-header flex items-center justify-between px-3 py-2 lg:hidden shrink-0 z-10 relative">
+      <header className="nav-header sticky top-0 flex items-center justify-between px-4 py-2.5 lg:hidden shrink-0 z-20">
         <div className="flex items-center gap-2">
           <MoonIcon className="h-6 w-6" style={{ color: "var(--accent-gold)" }} />
           <span className="font-quran text-lg font-bold" style={{ color: "var(--accent-gold)" }}>Nour</span>
@@ -173,6 +196,12 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
               <Route path="/prayer" element={<PrayerView />} />
               <Route path="/profile" element={<ProfileView />} />
               <Route path="/quests" element={<QuestsView />} />
+              <Route path="/prophets" element={<ProphetsView />} />
+              <Route path="/names" element={<NamesView />} />
+              <Route path="/hijri" element={<HijriCalendarView />} />
+              <Route path="/glossary" element={<GlossaryView />} />
+              <Route path="/dhikr" element={<DhikrCounterView />} />
+              <Route path="/quiz" element={<QuizView />} />
             </Routes>
           </div>
         </main>
@@ -197,20 +226,63 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
       )}
 
 {/* ====== BARRE DU BAS (MOBILE) ====== */}
-      <nav className="relative z-20 flex items-center justify-around border-t border-emerald-900/30 bg-night-900/90 px-1 py-1.5 pb-safe backdrop-blur lg:hidden shrink-0">
-        {navItems.map((item) => (
+      <nav className="relative z-30 flex items-center justify-around border-t border-emerald-900/30 bg-night-900/95 px-1 py-1 pb-safe backdrop-blur-lg lg:hidden shrink-0" style={{ minHeight: '56px' }}>
+        {primaryNav.map((item) => (
           <Link
             key={item.to}
             to={navTo(item.to)}
-            className={`flex flex-col items-center gap-0.5 rounded-xl px-3 py-1.5 text-xs transition ${
-              isActive(item.to) ? 'text-gold-300' : 'text-stone-400 hover:text-stone-200'
+            className={`flex flex-col items-center gap-0.5 rounded-xl px-2.5 py-1.5 text-[10px] font-medium transition active:scale-90 ${
+              isActive(item.to) ? 'text-gold-300' : 'text-stone-400'
             }`}
           >
-            <NavIcon name={item.icon} className="h-6 w-6" />
+            <NavIcon name={item.icon} style={{ width: 22, height: 22 }} />
             <span>{item.label}</span>
           </Link>
         ))}
+        <button
+          onClick={() => setMoreOpen(!moreOpen)}
+          className={`flex flex-col items-center gap-0.5 rounded-xl px-2.5 py-1.5 text-[10px] font-medium transition active:scale-90 ${
+            moreOpen || secondaryNav.some((item) => isActive(item.to)) ? 'text-gold-300' : 'text-stone-400'
+          }`}
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" style={{ width: 22, height: 22 }}>
+            <circle cx="5" cy="12" r="1.5" fill="currentColor" />
+            <circle cx="12" cy="12" r="1.5" fill="currentColor" />
+            <circle cx="19" cy="12" r="1.5" fill="currentColor" />
+          </svg>
+          <span>Plus</span>
+        </button>
       </nav>
+
+      {/* Grille Plus : sections secondaires */}
+      {moreOpen && (
+        <>
+          <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setMoreOpen(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-fade-in">
+            <div className="card rounded-t-3xl border-t-2 border-gold-500/40 p-4 pb-safe" style={{ background: 'var(--bg-surface)' }}>
+              <div className="mb-3 flex items-center justify-between">
+                <p className="text-sm font-bold text-gold-400">Explorer</p>
+                <button onClick={() => setMoreOpen(false)} className="chip text-xs">✕</button>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                {secondaryNav.map((item) => (
+                  <Link
+                    key={item.to}
+                    to={navTo(item.to)}
+                    onClick={() => setMoreOpen(false)}
+                    className={`flex flex-col items-center gap-1.5 rounded-2xl p-3 transition active:scale-90 ${
+                      isActive(item.to) ? 'border border-gold-500/50 bg-gold-500/10 text-gold-300' : 'border border-stone-700/50 text-stone-400'
+                    }`}
+                  >
+                    <NavIcon name={item.icon} className="h-7 w-7" />
+                    <span className="text-[10px] font-medium text-center">{item.label}</span>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <SettingsModal open={settingsOpen} onClose={() => setSettingsOpen(false)} />
       <AiSetupModal />

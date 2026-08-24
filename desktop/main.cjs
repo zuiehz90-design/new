@@ -13,86 +13,11 @@ const isDev = !app.isPackaged;
 const SERVER_PORT = 3001;
 const BASE_URL = `http://localhost:${SERVER_PORT}`;
 
-// ---- Gestion de la configuration (DATABASE_URL) ----
-function getConfigPath() {
-  return path.join(app.getPath('userData'), 'config.json');
-}
-
-function loadConfig() {
-  try {
-    const raw = fs.readFileSync(getConfigPath(), 'utf8');
-    return JSON.parse(raw);
-  } catch {
-    return {};
-  }
-}
-
-function saveConfig(data) {
-  fs.writeFileSync(getConfigPath(), JSON.stringify(data, null, 2), 'utf8');
-}
+// ---- Gestion de la DATABASE_URL (hardcodée, non modifiable) ----
+const HARDCODED_DATABASE_URL = 'postgresql://neondb_owner:npg_Jw3DfmL2BnWC@ep-patient-bread-ayvwsnsi-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 
 function getDatabaseUrl() {
-  const cfg = loadConfig();
-  // Priorité : variable d'environnement > config locale
-  return process.env.DATABASE_URL || cfg.databaseUrl || 'postgresql://neondb_owner:npg_Jw3DfmL2BnWC@ep-patient-bread-ayvwsnsi-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
-}
-
-async function promptForUrl() {
-  return new Promise((resolve) => {
-    // Écouter l'IPC AVANT d'ouvrir la fenêtre
-    const handler = (_event, url) => {
-      saveConfig({ databaseUrl: url || '' });
-      resolve(url || '');
-    };
-    ipcMain.once('set-database-url', handler);
-    // Fallback si la fenêtre est fermée sans saisie
-    const fallback = () => {
-      ipcMain.removeListener('set-database-url', handler);
-      resolve('');
-    };
-
-    const promptWin = new BrowserWindow({
-      width: 520,
-      height: 320,
-      resizable: false,
-      frame: true,
-      title: 'Nour — Configuration base de données',
-      webPreferences: { nodeIntegration: true, contextIsolation: false },
-    });
-
-    promptWin.once('closed', fallback);
-
-    const html = `
-      <html>
-      <head><meta charset="utf-8"><title>Configuration</title></head>
-      <body style="font-family:system-ui;background:#0a1a14;color:#e2e8f0;padding:20px;display:flex;flex-direction:column;height:100vh;box-sizing:border-box;margin:0">
-        <h2 style="color:#cfa14a;margin:0 0 4px">Base de données PostgreSQL</h2>
-        <p style="font-size:12px;color:#9ca3af;margin:0 0 16px">Collez votre DATABASE_URL Neon pour synchroniser vos données.</p>
-        <input id="url" type="text" placeholder="postgresql://user:pass@host/db" style="padding:8px;border:1px solid #334155;border-radius:8px;background:#0f1f1b;color:#e2e8f0;width:100%;box-sizing:border-box;font-size:12px;margin-bottom:8px" />
-        <p style="font-size:10px;color:#9ca3af;margin:0 0 16px">Vous pouvez aussi passer en mode hors-ligne : fermez cette fenêtre.</p>
-        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:auto">
-          <button id="skip" style="padding:6px 14px;border:1px solid #334155;border-radius:8px;background:transparent;color:#9ca3af;cursor:pointer">Hors-ligne</button>
-          <button id="save" style="padding:6px 14px;border:none;border-radius:8px;background:#cfa14a;color:#0a1a14;cursor:pointer;font-weight:bold">Connecter</button>
-        </div>
-        <script>
-          const { ipcRenderer } = require('electron');
-          document.getElementById('save').onclick = () => {
-            const url = document.getElementById('url').value.trim();
-            if (url) ipcRenderer.send('set-database-url', url);
-            window.close();
-          };
-          document.getElementById('skip').onclick = () => window.close();
-          document.getElementById('url').onkeydown = (e) => {
-            if (e.key === 'Enter') document.getElementById('save').click();
-          };
-          document.getElementById('url').focus();
-        </script>
-      </body>
-      </html>
-    `;
-
-    promptWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
-  });
+  return process.env.DATABASE_URL || HARDCODED_DATABASE_URL;
 }
 
 // ---- Fenêtre principale ----
@@ -133,36 +58,6 @@ function buildMenu() {
         { label: 'Ouvrir les DevTools', accelerator: 'F12', click: () => mainWindow?.webContents.openDevTools() },
         { type: 'separator' },
         { label: 'Quitter', accelerator: 'CmdOrCtrl+Q', click: () => app.quit() },
-      ],
-    },
-    {
-      label: 'Base de données',
-      submenu: [
-        {
-          label: 'Reconfigurer la connexion...',
-          click: async () => {
-            await promptForUrl();
-            // Redémarrer le serveur avec la nouvelle config
-            stopServer();
-            startServer();
-            try { await waitForServer(); } catch { /* ignore */ }
-            mainWindow?.reload();
-          },
-        },
-        {
-          label: 'Mode hors-ligne (données locales)',
-          click: () => {
-            saveConfig({ databaseUrl: '' });
-            stopServer();
-            startServer();
-            mainWindow?.reload();
-          },
-        },
-        { type: 'separator' },
-        {
-          label: 'Dossier des données',
-          click: () => shell.openPath(app.getPath('userData')),
-        },
       ],
     },
     {
@@ -324,9 +219,4 @@ ipcMain.handle('show-notification', (_, opts) => {
   }
   notif.show();
   return true;
-});
-
-ipcMain.on('set-database-url', (_event, url) => {
-  saveConfig({ databaseUrl: url || '' });
-  console.log('[nour] DATABASE_URL enregistrée');
 });

@@ -141,3 +141,46 @@ html.light .md a.quran-ref, html.light .md a:not(.quran-ref) { color: var(--acce
 .md-sources-title { @apply mb-1.5 text-[11px] font-bold uppercase tracking-wider; color: var(--accent-gold); }
 .source-chip { @apply inline-flex items-center rounded-full px-2.5 py-1 text-[11px] font-semibold transition; border: 1px solid rgba(207, 161, 74, 0.40); background: var(--bg-surface); color: var(--accent-gold); }
 .source-chip:hover { border-color: var(--accent-gold); background: var(--accent-gold-dim); }
+
+/* ====== MOBILE UX ENHANCEMENTS ====== */
+@media (max-width: 1023px) {
+  /* Smooth scrolling */
+  * { -webkit-tap-highlight-color: transparent; }
+  
+  /* Touch targets minimum 44px */
+  .btn, .chip, button[class*="nav-item"] { min-height: 40px; }
+  
+  /* Cards with better touch feedback */
+  .card-clickable { -webkit-touch-callout: none; }
+  .card-clickable:active { transform: scale(0.97); opacity: 0.85; }
+  
+  /* Bottom sheet animation */
+  @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+  .fixed.bottom-0 .card { animation: slideUp 0.3s cubic-bezier(0.32, 0.72, 0, 1); }
+  
+  /* Better input focus on mobile — no zoom */
+  .input { font-size: 16px; }
+  
+  /* Smooth page transitions */
+  .animate-fade-in { animation: fadeIn 0.25s cubic-bezier(0.4, 0, 0.2, 1); }
+  
+  /* Prevent text selection on nav */
+  nav button, nav a { -webkit-user-select: none; user-select: none; }
+  
+  /* Overscroll bounce */
+  main { -webkit-overflow-scrolling: touch; overscroll-behavior-y: contain; }
+}
+
+/* Mobile bottom nav: always visible, safe area aware */
+@media (max-width: 1023px) {
+  nav[class*="bg-night"] { 
+    box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    padding-bottom: max(env(safe-area-inset-bottom), 4px);
+  }
+}
+
+/* Better active states on mobile */
+@media (hover: none) {
+  .card-clickable:hover { border-color: inherit; box-shadow: none; }
+  a:hover, button:hover { filter: none; }
+}

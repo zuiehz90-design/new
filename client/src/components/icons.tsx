@@ -163,3 +163,70 @@ export function SpeakerIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function ProphetsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="12" cy="7" r="4" />
+      <path d="M5.5 21c0-4.4 2.9-8 6.5-8s6.5 3.6 6.5 8" />
+      <path d="M17 11l2 2-2 2" />
+      <path d="M19 13h-4" />
+    </Svg>
+  );
+}
+
+export function NamesIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 2L2 7l10 5 10-5-10-5z" />
+      <path d="M2 17l10 5 10-5" />
+      <path d="M2 12l10 5 10-5" />
+    </Svg>
+  );
+}
+
+export function CalendarIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
+      <line x1="16" y1="2" x2="16" y2="6" />
+      <line x1="8" y1="2" x2="8" y2="6" />
+      <line x1="3" y1="10" x2="21" y2="10" />
+    </Svg>
+  );
+}
+
+export function BookOpenIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M12 7v14" />
+      <path d="M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z" />
+    </Svg>
+  );
+}
+
+export function BeadsIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <circle cx="6" cy="8" r="2" />
+      <circle cx="12" cy="5" r="2" />
+      <circle cx="18" cy="8" r="2" />
+      <circle cx="20" cy="14" r="2" />
+      <circle cx="14" cy="18" r="2" />
+      <circle cx="8" cy="16" r="2" />
+      <path d="M6 8 Q4 14 8 16" strokeDasharray="0" />
+      <path d="M12 5 Q8 9 8 16" strokeDasharray="0" />
+      <path d="M12 5 Q16 9 14 18" strokeDasharray="0" />
+      <path d="M18 8 Q20 11 20 14" strokeDasharray="0" />
+    </Svg>
+  );
+}
+
+export function QuizIcon(props: IconProps) {
+  return (
+    <Svg {...props}>
+      <path d="M9 11l3 3L22 4" />
+      <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11" />
+    </Svg>
+  );
+}

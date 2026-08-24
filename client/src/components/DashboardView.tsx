@@ -135,9 +135,6 @@ export function DashboardView() {
         </section>
       )}
 
-      {/* Citation du jour */}
-      <DailyVerse />
-
       {/* Prochaine prière */}
       <section className="card mb-4 border-gold-500/40 bg-gold-500/5 p-5 text-center shadow-glow">
         {pt?.next ? (
@@ -164,6 +161,9 @@ export function DashboardView() {
           </div>
         )}
       </section>
+
+      {/* Citation du jour */}
+      <DailyVerse />
 
       {/* Horaires du jour */}
       {pt && (

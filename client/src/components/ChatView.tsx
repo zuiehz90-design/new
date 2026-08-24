@@ -4,24 +4,50 @@ import { useI18n } from '../i18n';
 import { useOffline } from '../hooks/useOffline';
 import { useSettings } from '../context/SettingsContext';
 import { Markdown, SourcesCard } from '../lib/markdown';
+import { getSuggestions, type DayPeriod } from '../lib/suggestions';
 import { MoonIcon, SendIcon, StopIcon } from './icons';
 import type { ChatMessage } from '../lib/types';
 
-const SUGGESTIONS = [
-  'Quels sont les cinq piliers de l\u2019islam ?',
-  'Que dit le Coran sur la patience ?',
-  'Comment faire la prière correctement ?',
-  'Que signifie la Zakat ?',
-];
+const PERIOD_EMOJI: Record<DayPeriod, string> = {
+  dawn: '🌅',
+  morning: '☀️',
+  noon: '🌞',
+  afternoon: '🌤️',
+  evening: '🌇',
+  night: '🌙',
+};
 
 export function ChatView() {
   const chat = useChatContext();
   const { t } = useI18n();
   const offline = useOffline();
   const bottomRef = useRef<HTMLDivElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+  // Track if user is near the bottom (auto-scroll only when user is reading the latest)
+  const atBottomRef = useRef(true);
   const messages = chat.active?.messages ?? [];
 
+  // Smart auto-scroll: only scroll to bottom if user is already near the bottom.
+  // If user scrolled up to read earlier messages, don't force them down.
   useEffect(() => {
+    const el = scrollContainerRef.current;
+    if (!el) return;
+    const onScroll = () => {
+      const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+      atBottomRef.current = dist < 120; // within 120px of bottom = "at bottom"
+    };
+    el.addEventListener('scroll', onScroll, { passive: true });
+    return () => el.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Reset scroll position when switching conversations
+  useEffect(() => {
+    atBottomRef.current = true;
+    setTimeout(() => bottomRef.current?.scrollIntoView({ behavior: 'smooth' }), 50);
+  }, [chat.active?.id]);
+
+  useEffect(() => {
+    if (!atBottomRef.current) return; // user is reading older messages, don't auto-scroll
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages.length, messages[messages.length - 1]?.content.length]);
 
@@ -189,7 +215,7 @@ export function ChatView() {
         </div>
       )}
 
-      <div className="flex-1 overflow-y-auto">
+      <div ref={scrollContainerRef} className="flex-1 overflow-y-auto">
         {messages.length === 0 ? (
           <EmptyState />
         ) : (
@@ -225,8 +251,19 @@ export function ChatView() {
 }
 
 function EmptyState() {
-  const { t } = useI18n();
+  const { t, lang } = useI18n();
   const chat = useChatContext();
+  // Suggestions contextuelles : recalculées toutes les minutes (l'heure change)
+  const [suggestions, setSuggestions] = useState(() => getSuggestions(lang));
+  useEffect(() => {
+    setSuggestions(getSuggestions(lang));
+    const id = setInterval(() => setSuggestions(getSuggestions(lang)), 60_000);
+    return () => clearInterval(id);
+  }, [lang]);
+
+  const periodLabel = t(`chat.period.${suggestions.period}`);
+  const emoji = PERIOD_EMOJI[suggestions.period];
+
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 text-center animate-fade-in sm:gap-6">
       <div className="font-quran hidden text-4xl text-gold-400 sm:block">﷽</div>
@@ -235,7 +272,17 @@ function EmptyState() {
         <p className="mx-auto mt-2 max-w-md text-[13px] text-stone-400 sm:text-sm">{t('chat.empty.subtitle')}</p>
       </div>
       <div className="hidden max-w-md flex-wrap justify-center gap-2 sm:flex">
-        {SUGGESTIONS.map((s) => (
+        <span className="flex w-full items-center justify-center gap-1 text-xs font-semibold text-gold-400">
+          {emoji} {periodLabel}
+        </span>
+        {suggestions.periodSuggestions.map((s) => (
+          <button key={s} className="chip" onClick={() => chat.send(s)}>
+            {s}
+          </button>
+        ))}
+      </div>
+      <div className="hidden max-w-md flex-wrap justify-center gap-2 sm:flex">
+        {suggestions.generalSuggestions.map((s) => (
           <button key={s} className="chip" onClick={() => chat.send(s)}>
             {s}
           </button>

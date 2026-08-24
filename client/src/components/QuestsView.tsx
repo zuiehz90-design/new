@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
 import { storageKey } from '../lib/storageScope';
 import type { Quest } from '../lib/api';
+import { SURAHS } from '../lib/surahs';
 import { RankCard } from './RankCard';
 
 const QUEST_ICONS: Record<string, string> = {
@@ -17,17 +18,65 @@ const QUEST_ICONS: Record<string, string> = {
   akhlaq: '💚',
 };
 
-/** Liens Coran associés à certaines quêtes */
-const QURAN_LINKS: Record<string, { label: string; href: string }[]> = {
-  'Mémorise 3 versets': [
-    { label: '📖 Al-Fatiha (1)', href: '/quran?surah=1&verse=1' },
-    { label: '📖 Al-Ikhlas (112)', href: '/quran?surah=112&verse=1' },
-    { label: '📖 An-Nas (114)', href: '/quran?surah=114&verse=1' },
-  ],
-  'Récite Ayat al-Kursi': [
-    { label: '📖 Ayat al-Kursi (2:255)', href: '/quran?surah=2&verse=255' },
-  ],
+/** Détecte automatiquement les liens Coran depuis le titre/description d'une quête. */
+const SURAH_NAME_MAP: Record<string, { num: number; verse?: number }> = {
+  'al-fatiha': { num: 1 }, 'fatiha': { num: 1 },
+  'al-baqara': { num: 2 }, 'baqara': { num: 2 }, 'la vache': { num: 2 },
+  'al-imran': { num: 3 }, 'imran': { num: 3 },
+  'al-kahf': { num: 18 }, 'kahf': { num: 18 }, 'la caverne': { num: 18 },
+  'ya-sin': { num: 36 }, 'yasin': { num: 36 }, 'ya sin': { num: 36 },
+  'ar-rahman': { num: 55 }, 'rahman': { num: 55 }, 'le tout misericordieux': { num: 55 },
+  'al-mulk': { num: 67 }, 'mulk': { num: 67 }, 'la royaute': { num: 67 },
+  'al-ikhlas': { num: 112 }, 'ikhlas': { num: 112 }, 'le monotheisme pur': { num: 112 },
+  'al-falaq': { num: 113 }, 'falaq': { num: 113 }, 'l\'aube naissante': { num: 113 },
+  'an-nas': { num: 114 }, 'nas': { num: 114 }, 'les hommes': { num: 114 },
+  'ayat al-kursi': { num: 2, verse: 255 }, 'ayatalkursi': { num: 2, verse: 255 },
+  'le trone': { num: 2, verse: 255 },
 };
+
+/** Extraire les liens Coran depuis une quête (titre + description). */
+function getQuestLinks(title: string, description: string): { label: string; href: string }[] {
+  const text = (title + ' ' + description).toLowerCase();
+  const links: { label: string; href: string }[] = [];
+  const found = new Set<number>();
+
+  for (const [key, val] of Object.entries(SURAH_NAME_MAP)) {
+    if (text.includes(key)) {
+      if (found.has(val.num)) continue;
+      found.add(val.num);
+      const surahMeta = SURAHS[val.num - 1];
+      const label = `📖 ${surahMeta.name}${val.verse ? ` (${val.num}:${val.verse})` : ` (${val.num})`}`;
+      const href = val.verse
+        ? `/quran?surah=${val.num}&verse=${val.verse}`
+        : `/quran?surah=${val.num}`;
+      links.push({ label, href });
+    }
+  }
+
+  // Si la quête mentionne « Coran » ou « page » sans sourate spécifique
+  if (links.length === 0 && /coran|page|verset|recite|r[ée]cite|lis/.test(text)) {
+    links.push({ label: '📖 Ouvrir le Coran', href: '/quran' });
+  }
+
+  return links;
+}
+
+/** Liens autres que le Coran (dhikr, quiz, profil…) */
+function getQuestExtraLinks(quest: Quest): { label: string; href: string }[] {
+  const text = (quest.title + ' ' + quest.description).toLowerCase();
+  const links: { label: string; href: string }[] = [];
+  if (/dhikr|tasbih|subhan|istighfar|100 fois/.test(text)) {
+    links.push({ label: '📿 Compteur Dhikr', href: '/dhikr' });
+  }
+  if (/quiz|connaissance|hadith/.test(text)) {
+    links.push({ label: '🧠 Quiz', href: '/quiz' });
+    links.push({ label: '📚 Lexique', href: '/glossary' });
+  }
+  if (/sourate.*memorise|m[ée]morise.*versets?|apprend/.test(text)) {
+    links.push({ label: '📍 99 Noms d\'Allah', href: '/names' });
+  }
+  return links;
+}
 
 const TIER_ICON: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇' };
 
@@ -146,21 +195,27 @@ export function QuestsView() {
                   <span className="flex-1">
                     <span className={'block text-sm font-semibold ' + (q.done ? 'text-stone-400 line-through' : '')}>{q.title}</span>
                     {q.description && <span className="block text-[11px] text-stone-500">{q.description}</span>}
-                    {/* Liens Coran pour les quêtes spécifiques */}
-                    {QURAN_LINKS[q.title] && !q.done && (
-                      <span className="mt-1 flex flex-wrap gap-1">
-                        {QURAN_LINKS[q.title].map((link) => (
-                          <button
-                            key={link.href}
-                            onClick={(e) => { e.stopPropagation(); navigate(link.href); }}
-                            className="rounded-lg px-2 py-0.5 text-[10px] font-bold transition hover:bg-emerald-500/20"
-                            style={{ background: 'rgba(4,120,87,0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(4,120,87,0.3)' }}
-                          >
-                            {link.label}
-                          </button>
-                        ))}
-                      </span>
-                    )}
+                    {/* Liens de redirection automatiques */}
+                    {!q.done && (() => {
+                      const quranLinks = getQuestLinks(q.title, q.description ?? '');
+                      const extraLinks = getQuestExtraLinks(q);
+                      const allLinks = [...quranLinks, ...extraLinks];
+                      if (allLinks.length === 0) return null;
+                      return (
+                        <span className="mt-1 flex flex-wrap gap-1">
+                          {allLinks.map((link) => (
+                            <button
+                              key={link.href}
+                              onClick={(e) => { e.stopPropagation(); navigate(link.href); }}
+                              className="rounded-lg px-2 py-0.5 text-[10px] font-bold transition hover:bg-emerald-500/20"
+                              style={{ background: 'rgba(4,120,87,0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(4,120,87,0.3)' }}
+                            >
+                              {link.label}
+                            </button>
+                          ))}
+                        </span>
+                      );
+                    })()}
                     {(q.verification || q.quiz) && !q.done && (
                       <span className="mt-0.5 block text-[10px] font-semibold text-amber-400/90">
                         🔒 {q.verification?.kind === 'prayer' && t('quest.verify.prayerHint')}

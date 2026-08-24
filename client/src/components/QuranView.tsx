@@ -119,15 +119,15 @@ export function QuranView() {
       {searching && <p className="text-sm text-stone-400">{t('quran.loading')}</p>}
 
       {results.length > 0 && !selected && (
-        <SearchResults
-          results={results}
-          onOpen={(s, v) => {
-            setResults([]);
-            setQuery('');
-            setSelected(s);
-            setParams({ surah: String(s), verse: String(v) }, { replace: true });
-          }}
-        />
+        <div className="card mb-4 p-3" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+          <SearchResults
+            results={results}
+            onOpen={(s, v) => {
+              setSelected(s);
+              setParams({ surah: String(s), verse: String(v) }, { replace: true });
+            }}
+          />
+        </div>
       )}
 
       {results.length === 0 && !searching && query.trim().length >= 2 && !selected && (
@@ -140,9 +140,18 @@ export function QuranView() {
           translation={settings.translation as TranslationKey}
           reciter={settings.reciter}
           highlightVerse={Number.isInteger(verseParam) && verseParam >= 1 ? verseParam : null}
+          hasSearch={results.length > 0 || query.trim().length >= 2}
           onBack={() => {
             setSelected(null);
             setParams({}, { replace: true });
+          }}
+          onBackToSearch={() => {
+            setSelected(null);
+            setParams({}, { replace: true });
+            // Garder la requête et les résultats pour les réafficher
+            if (query.trim().length >= 2 && results.length === 0) {
+              doSearch();
+            }
           }}
         />
       ) : (
@@ -368,13 +377,17 @@ function SearchResults({
   translation,
   reciter,
   highlightVerse,
+  hasSearch,
   onBack,
+  onBackToSearch,
 }: {
   chapter: number;
   translation: TranslationKey;
   reciter: string;
   highlightVerse: number | null;
+  hasSearch: boolean;
   onBack: () => void;
+  onBackToSearch: () => void;
 }) {
   const { t } = useI18n();
   const [ar, setAr] = useState<Verse[] | null>(null);
@@ -492,7 +505,14 @@ if (error) return <p className="text-sm text-red-400">{t('quran.error')}</p>;
     <div className="animate-fade-in">
       <div className="card mb-4 overflow-hidden p-4">
         <div className="flex items-center justify-between gap-2">
-          <button onClick={onBack} className="btn-ghost shrink-0 text-xs">← {t('quran.back')}</button>
+          <div className="flex items-center gap-2 shrink-0">
+            <button onClick={onBack} className="btn-ghost text-xs">← {t('quran.back')}</button>
+            {hasSearch && (
+              <button onClick={onBackToSearch} className="btn-ghost text-xs border-gold-500/40 text-gold-300">
+                🔍 {t('quran.backToSearch')}
+              </button>
+            )}
+          </div>
           <button
             onClick={() => (playingSurah ? stop() : play(1, true))}
             className="btn-gold shrink-0 text-xs"
