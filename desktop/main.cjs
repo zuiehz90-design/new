@@ -3,6 +3,9 @@ const path = require('path');
 const { fork } = require('child_process');
 const fs = require('fs');
 
+// Identite Windows pour les notifications natives (centre de notifications)
+app.setAppUserModelId('com.nour.desktop');
+
 let mainWindow = null;
 let serverProcess = null;
 
@@ -304,6 +307,28 @@ ipcMain.handle('open-file', async (_, filePath) => {
 ipcMain.handle('get-version', () => app.getVersion());
 
 ipcMain.handle('get-database-url', () => getDatabaseUrl());
+
+// Notification native Windows (apparait dans le centre de notifications)
+ipcMain.handle('show-notification', (_, opts) => {
+  const { Notification } = require('electron');
+  const notif = new Notification({
+    title: opts.title || 'Nour',
+    body: opts.body || '',
+    icon: path.join(__dirname, '..', 'client', 'public', 'icon.svg'),
+    silent: false,
+  });
+  if (opts.clickUrl && mainWindow) {
+    notif.on('click', () => {
+      mainWindow.show();
+      mainWindow.focus();
+      if (opts.clickUrl.startsWith('/')) {
+        mainWindow.loadURL(BASE_URL + opts.clickUrl);
+      }
+    });
+  }
+  notif.show();
+  return true;
+});
 
 ipcMain.on('set-database-url', (_event, url) => {
   saveConfig({ databaseUrl: url || '' });

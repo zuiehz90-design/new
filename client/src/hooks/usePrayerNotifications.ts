@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
+import { notify } from '../lib/desktop';
 import { getMosqueTimes } from '../lib/mawaqit';
 import { PRAYER_KEYS, type PrayerKey } from '../lib/prayer';
 
@@ -37,6 +38,7 @@ export function usePrayerNotifications() {
         if (!times) return;
         const now = new Date();
         for (const key of PRAYER_KEYS) {
+          await new Promise(r => setTimeout(r, 0)); // yield for async notify
           if (key === 'sunrise') continue;
           const prayerTime = parseTime((times as Record<string, string>)[key]);
           if (!prayerTime) continue;

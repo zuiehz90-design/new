@@ -27,4 +27,8 @@ contextBridge.exposeInMainWorld('nourDesktop', {
 
   /** DATABASE_URL configurée (vide = mode hors-ligne SQLite) */
   getDatabaseUrl: () => ipcRenderer.invoke('get-database-url'),
+  /** Notification native Windows (apparait dans le centre de notifications) */
+  showNotification: (opts) => ipcRenderer.invoke('show-notification', opts),
+
+
 });

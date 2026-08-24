@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
+import { notify } from '../lib/desktop';
 import { useAuth } from '../context/AuthContext';
 import { getMosqueTimes } from '../lib/mawaqit';
 import { type PrayerKey } from '../lib/prayer';
@@ -126,7 +127,7 @@ export function useQuestNotifications() {
             lastFired.current[fireKey] = now.toISOString();
             const body = `📋 « ${quest.title} »\n${trigger.message}`;
             try {
-              new Notification('⚔️ Quête du jour', { body, icon: '/icon.svg' });
+              await notify({ title: '⚔️ Quête du jour', body });
             } catch {
               /* notifications non supportées */
             }

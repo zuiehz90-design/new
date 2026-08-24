@@ -10,6 +10,7 @@ export interface NourDesktop {
   getDbPath: () => Promise<string>;
   getVersion: () => Promise<string>;
   getDatabaseUrl: () => Promise<string>;
+  showNotification: (opts: { title: string; body: string; clickUrl?: string }) => Promise<boolean>;
 }
 
 const win = window as typeof window & { nourDesktop?: NourDesktop };
@@ -21,6 +22,22 @@ export const isDesktop = !!win.nourDesktop?.isDesktop;
 export const desktop: NourDesktop | null = win.nourDesktop ?? null;
 
 /** Vérifie si l'app desktop est connectée à la base en ligne */
+
+/** Envoie une notification native via le desktop.
+ *  Sur le web, utilise l'API Notification standard. */
+export async function notify(opts: { title: string; body: string; clickUrl?: string }): Promise<void> {
+  if (desktop) {
+    await desktop.showNotification(opts);
+  } else if (typeof Notification !== 'undefined' && Notification.permission === 'granted') {
+    new Notification(opts.title, { body: opts.body });
+  } else if (typeof Notification !== 'undefined' && Notification.permission === 'default') {
+    const perm = await Notification.requestPermission();
+    if (perm === 'granted') {
+      new Notification(opts.title, { body: opts.body });
+    }
+  }
+}
+
 export async function isDesktopOnline(): Promise<boolean> {
   if (!desktop) return false;
   try {
