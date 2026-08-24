@@ -28,7 +28,7 @@ export function QuranView() {
     const today = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     localStorage.setItem(storageKey(scope, 'quranVisited:' + today), '1');
   }, [scope]);
-  const { settings } = useSettings();
+  const { settings, setSettings } = useSettings();
   const [params, setParams] = useSearchParams();
   const surahParam = Number(params.get('surah'));
   const verseParam = Number(params.get('verse'));
@@ -80,6 +80,18 @@ export function QuranView() {
       <div className="mb-4 text-center">
         <h2 className="font-quran text-3xl font-bold text-gold-400">القرآن الكريم</h2>
         <p className="mt-1 text-sm text-stone-400">{t('quran.title')}</p>
+        {/* Mode concentration : toggle rapide, surtout utile en lecture */}
+        <button
+          onClick={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
+          className={`mt-2 inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+            settings.focusMode
+              ? 'border-gold-500/70 bg-gold-500/15 text-gold-300'
+              : 'border-stone-600/60 bg-stone-800/40 text-stone-400 hover:border-gold-500/50 hover:text-gold-300'
+          }`}
+          title={t('quran.focusMode')}
+        >
+          🧘 {settings.focusMode ? t('quran.focusOn') : t('quran.focusOff')}
+        </button>
         {pinCount > 0 && (
           <button
             onClick={() => setPinsOpen(true)}
@@ -267,6 +279,26 @@ function SurahList({
   );
 }
 
+const MATCH_TYPE_STYLES: Record<string, string> = {
+  number: 'bg-sky-500/15 text-sky-300 border-sky-500/40',
+  arabic: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+  phonetic: 'bg-violet-500/15 text-violet-300 border-violet-500/40',
+  french: 'bg-gold-500/15 text-gold-300 border-gold-500/40',
+  english: 'bg-blue-500/15 text-blue-300 border-blue-500/40',
+  keyword: 'bg-rose-500/15 text-rose-300 border-rose-500/40',
+  verse: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+};
+
+function MatchTypeBadge({ type }: { type?: string }) {
+  const { t } = useI18n();
+  if (!type) return null;
+  return (
+    <span className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${MATCH_TYPE_STYLES[type] ?? 'bg-stone-500/15 text-stone-300 border-stone-500/40'}`}>
+      {t(`quran.match.${type}`)}
+    </span>
+  );
+}
+
 function SearchResults({
   results,
   onOpen,
@@ -294,7 +326,10 @@ function SearchResults({
                   {r.chapter}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-stone-100">{r.surahName}</div>
+                  <div className="flex items-center gap-2">
+                    <div className="font-semibold text-stone-100">{r.surahName}</div>
+                    <MatchTypeBadge type={r.matchType} />
+                  </div>
                   <div className="text-xs text-stone-400 truncate">{r.translated}</div>
                 </div>
                 <div className="font-quran text-lg text-stone-300 shrink-0" dir="rtl">{r.arabic}</div>
@@ -312,8 +347,9 @@ function SearchResults({
               onClick={() => onOpen(r.chapter, r.verse)}
               className="card card-clickable w-full p-3 text-left transition"
             >
-              <div className="mb-1 text-xs font-semibold text-emerald-400">
+              <div className="mb-1 flex items-center gap-2 text-xs font-semibold text-emerald-400">
                 {r.surahName} · {r.chapter}:{r.verse}
+                <MatchTypeBadge type={r.matchType} />
               </div>
               {r.arabic && (
                 <div className="font-quran text-right text-xl text-stone-100" dir="rtl">
@@ -424,7 +460,7 @@ function SearchResults({
     const container = el?.closest('.overflow-y-auto') as HTMLElement | null;
     if (el && container) {
       const top = el.offsetTop - container.clientHeight / 2 + el.clientHeight / 2;
-      container.scrollTo({ top: Math.max(0, top), behavior: 'auto' });
+      container.scrollTo({ top: Math.max(0, top), behavior: 'smooth' });
     }
   }, [audioState?.verse, audioState?.chapter, chapter, setPosition]);
 
@@ -486,10 +522,10 @@ if (error) return <p className="text-sm text-red-400">{t('quran.error')}</p>;
               key={v.verse}
               id={`verse-${v.chapter}-${v.verse}`}
               // onClick removed: pin is now done via pin button only
-              className={`card card-clickable cursor-pointer p-4 transition ${isHighlight ? 'ring-2 ring-gold-500/70' : ''} ${isActive ? 'border-emerald-500/60' : ''} ${isJump ? 'ring-2 ring-gold-500/70' : ''} ${isSaved ? 'border-gold-500/40' : ''}`}
+              className={`card card-clickable cursor-pointer p-4 transition ${isHighlight ? 'ring-2 ring-gold-500/70' : ''} ${isActive ? 'verse-active border-2' : ''} ${isJump ? 'ring-2 ring-gold-500/70' : ''} ${isSaved && !isActive ? 'border-gold-500/40' : ''}`}
             >
               <div className="mb-2 flex items-center justify-between text-xs text-stone-500">
-                <span className="font-semibold text-emerald-400">
+                <span className={`verse-ref font-semibold ${isActive ? '' : 'text-emerald-400'}`}>
                   {v.chapter}:{v.verse}
                 </span>
                 <button
@@ -498,11 +534,16 @@ if (error) return <p className="text-sm text-red-400">{t('quran.error')}</p>;
                     if (isActive) stop();
                     else play(v.verse);
                   }}
-                  className="chip"
+                  className={`chip ${isActive ? '!border-gold-500/80 !bg-gold-500/20 !text-gold-200' : ''}`}
                 >
                   {isActive ? `⏹ ${t('quran.audioStop')}` : `▶ ${t('quran.audio')}`}
                 </button>
                 <div className="flex items-center gap-2">
+                  {isActive && audioState?.playing && (
+                    <span className="chip !border-emerald-500/70 !bg-emerald-500/15 !text-emerald-300 animate-pulse">
+                      ▶ {t('quran.reciting')}
+                    </span>
+                  )}
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
@@ -524,7 +565,7 @@ if (error) return <p className="text-sm text-red-400">{t('quran.error')}</p>;
                   />
                 </div>
               </div>
-              <div className="font-quran text-right text-2xl leading-loose text-stone-100" dir="rtl">
+              <div className={`verse-arabic font-quran text-right text-2xl leading-loose ${isActive ? 'text-gold-50' : 'text-stone-100'}`} dir="rtl">
                 {v.arabic}
               </div>
               {v.translated && (

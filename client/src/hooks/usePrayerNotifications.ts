@@ -25,9 +25,10 @@ export function usePrayerNotifications() {
 
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
   const mosqueId = settings.mawaqitMosqueId;
+  const focusMode = settings.focusMode === true;
 
   useEffect(() => {
-    if (!settings.prayerNotifications || !mosqueId || typeof Notification === 'undefined' || isPaused) return;
+    if (!settings.prayerNotifications || !mosqueId || typeof Notification === 'undefined' || isPaused || focusMode) return;
 
     let cancelled = false;
 
@@ -67,5 +68,5 @@ export function usePrayerNotifications() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [settings.prayerNotifications, mosqueId, isPaused]);
+  }, [settings.prayerNotifications, mosqueId, isPaused, focusMode]);
 }

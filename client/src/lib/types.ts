@@ -34,6 +34,8 @@ export interface Settings {
   prayerNotifications: boolean;
   /** Date de fin de pause des prières (timestamp). null = pas de pause. */
   prayerPauseUntil: number | null;
+  /** Mode concentration : masque les notifications + fond apaisant pendant la lecture. */
+  focusMode: boolean;
 }
 
 export interface Coords {
@@ -51,6 +53,15 @@ export interface PrayerTimesResult {
   next: { key: string; date: Date; name?: string; time?: string } | null;
 }
 
+export type SearchMatchType =
+  | 'number'
+  | 'arabic'
+  | 'phonetic'
+  | 'french'
+  | 'english'
+  | 'keyword'
+  | 'verse';
+
 export interface SearchResult {
   chapter: number;
   verse: number;
@@ -59,4 +70,6 @@ export interface SearchResult {
   surahName: string;
   /** Result matches a surah name, not a verse. */
   isSurahMatch?: boolean;
+  /** How the result was matched (number, arabic, phonetic, french, english, keyword, verse). */
+  matchType?: SearchMatchType;
 }

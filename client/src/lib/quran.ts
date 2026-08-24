@@ -1,6 +1,6 @@
 import { dbGet, dbSet } from './db';
-import { SURAHS, type SurahMeta } from './surahs';
-import type { SearchResult, Verse } from './types';
+import { FRENCH_NAMES, KEYWORDS, SURAHS, type SurahMeta } from './surahs';
+import type { SearchMatchType, SearchResult, Verse } from './types';
 
 export const EDITIONS = {
   ar: 'ara-quranacademy',
@@ -82,39 +82,107 @@ function fuzzyMatch(query: string, target: string): boolean {
   return false;
 }
 
-
 export function getSurahMeta(chapter: number): SurahMeta | undefined {
   return SURAHS[chapter - 1];
+}
+
+/** Builds a surah-level match result (name / keyword / number hit). */
+function surahResult(s: SurahMeta, matchType: SearchMatchType): SearchResult {
+  const fr = FRENCH_NAMES[s.number];
+  const parts = [fr ? `${fr} — ` : '', s.english, ` — ${s.ayahs} versets`, `(${s.revelation === 'Meccan' ? 'Mecquoise' : 'Médinoise'})`];
+  return {
+    chapter: s.number,
+    verse: 1,
+    arabic: s.arabic,
+    translated: parts.join(''),
+    surahName: s.name,
+    isSurahMatch: true,
+    matchType,
+  };
+}
+
+/** Résout une requête de type "2", "2:255", "sourate 2" ou "2 255". */
+function parseNumeric(query: string): { chapter: number; verse?: number } | null {
+  const q = query.trim().toLowerCase();
+  const surate = q.replace(/^sourate\s+/i, '');
+  let m = surate.match(/^(\d{1,3})\s*[:.\s]\s*(\d{1,3})$/);
+  if (m) {
+    const chapter = Number(m[1]);
+    const verse = Number(m[2]);
+    if (chapter >= 1 && chapter <= 114 && verse >= 1) return { chapter, verse };
+    return null;
+  }
+  m = surate.match(/^(\d{1,3})$/);
+  if (m) {
+    const chapter = Number(m[1]);
+    if (chapter >= 1 && chapter <= 114) return { chapter };
+  }
+  return null;
 }
 
 export async function searchQuran(query: string, translation: TranslationKey): Promise<SearchResult[]> {
   const q = query.trim();
   if (q.length < 2) return [];
-  const isArabic = /[؀-ۿ]/.test(q);
+  const isArabic = /[\u0600-\u06FF]/.test(q);
 
   const results: SearchResult[] = [];
 
-  // --- 1. Search surah names first (always, Arabic or Latin) ---
+  // --- 0. Recherche numérique : "2", "2:255", "sourate 36" ---
+  const numeric = parseNumeric(q);
+  if (numeric) {
+    if (numeric.verse) {
+      try {
+        const [ar, tr] = await Promise.all([
+          fetchSurah(EDITIONS.ar, numeric.chapter),
+          fetchSurah(EDITIONS[translation], numeric.chapter),
+        ]);
+        const a = ar.find((v) => v.verse === numeric.verse);
+        const t = tr.find((v) => v.verse === numeric.verse);
+        results.push({
+          chapter: numeric.chapter,
+          verse: numeric.verse,
+          arabic: a?.text ?? '',
+          translated: t?.text ?? '',
+          surahName: getSurahMeta(numeric.chapter)?.name ?? String(numeric.chapter),
+          matchType: 'number',
+        });
+      } catch {
+        const s = getSurahMeta(numeric.chapter);
+        if (s) results.push(surahResult(s, 'number'));
+      }
+      return results;
+    }
+    const s = getSurahMeta(numeric.chapter);
+    if (s) {
+      results.push(surahResult(s, 'number'));
+      return results;
+    }
+  }
+
+  // --- 1. Recherche par nom de sourate (français, translittération, anglais, arabe) + mots-clés ---
   const norm = isArabic ? normalizeArabic(q) : normalizeLatin(q);
   if (norm) {
     for (const s of SURAHS) {
+      const fr = FRENCH_NAMES[s.number];
       const nameMatch = fuzzyMatch(q, s.name);
+      const frMatch = fr ? fuzzyMatch(q, fr) : false;
       const engMatch = fuzzyMatch(q, s.english);
       const arMatch = isArabic && normalizeArabic(s.arabic).includes(norm);
-      if (nameMatch || engMatch || arMatch) {
-        results.push({
-          chapter: s.number,
-          verse: 1,
-          arabic: s.arabic,
-          translated: `${s.english} — ${s.ayahs} versets (${s.revelation === 'Meccan' ? 'Mecquoise' : 'Médinoise'})`,
-          surahName: s.name,
-          isSurahMatch: true,
-        });
+      const kwMatch = !isArabic && (KEYWORDS[s.number] ?? []).some((k) => fuzzyMatch(q, k));
+      const kwArMatch = isArabic && (KEYWORDS[s.number] ?? []).some((k) => normalizeArabic(k).includes(norm));
+      let matchType: SearchMatchType | null = null;
+      if (arMatch) matchType = 'arabic';
+      else if (nameMatch) matchType = 'phonetic';
+      else if (frMatch) matchType = 'french';
+      else if (engMatch) matchType = 'english';
+      else if (kwMatch || kwArMatch) matchType = 'keyword';
+      if (matchType) {
+        results.push(surahResult(s, matchType));
       }
     }
   }
 
-  // --- 2. Search verse text ---
+  // --- 2. Recherche dans le texte des versets ---
   if (isArabic) {
     const ar = await fetchEdition(EDITIONS.ar);
     const normAr = normalizeArabic(q);
@@ -127,6 +195,7 @@ export async function searchQuran(query: string, translation: TranslationKey): P
             arabic: v.text,
             translated: '',
             surahName: getSurahMeta(v.chapter)?.name ?? String(v.chapter),
+            matchType: 'verse',
           });
         }
         if (results.length >= 60) break;
@@ -145,6 +214,7 @@ export async function searchQuran(query: string, translation: TranslationKey): P
             arabic: arabicVerse?.text ?? '',
             translated: v.text,
             surahName: getSurahMeta(v.chapter)?.name ?? String(v.chapter),
+            matchType: 'verse',
           });
         }
         if (results.length >= 60) break;

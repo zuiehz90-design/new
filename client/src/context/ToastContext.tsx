@@ -30,7 +30,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   return (
     <ToastContext.Provider value={{ toasts, show }}>
       {children}
-      <div className="fixed bottom-24 right-4 z-50 flex flex-col gap-2 lg:bottom-6">
+      <div className="toast-stack fixed bottom-24 right-4 z-50 flex flex-col gap-2 lg:bottom-6">
         {toasts.map(t => (
           <div key={t.id} className={`animate-fade-in flex items-center gap-3 rounded-2xl ${t.color} px-4 py-3 text-night-950 shadow-xl`}>
             <span className="text-2xl">{t.icon}</span>

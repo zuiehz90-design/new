@@ -12,6 +12,7 @@ export const DEFAULT_SETTINGS: Settings = {
   translation: 'fr',
   prayerNotifications: false,
   prayerPauseUntil: null,
+  focusMode: false,
 };
 
 interface Ctx {
@@ -34,8 +35,9 @@ export function SettingsProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const html = document.documentElement;
     html.classList.toggle('light', settings.theme === 'light');
+    html.classList.toggle('focus-mode', settings.focusMode === true);
     html.lang = settings.lang;
-  }, [settings.theme, settings.lang]);
+  }, [settings.theme, settings.focusMode, settings.lang]);
 
   return (
     <SettingsContext.Provider value={{ settings, setSettings }}>

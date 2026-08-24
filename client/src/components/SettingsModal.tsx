@@ -107,6 +107,17 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           </div>
 
           <div>
+            <label className="mb-1 block text-xs text-stone-500">{t('settings.focusMode')}</label>
+            <button
+              onClick={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
+              className={`chip ${settings.focusMode ? '!border-gold-500/70 !text-gold-300' : ''}`}
+            >
+              {settings.focusMode ? '🧘 Activé' : '🧘 Désactivé'}
+            </button>
+            <p className="mt-1 text-[11px] text-stone-500">{t('settings.focusModeHint')}</p>
+          </div>
+
+          <div>
             <label className="mb-1 block text-xs text-stone-500">{t('settings.model')}</label>
             <select
               value={settings.model}

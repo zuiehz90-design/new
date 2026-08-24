@@ -10,6 +10,7 @@ import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
 import { useAiSetup } from '../hooks/useAiSetup';
 import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
+import { DailyVerse } from './DailyVerse';
 import { MoonIcon } from './icons';
 import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
@@ -133,6 +134,9 @@ export function DashboardView() {
           </div>
         </section>
       )}
+
+      {/* Citation du jour */}
+      <DailyVerse />
 
       {/* Prochaine prière */}
       <section className="card mb-4 border-gold-500/40 bg-gold-500/5 p-5 text-center shadow-glow">

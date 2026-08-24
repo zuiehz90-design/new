@@ -84,9 +84,10 @@ export function useQuestNotifications() {
   const lastFired = useRef<Record<string, string>>({});
 
   const mosqueId = settings.mawaqitMosqueId;
+  const focusMode = settings.focusMode === true;
 
   useEffect(() => {
-    if (!settings.prayerNotifications || !user || !mosqueId) return;
+    if (!settings.prayerNotifications || !user || !mosqueId || focusMode) return;
 
     let cancelled = false;
 
@@ -144,5 +145,5 @@ export function useQuestNotifications() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [settings.prayerNotifications, mosqueId, user]);
+  }, [settings.prayerNotifications, mosqueId, user, focusMode]);
 }
