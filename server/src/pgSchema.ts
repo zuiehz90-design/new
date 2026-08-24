@@ -23,6 +23,8 @@ CREATE TABLE IF NOT EXISTS prayers (
   date TEXT NOT NULL,
   prayer TEXT NOT NULL,
   checked_at TEXT NOT NULL DEFAULT (to_char(now(), 'YYYY-MM-DD HH24:MI:SS')),
+  late INTEGER NOT NULL DEFAULT 0,
+  late_minutes INTEGER NOT NULL DEFAULT 0,
   UNIQUE(user_id, date, prayer)
 );
 CREATE TABLE IF NOT EXISTS quests (
@@ -71,6 +73,9 @@ CREATE TABLE IF NOT EXISTS achieved_badges (
   earned_at TEXT NOT NULL DEFAULT (to_char(now(), 'YYYY-MM-DD HH24:MI:SS')),
   UNIQUE(user_id, badge_id)
 );
+ALTER TABLE prayers ADD COLUMN IF NOT EXISTS late INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE prayers ADD COLUMN IF NOT EXISTS late_minutes INTEGER NOT NULL DEFAULT 0;
+
 CREATE INDEX IF NOT EXISTS idx_users_anonymous ON users(is_anonymous, last_seen);
 CREATE INDEX IF NOT EXISTS idx_achieved_badges_user ON achieved_badges(user_id);
 CREATE INDEX IF NOT EXISTS idx_prayers_user ON prayers(user_id, date);

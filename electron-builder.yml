@@ -1,0 +1,24 @@
+appId: com.nour.app
+productName: Nour
+copyright: "Gratuit et open source"
+
+files:
+  - "desktop/**/*"
+  - "server/dist/**/*"
+  - "client/dist/**/*"
+  - "node_modules/**/*"
+  - "package.json"
+
+extraMetadata:
+  main: "desktop/main.cjs"
+
+win:
+  target: portable
+  icon: "client/public/icon.svg"
+  artifactName: "Nour-${version}-portable.${ext}"
+
+asar:
+  smartUnpack: true
+
+directories:
+  output: "dist-desktop"

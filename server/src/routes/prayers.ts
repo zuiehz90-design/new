@@ -48,7 +48,7 @@ prayersRouter.post('/check', auth, (req: any, res) => {
   const before = getRank(userPoints(req.user.id));
   try {
     if (isLate) {
-      db.prepare('INSERT INTO prayers (user_id, date, prayer, late, late_minutes) VALUES (?, ?, ?, 1, ?) ON CONFLICT DO UPDATE SET late = 1, late_minutes = ?').run(req.user.id, d, prayer, minutes, minutes);
+      db.prepare('INSERT INTO prayers (user_id, date, prayer, late, late_minutes) VALUES (?, ?, ?, 1, ?) ON CONFLICT (user_id, date, prayer) DO UPDATE SET late = 1, late_minutes = ?').run(req.user.id, d, prayer, minutes, minutes);
     } else {
       db.prepare('INSERT OR IGNORE INTO prayers (user_id, date, prayer) VALUES (?, ?, ?)').run(req.user.id, d, prayer);
     }

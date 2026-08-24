@@ -118,7 +118,7 @@ function stopServer() {
   }
 }
 
-function waitForServer(maxRetries = 30): Promise<void> {
+function waitForServer(maxRetries = 30) {
   return new Promise((resolve, reject) => {
     let tries = 0;
     const check = () => {
