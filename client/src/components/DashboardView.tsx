@@ -83,9 +83,7 @@ export function DashboardView() {
               <p className="mt-1 text-xs leading-relaxed text-stone-300">{t('dashboard.desktopDesc')}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <a
-                  href="https://github.com/zuiehz90-design/new/releases"
-                  target="_blank"
-                  rel="noopener"
+                  href="/download/nour-setup.exe"
                   className="btn-gold text-xs"
                 >
                   ⬇️ {t('dashboard.desktopCta')}
@@ -183,12 +181,6 @@ export function DashboardView() {
             <RankCard
               achievements={achievements}
               points={quests?.lifetime ?? 0}
-              right={
-                <>
-                  <p className="text-lg font-bold text-gold-400">{prayers?.streak.current ?? 0}🔥</p>
-                  <p className="text-[10px] text-stone-500">{t('profile.streak')}</p>
-                </>
-              }
             />
           )}
 

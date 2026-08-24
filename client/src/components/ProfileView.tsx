@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
-import { AVATARS, ACCENTS, GOALS, SURAHS, getAccent, acMap } from '../lib/profileOptions';
+import { AVATARS, ACCENTS, GOALS, SURAHS, getAccent, acMap, NOTE_TAGS } from '../lib/profileOptions';
 import { OnboardingCarousel } from './OnboardingCarousel';
 
 export function ProfileView() {
@@ -23,7 +23,14 @@ export function ProfileView() {
   const [favoriteSurah, setFavoriteSurah] = useState<string>((user?.profile?.favoriteSurah as string) ?? '');
   const [gender, setGender] = useState<'male' | 'female' | ''>((user?.profile?.gender as 'male' | 'female') ?? '');
   const [goals, setGoals] = useState<string[]>(user?.profile?.goals ?? []);
-  const [note, setNote] = useState<string>((user?.profile?.note as string) ?? '');
+  // Migration depuis l'ancien champ "note" vers "tags"
+  const [tags, setTags] = useState<string[]>(
+    () => (user?.profile?.tags as string[]) ??
+    (typeof user?.profile?.note === 'string' && (user.profile.note as string).trim()
+      ? [(user.profile.note as string).trim().substring(0, 20)]
+      : [])
+  );
+  const [tagInput, setTagInput] = useState('');
   const [saved, setSaved] = useState(false);
   const mountedRef = useRef(false);
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -38,7 +45,7 @@ export function ProfileView() {
       setFavoriteSurah((user.profile?.favoriteSurah as string) ?? '');
       setGender((user.profile?.gender as 'male' | 'female') ?? '');
       setGoals(user.profile?.goals ?? []);
-      setNote((user.profile?.note as string) ?? '');
+      setTags((user.profile?.tags as string[]) ?? []);
     }
   }, [user]);
 
@@ -53,7 +60,7 @@ export function ProfileView() {
       try {
         await updateProfile({
           name: editName,
-          profile: { avatar, accent, favoriteSurah, gender: gender || undefined, goals, note },
+          profile: { avatar, accent, favoriteSurah, gender: gender || undefined, goals, tags },
         });
         setSaved(true);
         setTimeout(() => setSaved(false), 2000);
@@ -63,7 +70,7 @@ export function ProfileView() {
     }, 800);
 
     return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
-  }, [editName, avatar, accent, favoriteSurah, gender, goals, note]);
+  }, [editName, avatar, accent, favoriteSurah, gender, goals, tags]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -162,8 +169,12 @@ export function ProfileView() {
                 📖 {favoriteSurah}
               </p>
             )}
-            {note && (
-              <p className="mt-2 text-xs text-stone-400 italic line-clamp-2">« {note} »</p>
+            {tags.length > 0 && (
+              <div className="mt-2 flex flex-wrap gap-1">
+                {tags.map(tag => (
+                  <span key={tag} className="rounded-full border border-emerald-700/40 bg-emerald-900/30 px-2 py-0.5 text-[10px] text-emerald-300">#{tag}</span>
+                ))}
+              </div>
             )}
           </div>
         </div>
@@ -282,9 +293,61 @@ export function ProfileView() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-stone-500">{t('profile.note')}</label>
-            <textarea value={note} onChange={(e) => setNote(e.target.value)} className="input h-24 resize-none text-sm" placeholder={t('profile.notePlaceholder')} />
-            <p className="mt-1 text-[10px] text-stone-500">{t('profile.noteHint')}</p>
+            <label className="mb-1 block text-xs text-stone-500">{t('profile.tags')}</label>
+            <div className="flex flex-wrap gap-1.5 mb-2">
+              {tags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setTags(tags.filter(t => t !== tag))}
+                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition hover:border-red-500/40 hover:bg-red-500/10"
+                  style={{ borderColor: ac.h + '60', color: ac.h }}
+                  title="Cliquez pour retirer"
+                >
+                  #{tag}
+                  <span className="text-[10px] opacity-60">✕</span>
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tagInput.trim()) {
+                    e.preventDefault();
+                    const val = tagInput.trim();
+                    if (!tags.includes(val)) setTags([...tags, val]);
+                    setTagInput('');
+                  }
+                }}
+                className="input flex-1 text-sm"
+                placeholder={t('profile.tagsPlaceholder')}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const val = tagInput.trim();
+                  if (val && !tags.includes(val)) { setTags([...tags, val]); setTagInput(''); }
+                }}
+                disabled={!tagInput.trim()}
+                className="btn-ghost rounded-xl border border-stone-700/50 px-3 py-1.5 text-xs text-stone-400 hover:text-stone-200 disabled:opacity-30"
+              >
+                +
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              <span className="text-[10px] text-stone-500 mr-1">{t('common.suggestions')}:</span>
+              {NOTE_TAGS.filter(t => !tags.includes(t)).slice(0, 6).map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setTags([...tags, tag])}
+                  className="rounded-full border border-stone-700/40 bg-stone-800/40 px-2 py-0.5 text-[10px] text-stone-400 hover:border-emerald-700/60 hover:text-emerald-300 transition"
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-stone-500">{t('profile.tagsHint')}</p>
           </div>
         </div>
       </div>

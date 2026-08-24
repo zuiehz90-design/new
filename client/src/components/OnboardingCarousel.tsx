@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
-import { AVATARS, ACCENTS, GOALS, SURAHS, acMap } from '../lib/profileOptions';
+import { AVATARS, ACCENTS, GOALS, SURAHS, acMap, NOTE_TAGS } from '../lib/profileOptions';
 
 interface Props {
   onDone: () => void;
@@ -20,7 +20,8 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
   const [gender, setGender] = useState<'male' | 'female' | ''>('');
   const [favoriteSurah, setFavoriteSurah] = useState('');
   const [goals, setGoals] = useState<string[]>([]);
-  const [note, setNote] = useState('');
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [done, setDone] = useState(false);
@@ -36,7 +37,7 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
     'onboarding.genderTitle',
     'onboarding.surahTitle',
     'onboarding.goalsTitle',
-    'onboarding.noteTitle',
+    'onboarding.tagsTitle',
   ];
   const subtitleKeys = [
     'onboarding.accountSubtitle',
@@ -45,7 +46,7 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
     'onboarding.genderSubtitle',
     'onboarding.surahSubtitle',
     'onboarding.goalsSubtitle',
-    'onboarding.noteSubtitle',
+    'onboarding.tagsSubtitle',
   ];
 
   const toggleGoal = (id: string) => {
@@ -77,7 +78,7 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
     try {
       await updateProfile({
         name: name.trim() || undefined,
-        profile: { avatar, accent, favoriteSurah, gender: gender || undefined, goals, note },
+        profile: { avatar, accent, favoriteSurah, gender: gender || undefined, goals, tags },
       });
       setDone(true);
     } catch (err) {
@@ -256,16 +257,60 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
           </div>
         )}
 
-        {/* ÉTAPE 6 : note + fin */}
+        {/* ÉTAPE 6 : tags */}
         {step === 6 && (
           <div>
-            <textarea
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-              className="input h-24 resize-none text-sm"
-              placeholder={t('profile.notePlaceholder')}
-            />
-            <p className="mt-2 text-[10px] text-stone-500">{t('profile.noteHint')}</p>
+            <div className="flex flex-wrap gap-1 mb-2">
+              {tags.map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setTags(tags.filter(t => t !== tag))}
+                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition hover:border-red-500/40 hover:bg-red-500/10"
+                  style={{ borderColor: ac.h + '60', color: ac.h }}
+                >
+                  #{tag} ✕
+                </button>
+              ))}
+            </div>
+            <div className="flex gap-2">
+              <input
+                value={tagInput}
+                onChange={(e) => setTagInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && tagInput.trim()) {
+                    e.preventDefault();
+                    const val = tagInput.trim();
+                    if (!tags.includes(val)) setTags([...tags, val]);
+                    setTagInput('');
+                  }
+                }}
+                className="input flex-1 text-sm"
+                placeholder={t('profile.tagsPlaceholder')}
+              />
+              <button
+                type="button"
+                onClick={() => {
+                  const val = tagInput.trim();
+                  if (val && !tags.includes(val)) { setTags([...tags, val]); setTagInput(''); }
+                }}
+                disabled={!tagInput.trim()}
+                className="btn-ghost rounded-xl border border-stone-700/50 px-3 py-1.5 text-xs text-stone-400 hover:text-stone-200 disabled:opacity-30"
+              >
+                +
+              </button>
+            </div>
+            <div className="mt-2 flex flex-wrap gap-1">
+              {NOTE_TAGS.filter(t => !tags.includes(t)).map(tag => (
+                <button
+                  key={tag}
+                  onClick={() => setTags([...tags, tag])}
+                  className="rounded-full border border-stone-700/40 bg-stone-800/40 px-2 py-0.5 text-[10px] text-stone-400 hover:border-emerald-700/60 hover:text-emerald-300 transition"
+                >
+                  #{tag}
+                </button>
+              ))}
+            </div>
+            <p className="mt-2 text-[10px] text-stone-500">{t('profile.tagsHint')}</p>
           </div>
         )}
 

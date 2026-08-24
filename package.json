@@ -20,7 +20,8 @@
     "test": "cd client && node --import tsx --test src/lib/markdown.test.tsx src/lib/geocode.test.ts src/lib/readingPosition.test.ts src/lib/storageScope.test.ts src/lib/chatSync.test.ts && cd .. && node --import tsx --test server/src/lib/pgSql.test.ts server/src/routes/streak.test.ts server/src/routes/badges.test.ts server/src/routes/conversations.test.ts server/src/routes/auth.test.ts server/src/routes/quests.test.ts",
     "preview": "cd client && vite preview",
     "desktop:dev": "npm run build && electron .",
-    "desktop:build": "npm run build && electron-builder"
+    "desktop:build": "npm run build && electron-builder",
+    "desktop:copy-exe": "node scripts/copy-exe.cjs"
   },
   "dependencies": {
     "adhan": "^4.4.3",

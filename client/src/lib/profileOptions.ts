@@ -49,6 +49,25 @@ export function getAccent(accentId?: string) {
   return ACCENTS.find(a => a.id === accentId) ?? ACCENTS[0];
 }
 
+export const NOTE_TAGS = [
+  'Prière',
+  'Coran',
+  'Jeûne',
+  'Dhikr',
+  'Charité',
+  'Savoir',
+  'Famille',
+  'Travail',
+  'Santé',
+  'Régularité',
+  'Débutant',
+  'Avancé',
+  'Mémorisation',
+  'Spiritualité',
+  'Patience',
+  'Gratitude',
+] as const;
+
 export const acMap: Record<string, { h: string; b: string }> = {
   gold:     { h: '#d4af37', b: 'rgba(212,175,55,0.3)' },
   emerald:  { h: '#34d399', b: 'rgba(52,211,153,0.3)' },

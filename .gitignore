@@ -11,3 +11,6 @@ client/dist/
 
 # Desktop build
 dist-desktop/
+
+# Exe téléchargement direct (trop lourd pour git, copié par script)
+public/downloads/
