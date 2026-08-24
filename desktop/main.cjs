@@ -55,6 +55,18 @@ async function askForDatabaseUrl() {
 
 async function promptForUrl() {
   return new Promise((resolve) => {
+    // Écouter l'IPC AVANT d'ouvrir la fenêtre
+    const handler = (_event, url) => {
+      saveConfig({ databaseUrl: url || '' });
+      resolve(url || '');
+    };
+    ipcMain.once('set-database-url', handler);
+    // Fallback si la fenêtre est fermée sans saisie
+    const fallback = () => {
+      ipcMain.removeListener('set-database-url', handler);
+      resolve('');
+    };
+
     const promptWin = new BrowserWindow({
       width: 520,
       height: 320,
@@ -63,6 +75,8 @@ async function promptForUrl() {
       title: 'Nour — Configuration base de données',
       webPreferences: { nodeIntegration: true, contextIsolation: false },
     });
+
+    promptWin.once('closed', fallback);
 
     const html = `
       <html>
@@ -94,7 +108,6 @@ async function promptForUrl() {
     `;
 
     promptWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
-    promptWin.on('closed', () => resolve(''));
   });
 }
 
@@ -274,7 +287,12 @@ app.whenReady().then(async () => {
   const cfg = loadConfig();
   if (cfg.databaseUrl === undefined) {
     const url = await askForDatabaseUrl();
-    saveConfig({ databaseUrl: url || '' });
+    // promptForUrl a déjà sauvegardé via IPC si une URL a été saisie.
+    // On n'écrase que si aucune URL n'a été sauvegardée.
+    const afterCfg = loadConfig();
+    if (!afterCfg.databaseUrl) {
+      saveConfig({ databaseUrl: url || '' });
+    }
   }
 
   startServer();

@@ -167,6 +167,7 @@ if (fs.existsSync(clientDist)) {
 }
 
 app.use((err: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
-  console.error(err);
-  res.status(500).json({ error: 'Erreur interne du serveur.' });
+  const message = (err instanceof Error ? err.message : String(err ?? '')).slice(0, 500);
+  console.error('[ERROR]', message);
+  res.status(500).json({ error: message || 'Erreur interne du serveur.' });
 });

@@ -24,3 +24,7 @@ services:
         sync: false
       - key: CORS_ORIGIN
         sync: false
+      - key: MAWAQIT_USERNAME
+        sync: false
+      - key: MAWAQIT_PASSWORD
+        sync: false
