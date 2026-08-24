@@ -34,7 +34,7 @@ function saveConfig(data) {
 function getDatabaseUrl() {
   const cfg = loadConfig();
   // Priorité : variable d'environnement > config locale
-  return process.env.DATABASE_URL || cfg.databaseUrl || '';
+  return process.env.DATABASE_URL || cfg.databaseUrl || 'postgresql://neondb_owner:npg_Jw3DfmL2BnWC@ep-patient-bread-ayvwsnsi-pooler.c-5.us-east-2.aws.neon.tech/neondb?sslmode=require&channel_binding=require';
 }
 
 async function promptForUrl() {
@@ -178,7 +178,7 @@ function buildMenu() {
             type: 'info',
             title: 'Nour',
             message: 'Nour — Chat islamique avec IA',
-            detail: `Application gratuite et open source.\n\nBase de données : ${getDatabaseUrl() ? 'PostgreSQL Neon (synchronisé)' : 'SQLite locale (hors-ligne)'}`,
+            detail: "Application gratuite. Base : PostgreSQL Neon (sync local+cloud)",
           });
         }},
       ],
@@ -194,11 +194,7 @@ function startServer() {
   const databaseUrl = getDatabaseUrl();
   const serverEntry = path.join(__dirname, '..', 'server', 'dist', 'index.js');
 
-  if (databaseUrl) {
-    console.log('[nour] Mode connecté : PostgreSQL Neon');
-  } else {
-    console.log('[nour] Mode hors-ligne : SQLite locale');
-  }
+  console.log('[nour] SQLite local + sync Neon automatique');
 
   if (!fs.existsSync(serverEntry)) {
     // Mode dev : utiliser tsx pour exécuter directement le .ts
@@ -208,7 +204,7 @@ function startServer() {
         require.resolve('tsx/dist/cli.mjs'),
         [tsEntry],
         {
-          env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl, ENABLE_SYNC: databaseUrl ? 'true' : '' },
+          env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl, ENABLE_SYNC: 'true' },
           stdio: 'pipe',
           silent: true,
         },
@@ -218,7 +214,7 @@ function startServer() {
   } else {
     // Mode production : node direct
     serverProcess = fork(serverEntry, [], {
-      env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl, ENABLE_SYNC: databaseUrl ? 'true' : '' },
+      env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl, ENABLE_SYNC: 'true' },
       stdio: 'pipe',
       silent: true,
     });
