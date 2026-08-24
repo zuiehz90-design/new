@@ -50,7 +50,7 @@ export function DashboardView() {
   }, []);
 
 
-  const pt = useMawaqitTimes(settings.mawaqitMosqueId, now);
+  const pt = useMawaqitTimes();
 
   const countdown = useMemo(() => {
     if (!pt?.next) return null;
@@ -167,7 +167,7 @@ export function DashboardView() {
           {PRAYER_KEYS.map((key) => (
             <div key={key} className={`card p-2 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
               <p className="text-[10px] text-stone-400">{t(prayerLabel(key))}</p>
-              <p className="text-sm font-semibold">{pt[key]}</p>
+              <p className="text-sm font-semibold">{pt.times?.[key]}</p>
             </div>
           ))}
         </section>

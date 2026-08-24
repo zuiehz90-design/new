@@ -77,6 +77,8 @@ export const en: Record<string, string> = {
   'prayer.changeMosque': 'Change',
   'prayer.mosqueSelect': 'Choose my mosque',
   'prayer.mawaqitSource': 'Official mosque prayer times (Mawaqit)',
+  'prayer.loading': 'Calculating prayer times…',
+  'prayer.defaultCity': 'Paris (default)',
   'prayer.missed': 'Missed prayers',
   'prayer.missedHint': 'tap to catch up',
   'prayer.in': 'in',

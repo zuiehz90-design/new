@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
-import { fetchMawaqitTimes } from '../lib/mawaqit';
+import { getPrayerTimes } from '../lib/mawaqit';
 import { type PrayerKey } from '../lib/prayer';
 
 interface Trigger {
@@ -75,15 +75,18 @@ function parseTime(timeStr: string | undefined): Date | null {
 }
 
 /**
- * Notifications contextuelles pour les quêtes, basées sur les horaires MAWAQIT.
+ * Notifications contextuelles pour les quêtes, basées sur les horaires calculés.
  */
 export function useQuestNotifications() {
   const { settings } = useSettings();
   const { user } = useAuth();
   const lastFired = useRef<Record<string, string>>({});
 
+  const lat = settings.mawaqitLatitude;
+  const lon = settings.mawaqitLongitude;
+
   useEffect(() => {
-    if (!settings.prayerNotifications || !user || !settings.mawaqitMosqueId) return;
+    if (!settings.prayerNotifications || !user || !lat || !lon) return;
 
     let cancelled = false;
 
@@ -102,14 +105,11 @@ export function useQuestNotifications() {
         const pending = quests.filter((q) => !q.done);
         if (pending.length === 0) return;
 
-        const times = await fetchMawaqitTimes(settings.mawaqitMosqueId!);
+        const times = await getPrayerTimes(lat, lon, settings.prayerMethod ?? 'uoif');
         if (!times) return;
 
         const now = new Date();
         const today = now.toISOString().slice(0, 10);
-        const keyMap: Record<string, PrayerKey> = {
-          fajr: 'fajr', dohr: 'dhuhr', asr: 'asr', maghreb: 'maghrib', icha: 'isha',
-        };
 
         for (const quest of pending) {
           const trigger = matchTrigger(quest.title, quest.description);
@@ -118,9 +118,7 @@ export function useQuestNotifications() {
           const fireKey = `${quest.quest_id}-${today}`;
           if (lastFired.current[fireKey]) continue;
 
-          const srcKey = Object.keys(keyMap).find((k) => keyMap[k] === trigger.targetPrayer);
-          if (!srcKey) continue;
-          const targetTime = parseTime(times[srcKey] as string | undefined);
+          const targetTime = parseTime((times as Record<string, string>)[trigger.targetPrayer]);
           if (!targetTime) continue;
 
           const fireTime = new Date(targetTime.getTime() - trigger.prayerOffset * 60_000);
@@ -146,5 +144,5 @@ export function useQuestNotifications() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [settings.prayerNotifications, settings.mawaqitMosqueId, user]);
+  }, [settings.prayerNotifications, lat, lon, settings.prayerMethod, user]);
 }

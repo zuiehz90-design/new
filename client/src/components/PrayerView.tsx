@@ -4,7 +4,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
 import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
-import { searchMawaqitMosques, type MawaqitMosque } from '../lib/mawaqit';
+import { searchMosques, listMethods, type MawaqitMosque, type MethodInfo } from '../lib/mawaqit';
 import { PrayerCircles } from './PrayerCircles';
 import { PrayerPauseModal } from './PrayerPauseModal';
 
@@ -12,6 +12,7 @@ const PRAYER_LABELS: Record<string, string> = {
   fajr: 'prayer.fajr', sunrise: 'prayer.sunrise', dhuhr: 'prayer.dhuhr',
   asr: 'prayer.asr', maghrib: 'prayer.maghrib', isha: 'prayer.isha',
 };
+const PRAYER_ORDER = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 
 export function PrayerView() {
   const { t } = useI18n();
@@ -21,25 +22,40 @@ export function PrayerView() {
   const [now, setNow] = useState(Date.now());
   const [pauseOpen, setPauseOpen] = useState(false);
 
-  // État de la recherche de mosquée
+  // Recherche mosquée
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<MawaqitMosque[]>([]);
   const [searching, setSearching] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
 
+  // Méthodes
+  const [methods, setMethods] = useState<MethodInfo[]>([]);
+  useEffect(() => { listMethods().then(m => setMethods(m.methods)).catch(() => {}); }, []);
+
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
   const pauseRemaining = isPaused ? formatPauseRemaining(settings.prayerPauseUntil! - Date.now()) : null;
+  const canPause = user?.profile?.gender === 'female';
 
-  const times = useMawaqitTimes(settings.mawaqitMosqueId, now);
+  const { times, dates, next: nextPrayer, loading, error } = useMawaqitTimes();
 
   useEffect(() => {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(timer);
   }, []);
 
-  // La pause des prières est disponible uniquement pour les femmes
-  const canPause = user?.profile?.gender === 'female';
+  const methodLabel = (id: string) => methods.find(m => m.id === id)?.label ?? id;
+
+  // Prières manquées
+  const missed = useMemo(() => {
+    if (!dates || !prayers) return [];
+    const checked = prayers.checked;
+    const n = Date.now();
+    return PRAYER_ORDER.filter((key) => {
+      const d = dates[key];
+      return d && d.getTime() < n && !checked.includes(key);
+    });
+  }, [dates, prayers]);
 
   const onSearch = async (e: FormEvent) => {
     e.preventDefault();
@@ -49,7 +65,7 @@ export function PrayerView() {
     setMessage(null);
     setResults([]);
     try {
-      const mosques = await searchMawaqitMosques(q);
+      const mosques = await searchMosques(q);
       setResults(mosques);
       if (mosques.length === 0) setMessage(t('prayer.mosqueNoResults'));
     } catch {
@@ -60,22 +76,17 @@ export function PrayerView() {
   };
 
   const selectMosque = (m: MawaqitMosque) => {
-    setSettings((s) => ({ ...s, mawaqitMosqueId: m.uuid, mawaqitMosqueName: m.name }));
+    setSettings((s) => ({
+      ...s,
+      mawaqitMosqueId: m.uuid,
+      mawaqitMosqueName: m.name,
+      mawaqitLatitude: m.latitude,
+      mawaqitLongitude: m.longitude,
+    }));
     setResults([]);
     setQuery('');
     setShowSearch(false);
   };
-
-  const missed = useMemo(() => {
-    if (!times || !prayers) return [];
-    const checked = prayers.checked;
-    const n = Date.now();
-    const keys = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
-    return keys.filter((key) => {
-      const time = times.dates[key];
-      return time && time.getTime() < n && !checked.includes(key);
-    });
-  }, [times, prayers]);
 
   return (
     <div className="mx-auto max-w-xl px-4 pb-8 pt-4 animate-fade-in">
@@ -83,7 +94,7 @@ export function PrayerView() {
         <h2 className="text-2xl font-bold text-gold-400">{t('prayer.title')}</h2>
       </div>
 
-      {/* Bannière de pause */}
+      {/* Bannière pause */}
       {isPaused && (
         <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
           <div className="flex items-center justify-between">
@@ -101,6 +112,7 @@ export function PrayerView() {
         </div>
       )}
 
+      {/* Check-in salat */}
       {user && !isPaused && (
         <section className="card mb-4 p-4">
           <div className="mb-3 flex items-center justify-between">
@@ -122,7 +134,7 @@ export function PrayerView() {
               <span>
                 {t('prayer.missed')} :{' '}
                 <strong>
-                  {missed.map((k) => t(PRAYER_LABELS[k as keyof typeof PRAYER_LABELS] ?? '').split(' ')[0]).join(', ')}
+                  {missed.map((k) => t(PRAYER_LABELS[k]).split(' ')[0]).join(', ')}
                 </strong>
                 {' '}— {t('prayer.missedHint')}
               </span>
@@ -133,7 +145,7 @@ export function PrayerView() {
             prayers={prayers}
             missed={missed}
             onToggle={togglePrayer}
-            timeOf={(key) => (times ? (times.dates as Record<string, Date | undefined>)[key] ?? null : null)}
+            timeOf={(key) => (dates ? (dates as Record<string, Date | undefined>)[key] ?? null : null)}
           />
         </section>
       )}
@@ -144,25 +156,29 @@ export function PrayerView() {
         </section>
       )}
 
-      {/* Horaires de prière (MAWAQIT) */}
+      {/* Horaires de prière */}
+      {loading && <p className="text-center text-xs text-stone-500 py-4">⏳ {t('prayer.loading')}</p>}
+      {error && <p className="text-center text-xs text-red-400 py-4">⚠️ {error}</p>}
       {times && (
         <>
-          {times.next && (
+          {nextPrayer && (
             <div className="card mb-4 border-gold-500/40 bg-gold-500/5 p-4 text-center shadow-glow">
               <p className="text-xs text-gold-400">{t('prayer.next')}</p>
-              <p className="text-lg font-bold text-gold-300">{t(PRAYER_LABELS[times.next.key] ?? times.next.key)}</p>
+              <p className="text-lg font-bold text-gold-300">
+                {t(PRAYER_LABELS[nextPrayer.key] ?? nextPrayer.key)} — {nextPrayer.time}
+              </p>
             </div>
           )}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {(['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((k) => (
               <div key={k} className="card p-3 text-center">
                 <p className="text-xs text-stone-400">{t(PRAYER_LABELS[k])}</p>
-                <p className="text-lg font-semibold">{times[k]}</p>
+                <p className="text-lg font-semibold">{(times as Record<string, string>)[k]}</p>
               </div>
             ))}
           </div>
           <p className="mt-2 text-center text-[10px] text-stone-500">
-            🕌 {t('prayer.mawaqitSource')}
+            🕌 {settings.mawaqitMosqueName ?? t('prayer.defaultCity')} · {methodLabel(settings.prayerMethod ?? 'uoif')}
           </p>
         </>
       )}
@@ -178,7 +194,6 @@ export function PrayerView() {
               <span className="text-lg">🕌</span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-semibold text-emerald-300">{settings.mawaqitMosqueName}</p>
-                <p className="text-[10px] text-stone-500">{t('prayer.mawaqitSource')}</p>
               </div>
               <button
                 onClick={() => setShowSearch(true)}
@@ -227,9 +242,25 @@ export function PrayerView() {
             {message && <p className="text-xs text-stone-400">{message}</p>}
           </div>
         )}
+
+        {/* Méthode de calcul */}
+        {methods.length > 0 && (
+          <div className="pt-2 border-t border-stone-800/50">
+            <label className="text-[10px] text-stone-500">{t('prayer.method')}</label>
+            <select
+              value={settings.prayerMethod ?? 'uoif'}
+              onChange={(e) => setSettings((s) => ({ ...s, prayerMethod: e.target.value }))}
+              className="input mt-1 w-full text-xs"
+            >
+              {methods.map((m) => (
+                <option key={m.id} value={m.id}>{m.label}</option>
+              ))}
+            </select>
+          </div>
+        )}
       </div>
 
-      {/* Modal de pause */}
+      {/* Modal pause */}
       <PrayerPauseModal open={pauseOpen} onClose={() => setPauseOpen(false)} />
     </div>
   );

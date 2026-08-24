@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { fetchMawaqitTimes } from '../lib/mawaqit';
+import { getPrayerTimes } from '../lib/mawaqit';
 import { PRAYER_KEYS, type PrayerKey } from '../lib/prayer';
 
 function parseTime(timeStr: string | undefined): Date | null {
@@ -16,38 +16,30 @@ function parseTime(timeStr: string | undefined): Date | null {
 /**
  * Notifications de prière : vérifie périodiquement si l'heure d'une prière
  * vient d'être atteinte et émet une notification navigateur (si autorisé).
- * Les horaires proviennent de MAWAQIT (mosquée sélectionnée).
+ * Les horaires sont calculés localement à partir des coordonnées de la mosquée.
  */
 export function usePrayerNotifications() {
   const { settings } = useSettings();
   const lastFired = useRef<Record<string, string>>({});
 
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
+  const lat = settings.mawaqitLatitude;
+  const lon = settings.mawaqitLongitude;
 
   useEffect(() => {
-    if (!settings.prayerNotifications || !settings.mawaqitMosqueId || typeof Notification === 'undefined' || isPaused) return;
+    if (!settings.prayerNotifications || !lat || !lon || typeof Notification === 'undefined' || isPaused) return;
 
     let cancelled = false;
 
     const check = async () => {
       if (cancelled) return;
       try {
-        const times = await fetchMawaqitTimes(settings.mawaqitMosqueId!);
+        const times = await getPrayerTimes(lat, lon, settings.prayerMethod ?? 'uoif');
         if (!times) return;
         const now = new Date();
-        const keyMap: Record<string, PrayerKey> = {
-          fajr: 'fajr',
-          sunrise: 'sunrise',
-          dohr: 'dhuhr',
-          asr: 'asr',
-          maghreb: 'maghrib',
-          icha: 'isha',
-        };
         for (const key of PRAYER_KEYS) {
           if (key === 'sunrise') continue;
-          const srcKey = Object.keys(keyMap).find((k) => keyMap[k] === key);
-          if (!srcKey) continue;
-          const prayerTime = parseTime(times[srcKey] as string | undefined);
+          const prayerTime = parseTime((times as Record<string, string>)[key]);
           if (!prayerTime) continue;
           const diff = prayerTime.getTime() - now.getTime();
           if (diff >= -60_000 && diff <= 120_000) {
@@ -74,5 +66,5 @@ export function usePrayerNotifications() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [settings.prayerNotifications, settings.mawaqitMosqueId, isPaused]);
+  }, [settings.prayerNotifications, lat, lon, settings.prayerMethod, isPaused]);
 }

@@ -1,63 +1,64 @@
-/**
- * Client MAWAQIT côté frontend : recherche de mosquée et horaires de prière.
- * Toutes les requêtes passent par le backend Nour (proxy), jamais directement
- * vers mawaqit.net — le token reste côté serveur.
- */
-
+/** Client MAWAQIT — appels au proxy backend Nour. */
 export interface MawaqitMosque {
   uuid: string;
   name: string;
+  slug: string;
+  latitude: number;
+  longitude: number;
   address: string;
   city: string;
   country: string;
-  latitude: number;
-  longitude: number;
   [key: string]: unknown;
 }
 
-export interface MawaqitPrayerTimes {
-  hijri?: string;
-  date?: string;
+export interface PrayerTimes {
   fajr: string;
   sunrise: string;
-  dohr: string;
+  dhuhr: string;
   asr: string;
-  maghreb: string;
-  icha: string;
-  [key: string]: unknown;
+  maghrib: string;
+  isha: string;
+  date: string;
+  [key: string]: string;
 }
 
-function authHeaders(): Record<string, string> {
-  const token = localStorage.getItem('nour:token');
-  return token ? { Authorization: `Bearer ${token}` } : {};
+export interface MethodInfo {
+  id: string;
+  label: string;
 }
 
-/** Recherche des mosquées par mot-clé (via le backend Nour). */
-export async function searchMawaqitMosques(query: string): Promise<MawaqitMosque[]> {
-  if (!query.trim() || query.trim().length < 2) return [];
-  try {
-    const res = await fetch(`/api/mawaqit/search?q=${encodeURIComponent(query.trim())}`, {
-      headers: authHeaders(),
-    });
-    if (!res.ok) return [];
-    const data = (await res.json()) as { mosques: MawaqitMosque[] };
-    return data.mosques ?? [];
-  } catch {
-    return [];
+let methodsCache: { methods: MethodInfo[]; default: string } | null = null;
+
+async function api<T>(path: string): Promise<T> {
+  const res = await fetch(`/api/${path}`);
+  if (!res.ok) {
+    const body = await res.json().catch(() => ({ error: `HTTP ${res.status}` }));
+    throw new Error((body as { error?: string }).error ?? `Erreur ${res.status}`);
   }
+  return (await res.json()) as T;
 }
 
-/** Récupère les horaires de prière du jour pour une mosquée. */
-export async function fetchMawaqitTimes(uuid: string): Promise<MawaqitPrayerTimes | null> {
-  if (!uuid) return null;
-  try {
-    const res = await fetch(`/api/mawaqit/mosque/${encodeURIComponent(uuid)}/times`, {
-      headers: authHeaders(),
-    });
-    if (!res.ok) return null;
-    const data = (await res.json()) as { times: MawaqitPrayerTimes };
-    return data.times ?? null;
-  } catch {
-    return null;
+export async function searchMosques(query: string): Promise<MawaqitMosque[]> {
+  if (!query || query.length < 2) return [];
+  const data = await api<{ mosques: MawaqitMosque[] }>(`mawaqit/search?q=${encodeURIComponent(query)}`);
+  return data.mosques ?? [];
+}
+
+export async function getPrayerTimes(
+  lat: number,
+  lon: number,
+  method: string = 'uoif',
+  date?: string,
+): Promise<PrayerTimes> {
+  const params = new URLSearchParams({ lat: String(lat), lon: String(lon), method });
+  if (date) params.set('date', date);
+  const data = await api<{ times: PrayerTimes }>(`mawaqit/times?${params.toString()}`);
+  return data.times;
+}
+
+export async function listMethods(): Promise<{ methods: MethodInfo[]; default: string }> {
+  if (!methodsCache) {
+    methodsCache = await api<{ methods: MethodInfo[]; default: string }>('mawaqit/methods');
   }
+  return methodsCache!;
 }

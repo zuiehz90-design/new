@@ -48,6 +48,8 @@ export const ar: Record<string, string> = {
   'prayer.changeMosque': 'تغيير',
   'prayer.mosqueSelect': 'اختيار مسجدي',
   'prayer.mawaqitSource': 'أوقات الصلاة الرسمية للمسجد (مواقيت)',
+  'prayer.loading': 'جاري حساب أوقات الصلاة…',
+  'prayer.defaultCity': 'باريس (افتراضي)',
   'prayer.missed': 'صلوات فائتة',
   'prayer.missedHint': 'اضغط للتعويض',
   'prayer.geolocate': 'استخدام موقعي',

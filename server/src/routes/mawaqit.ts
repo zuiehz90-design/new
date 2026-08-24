@@ -1,14 +1,13 @@
 import { Router } from 'express';
-import { searchMosques, getMosqueInfo, getPrayerTimes } from '../mawaqit.js';
-import { authMiddleware as auth } from './auth.js';
+import { searchMosques, calculateTimes, METHODS, DEFAULT_METHOD } from '../mawaqit.js';
 
 export const mawaqitRouter = Router();
 
 /**
- * Recherche des mosquées par mot-clé.
+ * Recherche des mosquées par mot-clé (publique, pas d'auth).
  * GET /api/mawaqit/search?q=cergy
  */
-mawaqitRouter.get('/search', auth, async (req: any, res) => {
+mawaqitRouter.get('/search', async (req: any, res) => {
   const q = (req.query.q as string)?.trim() ?? '';
   if (q.length < 2) return res.json({ mosques: [] });
   try {
@@ -21,29 +20,32 @@ mawaqitRouter.get('/search', auth, async (req: any, res) => {
 });
 
 /**
- * Infos d'une mosquée.
- * GET /api/mawaqit/mosque/:id
+ * Calcule les horaires de prière à partir de coordonnées GPS + méthode.
+ * GET /api/mawaqit/times?lat=49.05&lon=2.02&method=uoif&date=2026-08-24
  */
-mawaqitRouter.get('/mosque/:id', auth, async (req: any, res) => {
+mawaqitRouter.get('/times', (req: any, res) => {
+  const lat = parseFloat(req.query.lat as string);
+  const lon = parseFloat(req.query.lon as string);
+  if (isNaN(lat) || isNaN(lon)) {
+    return res.status(400).json({ error: 'Paramètres lat et lon requis.' });
+  }
+  const method = (req.query.method as string)?.trim() || DEFAULT_METHOD;
+  const dateStr = (req.query.date as string)?.trim() || new Date().toISOString().slice(0, 10);
+
   try {
-    const info = await getMosqueInfo(req.params.id);
-    res.json({ mosque: info });
+    const times = calculateTimes(lat, lon, dateStr, method);
+    res.json({ times });
   } catch (err) {
-    console.error('[mawaqit] mosque info error:', (err as Error).message);
-    res.status(502).json({ error: 'Informations de la mosquée indisponibles.' });
+    console.error('[mawaqit] times error:', (err as Error).message);
+    res.status(500).json({ error: 'Erreur lors du calcul des horaires.' });
   }
 });
 
 /**
- * Horaires de prière du jour.
- * GET /api/mawaqit/mosque/:id/times
+ * Liste des méthodes de calcul disponibles.
+ * GET /api/mawaqit/methods
  */
-mawaqitRouter.get('/mosque/:id/times', auth, async (req: any, res) => {
-  try {
-    const times = await getPrayerTimes(req.params.id);
-    res.json({ times });
-  } catch (err) {
-    console.error('[mawaqit] prayer times error:', (err as Error).message);
-    res.status(502).json({ error: 'Horaires de prière indisponibles. Réessayez plus tard.' });
-  }
+mawaqitRouter.get('/methods', (_req, res) => {
+  const list = Object.entries(METHODS).map(([id, cfg]) => ({ id, label: cfg.label }));
+  res.json({ methods: list, default: DEFAULT_METHOD });
 });
