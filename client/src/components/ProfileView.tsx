@@ -1,68 +1,19 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
-
-const AVATARS = [
-  { id: 'initial', icon: '👤', label: 'Initiale' },
-  { id: 'mosque', icon: '🕌', label: 'Mosquée' },
-  { id: 'kaaba', icon: '🕋', label: 'Kaaba' },
-  { id: 'crescent', icon: '☪️', label: 'Croissant' },
-  { id: 'moon', icon: '🌙', label: 'Lune' },
-  { id: 'star', icon: '⭐', label: 'Étoile' },
-  { id: 'lantern', icon: '🏮', label: 'Lanterne' },
-  { id: 'book', icon: '📖', label: 'Coran' },
-  { id: 'tasbih', icon: '📿', label: 'Tasbih' },
-  { id: 'dua', icon: '🤲', label: 'Invocation' },
-  { id: 'palm', icon: '🌴', label: 'Palmier' },
-  { id: 'heart', icon: '💚', label: 'Cœur' },
-] as const;
-
-const ACCENTS = [
-  { id: 'gold', color: 'gold-400', bg: 'gold-500/15', border: 'gold-500/60', swatch: 'bg-gold-400', label: 'Or (défaut)' },
-  { id: 'emerald', color: 'emerald-400', bg: 'emerald-500/15', border: 'emerald-500/60', swatch: 'bg-emerald-400', label: 'Émeraude' },
-  { id: 'sapphire', color: 'sky-400', bg: 'sky-500/15', border: 'sky-500/60', swatch: 'bg-sky-400', label: 'Saphir' },
-  { id: 'amber', color: 'amber-400', bg: 'amber-500/15', border: 'amber-500/60', swatch: 'bg-amber-400', label: 'Ambre' },
-] as const;
-
-const GOALS = [
-  { id: 'prayer', icon: '🕌', label: 'profile.goal.prayer' },
-  { id: 'quran', icon: '📖', label: 'profile.goal.quran' },
-  { id: 'dhikr', icon: '📿', label: 'profile.goal.dhikr' },
-  { id: 'charity', icon: '🤲', label: 'profile.goal.charity' },
-  { id: 'fasting', icon: '🌙', label: 'profile.goal.fasting' },
-  { id: 'knowledge', icon: '🎓', label: 'profile.goal.knowledge' },
-  { id: 'akhlaq', icon: '💚', label: 'profile.goal.akhlaq' },
-] as const;
-
-const SURAHS = [
-  '', 'Al-Fatiha', 'Al-Baqara', 'Al-Imran', 'An-Nisa', "Al-Ma'ida", "Al-An'am", "Al-A'raf", 'Al-Anfal', 'At-Tawbah',
-  'Yunus', 'Hud', 'Yusuf', "Ar-Ra'd", 'Ibrahim', 'Al-Hijr', 'An-Nahl', 'Al-Isra', 'Al-Kahf', 'Maryam',
-  'Ta-Ha', 'Al-Anbiya', 'Al-Hajj', "Al-Mu'minun", 'An-Nur', 'Al-Furqan', "Ash-Shu'ara", 'An-Naml', 'Al-Qasas', 'Al-Ankabut',
-  'Ar-Rum', 'Luqman', 'As-Sajda', 'Al-Ahzab', 'Saba', 'Fatir', 'Ya-Sin', 'As-Saffat', 'Sad', 'Az-Zumar',
-  'Ghafir', 'Fussilat', 'Ash-Shura', 'Az-Zukhruf', 'Ad-Dukhan', 'Al-Jathiya', 'Al-Ahqaf', 'Muhammad', 'Al-Fath', 'Al-Hujurat',
-  'Qaf', 'Adh-Dhariyat', 'At-Tur', 'An-Najm', 'Al-Qamar', 'Ar-Rahman', "Al-Waqi'a", 'Al-Hadid', 'Al-Mujadila', 'Al-Hashr',
-  'Al-Mumtahina', 'As-Saff', "Al-Jumu'a", 'Al-Munafiqun', 'At-Taghabun', 'At-Talaq', 'At-Tahrim', 'Al-Mulk', 'Al-Qalam', 'Al-Haqqa',
-  "Al-Ma'arij", 'Nuh', 'Al-Jinn', 'Al-Muzzammil', 'Al-Muddaththir', 'Al-Qiyama', 'Al-Insan', 'Al-Mursalat', 'An-Naba', "An-Nazi'at",
-  'Abasa', 'At-Takwir', 'Al-Infitar', 'Al-Mutaffifin', 'Al-Inshiqaq', 'Al-Buruj', 'At-Tariq', "Al-A'la", 'Al-Ghashiya', 'Al-Fajr',
-  'Al-Balad', 'Ash-Shams', 'Al-Layl', 'Ad-Duha', 'Ash-Sharh', 'At-Tin', 'Al-Alaq', 'Al-Qadr', 'Al-Bayyina', 'Az-Zalzala',
-  'Al-Adiyat', "Al-Qari'a", 'At-Takathur', 'Al-Asr', 'Al-Humaza', 'Al-Fil', 'Quraysh', "Al-Ma'un", 'Al-Kawthar', 'Al-Kafirun',
-  'An-Nasr', 'Al-Masad', 'Al-Ikhlas', 'Al-Falaq', 'An-Nas',
-];
-
-function getAccent(accentId?: string) {
-  return ACCENTS.find(a => a.id === accentId) ?? ACCENTS[0];
-}
-
+import { AVATARS, ACCENTS, GOALS, SURAHS, getAccent, acMap } from '../lib/profileOptions';
+import { OnboardingCarousel } from './OnboardingCarousel';
 
 export function ProfileView() {
   const { t } = useI18n();
-  const { user, loading, login, register, logout, updateProfile } = useAuth();
+  const { user, loading, login, logout, updateProfile } = useAuth();
   const { prayers, quests } = useDevotion();
 
   const [mode, setMode] = useState<'login' | 'register'>('register');
+  const [onboarding, setOnboarding] = useState(false);
   const [name, setName] = useState('');
-    const [password, setPassword] = useState('');
+  const [password, setPassword] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -74,6 +25,8 @@ export function ProfileView() {
   const [goals, setGoals] = useState<string[]>(user?.profile?.goals ?? []);
   const [note, setNote] = useState<string>((user?.profile?.note as string) ?? '');
   const [saved, setSaved] = useState(false);
+  const mountedRef = useRef(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const currentAccent = getAccent(accent);
 
@@ -84,16 +37,40 @@ export function ProfileView() {
       setAccent((user.profile?.accent as string) ?? 'gold');
       setFavoriteSurah((user.profile?.favoriteSurah as string) ?? '');
       setGender((user.profile?.gender as 'male' | 'female') ?? '');
+      setGoals(user.profile?.goals ?? []);
+      setNote((user.profile?.note as string) ?? '');
     }
   }, [user]);
+
+  // Auto-save avec debounce 800 ms : déclenché à chaque modification du profil.
+  // Ignore le premier rendu pour ne pas sauvegarder au montage initial.
+  useEffect(() => {
+    if (!mountedRef.current) { mountedRef.current = true; return; }
+    if (!user || user.isAnonymous) return;
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      try {
+        await updateProfile({
+          name: editName,
+          profile: { avatar, accent, favoriteSurah, gender: gender || undefined, goals, note },
+        });
+        setSaved(true);
+        setTimeout(() => setSaved(false), 2000);
+      } catch {
+        /* ignore */
+      }
+    }, 800);
+
+    return () => { if (saveTimerRef.current) clearTimeout(saveTimerRef.current); };
+  }, [editName, avatar, accent, favoriteSurah, gender, goals, note]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setFormError(null);
     setSubmitting(true);
     try {
-      if (mode === 'login') await login(name, password);
-      else await register(name, password);
+      await login(name, password);
     } catch (err) {
       setFormError((err as Error).message);
     } finally {
@@ -101,23 +78,9 @@ export function ProfileView() {
     }
   };
 
-  const toggleGoal = (id: string) => {
+  const toggleGoal = useCallback((id: string) => {
     setGoals((prev) => (prev.includes(id) ? prev.filter((g) => g !== id) : [...prev, id]));
-  };
-
-  const saveProfile = async () => {
-    setSaved(false);
-    try {
-      await updateProfile({
-        name: editName,
-        profile: { avatar, accent, favoriteSurah, gender: gender || undefined, goals, note },
-      });
-      setSaved(true);
-      setTimeout(() => setSaved(false), 2000);
-    } catch {
-      /* ignore */
-    }
-  };
+  }, []);
 
   const avatarIcon = avatar === 'initial' ? null : AVATARS.find(a => a.id === avatar)?.icon;
 
@@ -126,6 +89,20 @@ export function ProfileView() {
   }
 
   if (!user || user.isAnonymous) {
+    // Le carousel d'onboarding reste affiché même après la création du compte
+    // (register a déjà connecté l'utilisateur) jusqu'à ce qu'il soit terminé.
+    if (onboarding) {
+      return (
+        <div className="mx-auto max-w-md px-4 pb-10 pt-8 animate-fade-in">
+          <div className="mb-6 text-center">
+            <div className="font-quran text-4xl text-gold-400">﷽</div>
+            <h1 className="mt-2 text-2xl font-bold">{t('profile.title')}</h1>
+          </div>
+          <OnboardingCarousel onDone={() => setOnboarding(false)} onCancel={() => setOnboarding(false)} />
+        </div>
+      );
+    }
+
     return (
       <div className="mx-auto max-w-md px-4 pb-10 pt-8 animate-fade-in">
         <div className="mb-6 text-center">
@@ -145,24 +122,29 @@ export function ProfileView() {
             <button onClick={() => setMode('register')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'register' ? 'bg-emerald-700 text-white' : 'text-stone-400 hover:text-stone-200'}`}>{t('profile.register')}</button>
             <button onClick={() => setMode('login')} className={`flex-1 rounded-lg px-3 py-2 text-sm font-semibold ${mode === 'login' ? 'bg-emerald-700 text-white' : 'text-stone-400 hover:text-stone-200'}`}>{t('profile.login')}</button>
           </div>
-          <form onSubmit={submit} className="space-y-3">
-            <div><label className="mb-1 block text-xs text-stone-500">{t('profile.name')}</label><input value={name} onChange={(e) => setName(e.target.value)} className="input text-sm" required minLength={2} /></div>
-            <div><label className="mb-1 block text-xs text-stone-500">{t('profile.password')}</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input text-sm" required minLength={6} /></div>
-            {formError && <p className="text-xs text-red-400">{formError}</p>}
-            <button type="submit" disabled={submitting} className="btn-gold w-full text-sm">{submitting ? t('common.loading') : mode === 'login' ? t('profile.login') : t('profile.createAccount')}</button>
-          </form>
+
+          {mode === 'register' ? (
+            <div className="text-center">
+              <div className="text-4xl">🚀</div>
+              <p className="mt-3 text-sm text-stone-300">{t('onboarding.intro')}</p>
+              <button onClick={() => setOnboarding(true)} className="btn-gold mt-4 w-full text-sm">
+                {t('onboarding.start')}
+              </button>
+            </div>
+          ) : (
+            <form onSubmit={submit} className="space-y-3">
+              <div><label className="mb-1 block text-xs text-stone-500">{t('profile.name')}</label><input value={name} onChange={(e) => setName(e.target.value)} className="input text-sm" required minLength={2} /></div>
+              <div><label className="mb-1 block text-xs text-stone-500">{t('profile.password')}</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input text-sm" required minLength={6} /></div>
+              {formError && <p className="text-xs text-red-400">{formError}</p>}
+              <button type="submit" disabled={submitting} className="btn-gold w-full text-sm">{submitting ? t('common.loading') : t('profile.login')}</button>
+            </form>
+          )}
         </div>
       </div>
     );
   }
 
   const streak = prayers?.streak ?? { current: 0, best: 0 };
-  const acMap = {
-    gold:    { h: '#d4af37', b: 'rgba(212,175,55,0.3)' },
-    emerald: { h: '#34d399', b: 'rgba(52,211,153,0.3)' },
-    sapphire:{ h: '#38bdf8', b: 'rgba(56,189,248,0.3)' },
-    amber:   { h: '#fbbf24', b: 'rgba(251,191,36,0.3)' },
-  };
   const ac = acMap[currentAccent.id] ?? acMap.gold;
 
   return (
@@ -174,7 +156,7 @@ export function ProfileView() {
           </div>
           <div className="flex-1 min-w-0">
             <h1 className="text-xl font-bold" style={{ color: ac.h }}>{user.name}</h1>
-  
+
             {favoriteSurah && (
               <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-700/40 bg-emerald-900/30 px-2 py-0.5 text-[11px] text-emerald-300">
                 📖 {favoriteSurah}
@@ -207,8 +189,15 @@ export function ProfileView() {
       </button>
 
       <div className="card p-5">
-        <h2 className="mb-3 text-sm font-bold" style={{ color: ac.h }}>{t('profile.edit')}</h2>
         <div className="space-y-4">
+          {/* Indicateur auto-save */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-sm font-bold" style={{ color: ac.h }}>{t('profile.edit')}</h2>
+            <span className={`text-[10px] font-medium transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`} style={{ color: ac.h }}>
+              {t('profile.saved')}
+            </span>
+          </div>
+
           <div>
             <label className="mb-1 block text-xs text-stone-500">{t('profile.name')}</label>
             <input value={editName} onChange={(e) => setEditName(e.target.value)} className="input text-sm" />
@@ -297,13 +286,8 @@ export function ProfileView() {
             <textarea value={note} onChange={(e) => setNote(e.target.value)} className="input h-24 resize-none text-sm" placeholder={t('profile.notePlaceholder')} />
             <p className="mt-1 text-[10px] text-stone-500">{t('profile.noteHint')}</p>
           </div>
-
-          <button onClick={saveProfile} className="btn-primary w-full text-sm">
-            {saved ? t('profile.saved') : t('settings.save')}
-          </button>
         </div>
       </div>
-
     </div>
   );
 }

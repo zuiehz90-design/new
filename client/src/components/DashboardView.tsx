@@ -12,6 +12,7 @@ import { useAiSetup } from '../hooks/useAiSetup';
 import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
 import { MoonIcon } from './icons';
+import { isDesktop } from '../lib/desktop';
 
 const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export function DashboardView() {
@@ -23,8 +24,16 @@ export function DashboardView() {
   const { user, loading: authLoading } = useAuth();
   const { prayers, quests, achievements, togglePrayer, toggleQuest } = useDevotion();
   const [now, setNow] = useState(Date.now());
+  const [desktopBannerDismissed, setDesktopBannerDismissed] = useState(
+    () => localStorage.getItem('nour-desktop-banner-dismissed') === '1'
+  );
   const aiSetup = useAiSetup();
   const aiConfigured = aiSetup.status !== 'missing';
+
+  const dismissDesktopBanner = () => {
+    localStorage.setItem('nour-desktop-banner-dismissed', '1');
+    setDesktopBannerDismissed(true);
+  };
 
   // Vérifier si la pause est active
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
@@ -63,6 +72,34 @@ export function DashboardView() {
           {t('dashboard.title')} <MoonIcon className="inline h-5 w-5 text-gold-400" />
         </h1>
       </div>
+
+      {/* Bannière app desktop (web uniquement) */}
+      {!isDesktop && !desktopBannerDismissed && (
+        <section className="card mb-4 border-gold-500/50 bg-gradient-to-br from-emerald-900/40 to-gold-900/20 p-4 animate-fade-in shadow-glow">
+          <div className="flex items-start gap-3">
+            <span className="text-3xl shrink-0">🖥️</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold text-gold-300">{t('dashboard.desktopTitle')}</p>
+              <p className="mt-1 text-xs leading-relaxed text-stone-300">{t('dashboard.desktopDesc')}</p>
+              <div className="mt-3 flex flex-wrap items-center gap-2">
+                <a
+                  href="https://github.com/zuiehz90-design/new/releases"
+                  target="_blank"
+                  rel="noopener"
+                  className="btn-gold text-xs"
+                >
+                  ⬇️ {t('dashboard.desktopCta')}
+                </a>
+                <button onClick={dismissDesktopBanner} className="text-xs text-stone-400 underline hover:text-stone-200">
+                  {t('dashboard.desktopDismiss')}
+                </button>
+              </div>
+              <p className="mt-2 text-[10px] text-stone-500">{t('dashboard.desktopHint')}</p>
+            </div>
+          </div>
+        </section>
+      )}
+
       {/* Bannière clé API (si IA non configurée) */}
       {!aiConfigured && (
         <section className="card mb-4 border-amber-500/40 bg-amber-900/15 p-4 animate-fade-in">
