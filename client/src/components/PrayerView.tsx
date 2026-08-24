@@ -3,11 +3,12 @@ import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
 import { useGeolocation } from '../hooks/useGeolocation';
 import { searchCity, shortPlaceName, type GeocodeResult } from '../lib/geocode';
-import { Coordinates, CalculationMethod, PrayerTimes, Madhab, Prayer } from 'adhan';
-import type { PrayerTimesResult } from '../lib/types';
+import { Coordinates, CalculationMethod, PrayerTimes, Madhab } from 'adhan';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
+import { usePrayerTimes } from '../hooks/usePrayerTimes';
 import { PrayerCircles } from './PrayerCircles';
+import { PrayerPauseModal } from './PrayerPauseModal';
 
 const PRAYER_LABELS: Record<string, string> = {
   fajr: 'prayer.fajr', sunrise: 'prayer.sunrise', dhuhr: 'prayer.dhuhr',
@@ -15,7 +16,9 @@ const PRAYER_LABELS: Record<string, string> = {
 };
 
 const PRAYER_METHODS: { id: string; label: string; make: () => ReturnType<typeof CalculationMethod.Other> }[] = [
+  { id: 'aladhan-api', label: 'AlAdhan API (recommandé)', make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 12; p.ishaAngle = 12; return p; } },
   { id: 'uoif', label: 'UOIF (France, 12°)', make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 12; p.ishaAngle = 12; return p; } },
+  { id: 'mosquee-paris', label: 'Mosquée de Paris (18°)', make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 18; p.ishaAngle = 18; return p; } },
   { id: 'muslim-world-league', label: 'Muslim World League', make: () => CalculationMethod.MuslimWorldLeague() },
   { id: 'egyptian', label: 'Egyptian', make: () => CalculationMethod.Egyptian() },
   { id: 'karachi', label: 'Karachi', make: () => CalculationMethod.Karachi() },
@@ -28,27 +31,6 @@ function formatTime(date: Date): string {
   return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-function compute(coords: { lat: number; lng: number }, methodId: string): PrayerTimesResult & { dates: { fajr: Date; dhuhr: Date; asr: Date; maghrib: Date; isha: Date } } {
-  const method = PRAYER_METHODS.find((m) => m.id === methodId) ?? PRAYER_METHODS[0];
-  const params = method.make();
-  params.madhab = Madhab.Shafi;
-  const pt = new PrayerTimes(new Coordinates(coords.lat, coords.lng), new Date(), params);
-  const next = pt.nextPrayer(new Date());
-  const nextLabel = next && next !== Prayer.None ? Object.keys(PRAYER_LABELS).find((k) => (Prayer as Record<string, unknown>)[k] === next) ?? null : null;
-  return {
-    fajr: formatTime(pt.fajr),
-    sunrise: formatTime(pt.sunrise),
-    dhuhr: formatTime(pt.dhuhr),
-    asr: formatTime(pt.asr),
-    maghrib: formatTime(pt.maghrib),
-    isha: formatTime(pt.isha),
-    next: next && nextLabel && pt.timeForPrayer(next)
-      ? { name: nextLabel, time: formatTime(pt.timeForPrayer(next)!) }
-      : null,
-    dates: { fajr: pt.fajr, dhuhr: pt.dhuhr, asr: pt.asr, maghrib: pt.maghrib, isha: pt.isha },
-  };
-}
-
 export function PrayerView() {
   const { t } = useI18n();
   const { settings, setSettings } = useSettings();
@@ -58,6 +40,11 @@ export function PrayerView() {
   const [now, setNow] = useState(Date.now());
   const [lat, setLat] = useState(coords?.lat?.toString() ?? '');
   const [lng, setLng] = useState(coords?.lng?.toString() ?? '');
+  const [pauseOpen, setPauseOpen] = useState(false);
+
+  // Vérifier si la pause est active
+  const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
+  const pauseRemaining = isPaused ? formatPauseRemaining(settings.prayerPauseUntil! - Date.now()) : null;
 
   useEffect(() => {
     if (coords) {
@@ -79,14 +66,10 @@ export function PrayerView() {
   }, [lat, lng]);
 
   const active = coords ?? manualCoords;
-  const times = useMemo(() => {
-    if (!active) return null;
-    try {
-      return compute(active, settings.prayerMethod);
-    } catch {
-      return null;
-    }
-  }, [active, settings.prayerMethod, now]);
+  const times = usePrayerTimes(active, settings.prayerMethod, now);
+
+  // La pause des prières est disponible uniquement pour les femmes
+  const canPause = user?.profile?.gender === 'female';
 
   const applyManual = () => {
     if (manualCoords) void confirmCoords(manualCoords);
@@ -138,9 +121,38 @@ export function PrayerView() {
         <h2 className="text-2xl font-bold text-gold-400">{t('prayer.title')}</h2>
       </div>
 
-      {user && (
+      {/* Bannière de pause */}
+      {isPaused && (
+        <div className="mb-4 rounded-xl border border-amber-500/40 bg-amber-500/10 p-4">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-amber-300">⏸️ {t('prayer.pause.active')}</p>
+              <p className="mt-1 text-xs text-amber-400/80">{pauseRemaining}</p>
+            </div>
+            <button
+              onClick={() => setPauseOpen(true)}
+              className="rounded-lg px-3 py-1.5 text-xs font-bold text-amber-200 transition hover:bg-amber-500/20"
+            >
+              🔄 {t('prayer.pause.resume')}
+            </button>
+          </div>
+        </div>
+      )}
+
+      {user && !isPaused && (
         <section className="card mb-4 p-4">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-400">🕌 {t('dashboard.salatCheckin')}</h3>
+          <div className="mb-3 flex items-center justify-between">
+            <h3 className="flex items-center gap-2 text-sm font-bold text-gold-400">🕌 {t('dashboard.salatCheckin')}</h3>
+            {canPause && (
+              <button
+                onClick={() => setPauseOpen(true)}
+                className="rounded-lg px-2 py-1 text-[10px] font-bold text-stone-500 transition hover:bg-stone-500/10 hover:text-stone-300"
+                title={t('prayer.pause.button')}
+              >
+                ⏸️ {t('prayer.pause.button')}
+              </button>
+            )}
+          </div>
 
             {missed.length > 0 && (
               <div className="mb-3 rounded-xl border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-center gap-2">
@@ -258,8 +270,7 @@ export function PrayerView() {
           {times.next && (
             <div className="card mb-4 border-gold-500/40 bg-gold-500/5 p-4 text-center shadow-glow">
               <p className="text-xs text-gold-400">{t('prayer.next')}</p>
-              <p className="text-lg font-bold text-gold-300">{t(PRAYER_LABELS[times.next.name] ?? times.next.name)}</p>
-              <p className="text-2xl font-bold">{times.next.time}</p>
+              <p className="text-lg font-bold text-gold-300">{t(PRAYER_LABELS[times.next.key] ?? times.next.key)}</p>
             </div>
           )}
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
@@ -276,6 +287,19 @@ export function PrayerView() {
       {!active && !loading && (
         <p className="text-center text-sm text-stone-500">{t('prayer.geoError')}</p>
       )}
+
+      {/* Modal de pause */}
+      <PrayerPauseModal open={pauseOpen} onClose={() => setPauseOpen(false)} />
     </div>
   );
+}
+
+function formatPauseRemaining(ms: number): string {
+  if (ms <= 0) return '0m';
+  const days = Math.floor(ms / (24 * 60 * 60 * 1000));
+  const hours = Math.floor((ms % (24 * 60 * 60 * 1000)) / (60 * 60 * 1000));
+  const minutes = Math.floor((ms % (60 * 60 * 1000)) / (60 * 1000));
+  if (days > 0) return `${days}j ${hours}h`;
+  if (hours > 0) return `${hours}h ${minutes}m`;
+  return `${minutes}m`;
 }

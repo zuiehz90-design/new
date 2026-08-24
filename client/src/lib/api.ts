@@ -119,6 +119,7 @@ export async function apiGetAchievements<T>(): Promise<T | null> {
 export interface UserProfile {
   goals?: string[];
   note?: string;
+  gender?: 'male' | 'female';
   [key: string]: unknown;
 }
 
@@ -278,8 +279,8 @@ export function apiPrayers(): Promise<PrayerStatus> {
   return apiFetch<PrayerStatus>('/api/prayers');
 }
 
-export function apiCheckPrayer(prayer: string): Promise<{ ok: boolean; newBadges?: string[] }> {
-  return apiFetch('/api/prayers/check', { method: 'POST', body: JSON.stringify({ prayer }) });
+export function apiCheckPrayer(prayer: string, opts?: { late?: boolean; lateMinutes?: number }): Promise<{ ok: boolean; newBadges?: string[]; penalty?: number }> {
+  return apiFetch('/api/prayers/check', { method: 'POST', body: JSON.stringify({ prayer, ...(opts ?? {}) }) });
 }
 
 export function apiUncheckPrayer(prayer: string): Promise<{ ok: boolean }> {

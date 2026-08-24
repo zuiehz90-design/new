@@ -6,7 +6,8 @@ import { useChatContext } from '../App';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
 import { useGeolocation } from '../hooks/useGeolocation';
-import { computePrayers, formatTime, PRAYER_KEYS, prayerLabel } from '../lib/prayer';
+import { formatTime, PRAYER_KEYS, prayerLabel } from '../lib/prayer';
+import { usePrayerTimes } from '../hooks/usePrayerTimes';
 import { useAiSetup } from '../hooks/useAiSetup';
 import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
@@ -25,20 +26,16 @@ export function DashboardView() {
   const aiSetup = useAiSetup();
   const aiConfigured = aiSetup.status !== 'missing';
 
+  // Vérifier si la pause est active
+  const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
+
   useEffect(() => {
     const id = setInterval(() => setNow(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
 
-  const pt = useMemo(() => {
-    if (!coords) return null;
-    try {
-      return computePrayers(coords, settings.prayerMethod);
-    } catch {
-      return null;
-    }
-  }, [coords, settings.prayerMethod, now]);
+  const pt = usePrayerTimes(coords, settings.prayerMethod, now);
 
   const countdown = useMemo(() => {
     if (!pt?.next) return null;
@@ -53,7 +50,7 @@ export function DashboardView() {
     if (!pt || !prayers) return [];
     const checked = prayers.checked;
     return SALAT_KEYS.filter((key) => {
-      const time = pt[key as keyof typeof pt] as Date | undefined;
+      const time = pt.dates?.[key];
       return time && time.getTime() < now && !checked.includes(key);
     });
   }, [pt, prayers, now]);
@@ -91,12 +88,12 @@ export function DashboardView() {
         {pt?.next ? (
           <>
             <p className="text-xs uppercase tracking-widest text-gold-400">{t('prayer.next')}</p>
-            <p className="mt-1 text-2xl font-bold text-gold-300">{t(prayerLabel(pt.next.key))}</p>
+            <p className="mt-1 text-2xl font-bold text-gold-300">{t(prayerLabel(pt.next.key as any))}</p>
             {countdown && (
-              <p className="mt-2 text-sm" style={{color:"var(--text-secondary)"}}>
-                {countdown.h > 0 && <span className="font-semibold" style={{color:"var(--text-primary)"}}>{countdown.h}h </span>}
-                <span className="font-semibold text-stone-200">{countdown.m.toString().padStart(2, '0')}m</span>{' '}
-                {countdown.s.toString().padStart(2, '0')}s
+              <p className="mt-3 text-2xl font-bold tracking-tight" style={{color:"var(--text-primary)"}}>
+                {countdown.h > 0 && <span>{countdown.h}h </span>}
+                <span>{countdown.m.toString().padStart(2, '0')}m</span>
+                <span className="text-lg text-stone-400 ml-1">{countdown.s.toString().padStart(2, '0')}s</span>
               </p>
             )}
           </>
@@ -125,7 +122,7 @@ export function DashboardView() {
           {PRAYER_KEYS.map((key) => (
             <div key={key} className={`card p-2 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
               <p className="text-[10px] text-stone-400">{t(prayerLabel(key))}</p>
-              <p className="text-sm font-semibold">{formatTime(pt[key])}</p>
+              <p className="text-sm font-semibold">{pt[key]}</p>
             </div>
           ))}
         </section>
@@ -178,8 +175,16 @@ export function DashboardView() {
           <section className="card mb-4 p-4">
             <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-400">🕌 {t('dashboard.salatCheckin')}</h2>
 
-            {/* Alerte prieres manquees */}
-            {missed.length > 0 && (
+            {/* Bannière de pause */}
+            {isPaused && (
+              <div className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-xs text-amber-300 flex items-center gap-2">
+                <span className="text-lg">⏸️</span>
+                <span>{t('prayer.pause.exempt', { date: new Date(settings.prayerPauseUntil!).toLocaleDateString() })}</span>
+              </div>
+            )}
+
+            {/* Alerte prieres manquees (masquee si pause active) */}
+            {!isPaused && missed.length > 0 && (
               <div className="mb-3 rounded-xl border border-red-500/50 bg-red-500/10 px-3 py-2 text-xs text-red-300 flex items-center gap-2">
                 <span className="text-lg">⚠️</span>
                 <span>
@@ -196,7 +201,7 @@ export function DashboardView() {
               prayers={prayers}
               missed={missed}
               onToggle={togglePrayer}
-              timeOf={(key) => (pt ? (pt[key as keyof typeof pt] as Date | null) : null)}
+              timeOf={(key) => (pt?.dates ? (pt.dates as Record<string, Date | undefined>)[key] ?? null : null)}
             />
           </section>
 

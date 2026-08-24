@@ -12,8 +12,11 @@ export function usePrayerNotifications() {
   const { coords } = useGeolocation();
   const lastFired = useRef<Record<string, string>>({}); // key -> date ISO du dernier déclenchement
 
+  // Vérifier si la pause est active
+  const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
+
   useEffect(() => {
-    if (!settings.prayerNotifications || !coords || typeof Notification === 'undefined') return;
+    if (!settings.prayerNotifications || !coords || typeof Notification === 'undefined' || isPaused) return;
 
     const check = () => {
       try {
@@ -48,5 +51,5 @@ export function usePrayerNotifications() {
     check();
     const id = setInterval(check, 30_000);
     return () => clearInterval(id);
-  }, [settings.prayerNotifications, settings.prayerMethod, coords]);
+  }, [settings.prayerNotifications, settings.prayerMethod, coords, isPaused]);
 }

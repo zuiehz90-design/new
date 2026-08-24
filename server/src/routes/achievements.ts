@@ -148,12 +148,21 @@ achievementsRouter.get('/', authMiddleware, (req: any, res) => {
 });
 
 export function userPoints(userId: number): number {
-  // Une seule requête au lieu d'un COUNT prières + un SUM quêtes séparés.
+  // Points = (prières * 10) + pénalités retard + quêtes complétées.
   const row = db.prepare(`
     SELECT
       (SELECT COUNT(*) FROM prayers WHERE user_id = ?) * 10
+      + (SELECT COALESCE(SUM(
+          CASE
+            WHEN late = 1 AND late_minutes <= 15 THEN 0
+            WHEN late = 1 AND late_minutes <= 60 THEN -2
+            WHEN late = 1 AND late_minutes <= 120 THEN -5
+            WHEN late = 1 AND late_minutes <= 240 THEN -8
+            WHEN late = 1 THEN -10
+            ELSE 0
+          END), 0) FROM prayers WHERE user_id = ?)
       + (SELECT COALESCE(SUM(points), 0) FROM quests WHERE user_id = ? AND done = 1) AS n
-  `).get(userId, userId) as { n: number } | undefined;
+  `).get(userId, userId, userId) as { n: number } | undefined;
   return row?.n ?? 0;
 }
 

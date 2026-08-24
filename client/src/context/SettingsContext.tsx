@@ -6,10 +6,11 @@ export const DEFAULT_SETTINGS: Settings = {
   lang: 'fr',
   theme: 'dark',
   model: 'openrouter/free',
-  prayerMethod: 'uoif',
+  prayerMethod: 'aladhan-api',
   reciter: 'Alafasy_128kbps',
   translation: 'fr',
   prayerNotifications: false,
+  prayerPauseUntil: null,
 };
 
 interface Ctx {

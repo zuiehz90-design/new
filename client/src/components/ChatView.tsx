@@ -26,6 +26,41 @@ export function ChatView() {
   }, [messages.length, messages[messages.length - 1]?.content.length]);
 
   const [listOpen, setListOpen] = useState(false);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+
+  const toggleSelect = (id: string) => {
+    setSelected((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const selectAll = () => {
+    if (selected.size === chat.conversations.length) {
+      setSelected(new Set());
+    } else {
+      setSelected(new Set(chat.conversations.map((c) => c.id)));
+    }
+  };
+
+  const deleteSelected = () => {
+    if (selected.size === 0) return;
+    if (!window.confirm(`Supprimer ${selected.size} conversation(s) ?`)) return;
+    for (const id of selected) chat.deleteChat(id);
+    setSelected(new Set());
+    setSelectMode(false);
+  };
+
+  const deleteAll = () => {
+    if (chat.conversations.length === 0) return;
+    if (!window.confirm(`Supprimer toutes les conversations (${chat.conversations.length}) ?`)) return;
+    chat.clearAll();
+    setSelected(new Set());
+    setSelectMode(false);
+  };
 
   return (
     <div className="mx-auto flex h-full max-w-3xl flex-col px-4 pb-4 pt-4">
@@ -68,31 +103,82 @@ export function ChatView() {
           {chat.conversations.length === 0 ? (
             <p className="p-2 text-center text-xs text-stone-500">{t('chat.noConversations')}</p>
           ) : (
-            <ul className="space-y-1">
-              {chat.conversations.map((c) => (
-                <li key={c.id} className="flex items-center gap-1">
+            <>
+              {/* Barre d'actions */}
+              <div className="mb-2 flex items-center gap-1 px-1">
+                <button
+                  onClick={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
+                  className="rounded-lg px-2 py-1 text-[10px] font-bold transition"
+                  style={{ background: selectMode ? 'rgba(4,120,87,0.2)' : 'rgba(255,255,255,0.05)', color: selectMode ? 'var(--accent-primary)' : 'var(--text-secondary)' }}
+                >
+                  {selectMode ? '✕ Annuler' : '☑️ Sélectionner'}
+                </button>
+                {selectMode && (
                   <button
-                    onClick={() => { chat.openConversation(c.id); setListOpen(false); }}
-                    className="min-w-0 flex-1 truncate rounded-lg px-3 py-2 text-left text-sm transition"
-                    style={chat.activeId === c.id ? { background: 'rgba(4,120,87,0.12)', color: 'var(--accent-primary)', fontWeight: 600 } : { color: 'var(--text-secondary)' }}
+                    onClick={selectAll}
+                    className="rounded-lg px-2 py-1 text-[10px] font-bold text-stone-400 transition hover:text-white"
+                    style={{ background: 'rgba(255,255,255,0.05)' }}
                   >
-                    {c.title}
+                    {selected.size === chat.conversations.length ? ' Tout décocher' : '☑️ Tout cocher'}
                   </button>
+                )}
+                {selectMode && selected.size > 0 && (
                   <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (window.confirm(t('chat.confirmDelete'))) {
-                        chat.deleteChat(c.id);
-                      }
-                    }}
-                    className="shrink-0 rounded-lg px-2 py-2 text-xs text-stone-500 hover:text-red-400"
-                    title={t('chat.deleteChat')}
+                    onClick={deleteSelected}
+                    className="ml-auto rounded-lg px-2 py-1 text-[10px] font-bold text-red-400 transition hover:bg-red-500/20"
                   >
-                    🗑️
+                    🗑️ Supprimer ({selected.size})
                   </button>
-                </li>
-              ))}
-            </ul>
+                )}
+                {!selectMode && chat.conversations.length > 0 && (
+                  <button
+                    onClick={deleteAll}
+                    className="ml-auto rounded-lg px-2 py-1 text-[10px] font-bold text-red-400/60 transition hover:text-red-400"
+                  >
+                    🗑️ Tout supprimer
+                  </button>
+                )}
+              </div>
+              <ul className="space-y-1">
+                {chat.conversations.map((c) => (
+                  <li key={c.id} className="flex items-center gap-1">
+                    {selectMode && (
+                      <button
+                        onClick={() => toggleSelect(c.id)}
+                        className="shrink-0 flex h-5 w-5 items-center justify-center rounded-md text-xs transition"
+                        style={{
+                          background: selected.has(c.id) ? 'rgba(4,120,87,0.4)' : 'rgba(255,255,255,0.08)',
+                          border: '1px solid ' + (selected.has(c.id) ? 'rgba(4,120,87,0.8)' : 'rgba(255,255,255,0.15)'),
+                        }}
+                      >
+                        {selected.has(c.id) ? '✓' : ''}
+                      </button>
+                    )}
+                    <button
+                      onClick={() => { chat.openConversation(c.id); setListOpen(false); }}
+                      className="min-w-0 flex-1 truncate rounded-lg px-3 py-2 text-left text-sm transition"
+                      style={chat.activeId === c.id ? { background: 'rgba(4,120,87,0.12)', color: 'var(--accent-primary)', fontWeight: 600 } : { color: 'var(--text-secondary)' }}
+                    >
+                      {c.title}
+                    </button>
+                    {!selectMode && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (window.confirm(t('chat.confirmDelete'))) {
+                            chat.deleteChat(c.id);
+                          }
+                        }}
+                        className="shrink-0 rounded-lg px-2 py-2 text-xs text-stone-500 hover:text-red-400"
+                        title={t('chat.deleteChat')}
+                      >
+                        🗑️
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </>
           )}
         </div>
       )}

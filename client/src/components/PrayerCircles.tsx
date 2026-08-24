@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { useI18n } from '../i18n';
 import { type PrayerStatus } from '../lib/api';
 import { prayerLabel } from '../lib/prayer';
+import { LatePrayerModal } from './LatePrayerModal';
 
 const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 
@@ -18,12 +20,14 @@ export function PrayerCircles({
 }: {
   prayers: PrayerStatus | null;
   missed: string[];
-  onToggle: (key: string) => void;
+  onToggle: (key: string, opts?: { late?: boolean; lateMinutes?: number }) => void;
   timeOf?: (key: string) => Date | null | undefined;
 }) {
   const { t } = useI18n();
+  const [lateModal, setLateModal] = useState<{ key: string; prayerTime: Date } | null>(null);
 
   return (
+    <>
     <div className="flex items-start justify-between gap-1 sm:gap-2">
       {SALAT_KEYS.map((key) => {
         const done = prayers?.checked.includes(key) ?? false;
@@ -47,7 +51,18 @@ export function PrayerCircles({
         return (
           <button
             key={key}
-            onClick={() => onToggle(key)}
+            onClick={() => {
+              if (done) {
+                // Already done, uncheck directly
+                onToggle(key);
+              } else if (hasPassed && time) {
+                // Prayer has passed, show late modal
+                setLateModal({ key, prayerTime: time });
+              } else {
+                // Not yet passed, check directly
+                onToggle(key);
+              }
+            }}
             disabled={blocked}
             title={blocked ? t('prayer.notYet') : undefined}
             aria-disabled={blocked}
@@ -74,5 +89,19 @@ export function PrayerCircles({
         );
       })}
     </div>
+
+      {lateModal && (
+        <LatePrayerModal
+          open={true}
+          prayer={lateModal.key}
+          prayerTime={lateModal.prayerTime}
+          onClose={() => setLateModal(null)}
+          onConfirm={(late, lateMinutes) => {
+            onToggle(lateModal.key, { late, lateMinutes });
+            setLateModal(null);
+          }}
+        />
+      )}
+    </>
   );
 }

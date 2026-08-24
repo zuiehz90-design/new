@@ -70,6 +70,7 @@ export function ProfileView() {
   const [avatar, setAvatar] = useState<string>((user?.profile?.avatar as string) ?? 'initial');
   const [accent, setAccent] = useState<string>((user?.profile?.accent as string) ?? 'gold');
   const [favoriteSurah, setFavoriteSurah] = useState<string>((user?.profile?.favoriteSurah as string) ?? '');
+  const [gender, setGender] = useState<'male' | 'female' | ''>((user?.profile?.gender as 'male' | 'female') ?? '');
   const [goals, setGoals] = useState<string[]>(user?.profile?.goals ?? []);
   const [note, setNote] = useState<string>((user?.profile?.note as string) ?? '');
   const [saved, setSaved] = useState(false);
@@ -82,6 +83,7 @@ export function ProfileView() {
       setAvatar((user.profile?.avatar as string) ?? 'initial');
       setAccent((user.profile?.accent as string) ?? 'gold');
       setFavoriteSurah((user.profile?.favoriteSurah as string) ?? '');
+      setGender((user.profile?.gender as 'male' | 'female') ?? '');
     }
   }, [user]);
 
@@ -108,7 +110,7 @@ export function ProfileView() {
     try {
       await updateProfile({
         name: editName,
-        profile: { avatar, accent, favoriteSurah, goals, note },
+        profile: { avatar, accent, favoriteSurah, gender: gender || undefined, goals, note },
       });
       setSaved(true);
       setTimeout(() => setSaved(false), 2000);
@@ -247,6 +249,33 @@ export function ProfileView() {
               <option value="">— {t('profile.noFavoriteSurah')} —</option>
               {SURAHS.filter(Boolean).map((s, i) => (<option key={i} value={s}>{i + 1}. {s}</option>))}
             </select>
+          </div>
+
+          <div>
+            <label className="mb-1 block text-xs text-stone-500">{t('profile.gender')}</label>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setGender('male')}
+                className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm transition ${
+                  gender === 'male'
+                    ? 'border-gold-500/60 bg-gold-500/15 text-gold-300'
+                    : 'border-emerald-900/40 text-stone-400 hover:border-emerald-700'
+                }`}
+              >
+                👨 {t('profile.genderMale')}
+              </button>
+              <button
+                onClick={() => setGender('female')}
+                className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm transition ${
+                  gender === 'female'
+                    ? 'border-pink-500/60 bg-pink-500/15 text-pink-300'
+                    : 'border-emerald-900/40 text-stone-400 hover:border-emerald-700'
+                }`}
+              >
+                👩 {t('profile.genderFemale')}
+              </button>
+            </div>
+            <p className="mt-1 text-[10px] text-stone-500">{t('profile.genderHint')}</p>
           </div>
 
           <div>

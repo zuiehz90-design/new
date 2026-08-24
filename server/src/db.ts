@@ -53,14 +53,25 @@ function createSqliteDb(): DatabaseSync {
       db.exec('ALTER TABLE users ADD COLUMN last_seen TEXT');
     }
   } catch { /* migration deja faite */ }
-  db.exec('CREATE INDEX IF NOT EXISTS idx_users_anonymous ON users(is_anonymous, last_seen)');
-  // Migration : api_key OpenRouter par compte
+  db.exec('CREATE INDEX IF NOT EXISTS idx_users_anonymous ON users(is_anonymous, last_seen)');  // Migration : api_key OpenRouter par compte
   try {
     const cols = db.prepare('PRAGMA table_info(users)').all() as { name: string }[];
     if (!cols.some((c) => c.name === 'api_key')) {
       db.exec('ALTER TABLE users ADD COLUMN api_key TEXT');
     }
   } catch { /* migration deja faite */ }
+
+  // Migration : prières en retard (late, late_minutes)
+  try {
+    const cols = db.prepare('PRAGMA table_info(prayers)').all() as { name: string }[];
+    if (!cols.some((c) => c.name === 'late')) {
+      db.exec('ALTER TABLE prayers ADD COLUMN late INTEGER NOT NULL DEFAULT 0');
+    }
+    if (!cols.some((c) => c.name === 'late_minutes')) {
+      db.exec('ALTER TABLE prayers ADD COLUMN late_minutes INTEGER NOT NULL DEFAULT 0');
+    }
+  } catch { /* migration deja faite */ }
+
 
   db.exec(`
 CREATE TABLE IF NOT EXISTS sessions (
@@ -75,6 +86,8 @@ CREATE TABLE IF NOT EXISTS prayers (
   date TEXT NOT NULL,
   prayer TEXT NOT NULL,
   checked_at TEXT NOT NULL DEFAULT (datetime('now')),
+  late INTEGER NOT NULL DEFAULT 0,
+  late_minutes INTEGER NOT NULL DEFAULT 0,
   UNIQUE(user_id, date, prayer)
 );
 CREATE TABLE IF NOT EXISTS quests (

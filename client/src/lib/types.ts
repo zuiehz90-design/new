@@ -29,6 +29,8 @@ export interface Settings {
   reciter: string;
   translation: 'fr' | 'en';
   prayerNotifications: boolean;
+  /** Date de fin de pause des prières (timestamp). null = pas de pause. */
+  prayerPauseUntil: number | null;
 }
 
 export interface Coords {
@@ -43,7 +45,7 @@ export interface PrayerTimesResult {
   asr: string;
   maghrib: string;
   isha: string;
-  next: { name: string; time: string } | null;
+  next: { key: string; date: Date; name?: string; time?: string } | null;
 }
 
 export interface SearchResult {

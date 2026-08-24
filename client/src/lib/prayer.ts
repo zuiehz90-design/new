@@ -7,11 +7,23 @@ export const PRAYER_METHODS: {
   id: string;
   label: string;
   make: () => ReturnType<typeof CalculationMethod.Other>;
+  api?: boolean; // uses AlAdhan API instead of local calculation
 }[] = [
+  {
+    id: 'aladhan-api',
+    label: 'AlAdhan API (recommandé)',
+    make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 12; p.ishaAngle = 12; return p; },
+    api: true,
+  },
   {
     id: 'uoif',
     label: 'UOIF (France, 12°)',
     make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 12; p.ishaAngle = 12; return p; },
+  },
+  {
+    id: 'mosquee-paris',
+    label: 'Mosquée de Paris (18°)',
+    make: () => { const p = CalculationMethod.Other(); p.fajrAngle = 18; p.ishaAngle = 18; return p; },
   },
   { id: 'muslim-world-league', label: 'Muslim World League', make: () => CalculationMethod.MuslimWorldLeague() },
   { id: 'egyptian', label: 'Egyptian', make: () => CalculationMethod.Egyptian() },

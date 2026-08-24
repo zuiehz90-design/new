@@ -196,7 +196,7 @@ function NavIcon({ name, className }: { name: string; className?: string }) {
       )}
 
 {/* ====== BARRE DU BAS (MOBILE) ====== */}
-      <nav className="flex items-center justify-around border-t border-emerald-900/30 bg-night-900/90 px-1 py-1.5 pb-safe backdrop-blur lg:hidden shrink-0">
+      <nav className="relative z-20 flex items-center justify-around border-t border-emerald-900/30 bg-night-900/90 px-1 py-1.5 pb-safe backdrop-blur lg:hidden shrink-0">
         {navItems.map((item) => (
           <Link
             key={item.to}

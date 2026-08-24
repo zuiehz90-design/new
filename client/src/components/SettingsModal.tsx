@@ -12,6 +12,7 @@ const LANGUAGES = [
 
 const PRAYER_METHODS = [
   { id: 'uoif', label: 'UOIF (France, 12°)' },
+  { id: 'mosquee-paris', label: 'Mosquée de Paris (18°)' },
   { id: 'muslim-world-league', label: 'Muslim World League' },
   { id: 'egyptian', label: 'Egyptian' },
   { id: 'karachi', label: 'Karachi' },

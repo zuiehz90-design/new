@@ -17,6 +17,18 @@ const QUEST_ICONS: Record<string, string> = {
   akhlaq: '💚',
 };
 
+/** Liens Coran associés à certaines quêtes */
+const QURAN_LINKS: Record<string, { label: string; href: string }[]> = {
+  'Mémorise 3 versets': [
+    { label: '📖 Al-Fatiha (1)', href: '/quran?surah=1&verse=1' },
+    { label: '📖 Al-Ikhlas (112)', href: '/quran?surah=112&verse=1' },
+    { label: '📖 An-Nas (114)', href: '/quran?surah=114&verse=1' },
+  ],
+  'Récite Ayat al-Kursi': [
+    { label: '📖 Ayat al-Kursi (2:255)', href: '/quran?surah=2&verse=255' },
+  ],
+};
+
 const TIER_ICON: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇' };
 
 function localDate(): string {
@@ -134,6 +146,21 @@ export function QuestsView() {
                   <span className="flex-1">
                     <span className={'block text-sm font-semibold ' + (q.done ? 'text-stone-400 line-through' : '')}>{q.title}</span>
                     {q.description && <span className="block text-[11px] text-stone-500">{q.description}</span>}
+                    {/* Liens Coran pour les quêtes spécifiques */}
+                    {QURAN_LINKS[q.title] && !q.done && (
+                      <span className="mt-1 flex flex-wrap gap-1">
+                        {QURAN_LINKS[q.title].map((link) => (
+                          <button
+                            key={link.href}
+                            onClick={(e) => { e.stopPropagation(); navigate(link.href); }}
+                            className="rounded-lg px-2 py-0.5 text-[10px] font-bold transition hover:bg-emerald-500/20"
+                            style={{ background: 'rgba(4,120,87,0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(4,120,87,0.3)' }}
+                          >
+                            {link.label}
+                          </button>
+                        ))}
+                      </span>
+                    )}
                     {(q.verification || q.quiz) && !q.done && (
                       <span className="mt-0.5 block text-[10px] font-semibold text-amber-400/90">
                         🔒 {q.verification?.kind === 'prayer' && t('quest.verify.prayerHint')}

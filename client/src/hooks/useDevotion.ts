@@ -99,7 +99,7 @@ export function useDevotion() {
 
   useEffect(() => { load(); }, [load]);
 
-  const togglePrayer = useCallback(async (prayer: string) => {
+  const togglePrayer = useCallback(async (prayer: string, opts?: { late?: boolean; lateMinutes?: number }) => {
     if (!user || !prayers) return;
     // Feedback haptique (Android/Chrome) : petite pulsation tactile au toucher
     try {
@@ -109,7 +109,7 @@ export function useDevotion() {
     try {
       let res: any;
       if (checked) res = await apiUncheckPrayer(prayer);
-      else res = await apiCheckPrayer(prayer);
+      else res = await apiCheckPrayer(prayer, opts);
       await load();
       // Toast de promotion de rang (façon jeu vidéo)
       const newRank = res?.newRank as RankInfo | undefined;
@@ -124,7 +124,12 @@ export function useDevotion() {
           showToast(info.icon, info.name, 'Badge débloqué !', 'bg-amber-400');
         });
       } else if (!checked && !newRank) {
-        showToast('✅', 'Salat check-in', '+10 pts', 'bg-emerald-500');
+        const penalty = res?.penalty ?? 0;
+        if (opts?.late && penalty < 0) {
+          showToast('⏰', 'Prière en retard', `${penalty} pts`, 'bg-amber-500');
+        } else {
+          showToast('✅', 'Salat check-in', '+10 pts', 'bg-emerald-500');
+        }
       }
     } catch { /* ignore */ }
   }, [user, prayers, load, showToast]);

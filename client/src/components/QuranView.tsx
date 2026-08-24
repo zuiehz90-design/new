@@ -4,7 +4,7 @@ import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
 import { SURAHS } from '../lib/surahs';
 import { useReadingPosition } from '../context/ReadingPositionContext';
-import { EDITIONS, fetchSurah, searchQuran, fetchTafsir, type TranslationKey } from '../lib/quran';
+import { EDITIONS, fetchSurah, searchQuran, type TranslationKey } from '../lib/quran';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { storageKey } from '../lib/storageScope';
@@ -346,11 +346,7 @@ function SearchResults({
   const [error, setError] = useState(false);
   const { state: audioState, play: audioPlay, stop: audioStop, toggle: audioToggle } = useAudioPlayer();
   const [playingSurah, setPlayingSurah] = useState(false);
-  const [tafsir, setTafsir] = useState<Verse[] | null>(null);
-  const [tafsirOpen, setTafsirOpen] = useState<number | null>(null);
-  const [tafsirError, setTafsirError] = useState(false);
-  const [tafsirFr, setTafsirFr] = useState<string | null>(null);
-  const [tafsirFrLoading, setTafsirFrLoading] = useState(false);
+
   const [jumpFlash, setJumpFlash] = useState<number | null>(null);
   const { show: showToast } = useToast();
   const { setPosition, getPosition, clearPosition } = useReadingPosition();
@@ -392,19 +388,6 @@ function SearchResults({
     const container = document.querySelector('main .overflow-y-auto') as HTMLElement | null;
     container?.scrollTo({ top: 0, behavior: 'smooth' });
   };
-
-  useEffect(() => {
-    let alive = true;
-    setTafsir(null);
-    setTafsirOpen(null);
-    setTafsirError(false);
-    void fetchTafsir(chapter)
-      .then((d) => alive && setTafsir(d))
-      .catch(() => alive && setTafsirError(true));
-    return () => {
-      alive = false;
-    };
-  }, [chapter]);
 
   useEffect(() => {
     let alive = true;
@@ -466,58 +449,7 @@ function SearchResults({
 
 
 
-  // Fetch tafsir en français via l'IA
-      const fetchTafsirFr = async (verse: number) => {
-    if (tafsirFr && tafsirOpen === verse) { setTafsirFr(null); return; }
-    setTafsirOpen(verse);
-    setTafsirFr(null);
-    setTafsirFrLoading(true);
-    try {
-      const res = await fetch('/api/chat', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          ...(getToken() ? { Authorization: `Bearer ${getToken()}` } : {}),
-        },
-        body: JSON.stringify({
-          messages: [{
-            role: 'user',
-            content: "Explique brievement en francais (3-4 phrases max) le sens du verset " + chapter + ":" + verse + " du Coran (" + meta.name + "). Sois clair et simple. Ne cite pas de sources inventees."
-          }]
-        })
-      });
-      const reader = res.body?.getReader();
-      const decoder = new TextDecoder();
-      let buf = '';
-      let text = '';
-      if (reader) {
-        for (;;) {
-          const { done, value } = await reader.read();
-          if (done) break;
-          buf += decoder.decode(value, { stream: true });
-          const lines = buf.split("\n");
-          buf = lines.pop() ?? '';
-          for (const line of lines) {
-            const trimmed = line.trim();
-            if (!trimmed.startsWith('data:')) continue;
-            const payload = trimmed.slice(5).trim();
-            if (payload === '[DONE]') continue;
-            try {
-              const json = JSON.parse(payload);
-              const delta = json.choices?.[0]?.delta;
-              const chunk = delta?.content ?? delta?.reasoning ?? delta?.reasoning_details?.[0]?.text;
-              if (typeof chunk === 'string' && chunk) text += chunk;
-            } catch { /* chunk partiel */ }
-          }
-        }
-      }
-      setTafsirFr(text || null);
-    } catch {
-      setTafsirFr(null);
-    } finally {
-      setTafsirFrLoading(false);
-    }
-  };if (error) return <p className="text-sm text-red-400">{t('quran.error')}</p>;
+if (error) return <p className="text-sm text-red-400">{t('quran.error')}</p>;
   if (!ar) return <p className="text-sm text-stone-400">{t('quran.loading')}</p>;
 
   return (
@@ -581,20 +513,7 @@ function SearchResults({
                   >
                     {isSaved ? '📍 ✕' : '📌'}
                   </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      if (tafsirOpen === v.verse) {
-                        setTafsirOpen(null);
-                        setTafsirFr(null);
-                      } else {
-                        fetchTafsirFr(v.verse);
-                      }
-                    }}
-                    className={`chip ${tafsirOpen === v.verse ? '!border-emerald-500/70' : ''}`}
-                  >
-                    📖 {t('quran.tafsir')}
-                  </button>
+
                   <VerseShareButton
                     chapter={v.chapter}
                     verse={v.verse}
@@ -613,28 +532,7 @@ function SearchResults({
                   {v.translated}
                 </div>
               )}
-              {tafsirOpen === v.verse && (
-                <div className="mt-2 rounded-xl border border-gold-500/20 bg-night-800/40 p-3">
-                  {/* Tafsir français */}
-                  {tafsirFrLoading ? (
-                    <p className="text-xs text-stone-400">{t('quran.loading')}</p>
-                  ) : tafsirFr ? (
-                    <>
-                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-gold-400">📖 Tafsir (français)</p>
-                      <p className="text-sm leading-relaxed text-stone-200">{tafsirFr}</p>
-                    </>
-                  ) : tafsirError ? (
-                    <p className="text-xs text-stone-400">{t('quran.tafsirUnavailable')}</p>
-                  ) : tafsir ? (
-                    <>
-                      <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-gold-400">📖 Tafsir (arabe)</p>
-                      <p className="font-quran-alt text-sm leading-relaxed text-stone-200" dir="rtl">
-                        {tafsir.find((x) => x.verse === v.verse)?.text ?? ''}
-                      </p>
-                    </>
-                  ) : null}
-                </div>
-              )}
+
             </div>
           );
         })}
