@@ -19,15 +19,11 @@ export interface PrayerTimes {
   maghrib: string;
   isha: string;
   date: string;
+  mosque: string;
+  timezone: string;
+  hijri: string;
   [key: string]: string;
 }
-
-export interface MethodInfo {
-  id: string;
-  label: string;
-}
-
-let methodsCache: { methods: MethodInfo[]; default: string } | null = null;
 
 async function api<T>(path: string): Promise<T> {
   const res = await fetch(`/api/${path}`);
@@ -44,21 +40,9 @@ export async function searchMosques(query: string): Promise<MawaqitMosque[]> {
   return data.mosques ?? [];
 }
 
-export async function getPrayerTimes(
-  lat: number,
-  lon: number,
-  method: string = 'uoif',
-  date?: string,
-): Promise<PrayerTimes> {
-  const params = new URLSearchParams({ lat: String(lat), lon: String(lon), method });
-  if (date) params.set('date', date);
-  const data = await api<{ times: PrayerTimes }>(`mawaqit/times?${params.toString()}`);
+export async function getMosqueTimes(masjidId: string): Promise<PrayerTimes> {
+  const data = await api<{ times: PrayerTimes }>(
+    `mawaqit/mosque/${encodeURIComponent(masjidId)}/times`,
+  );
   return data.times;
-}
-
-export async function listMethods(): Promise<{ methods: MethodInfo[]; default: string }> {
-  if (!methodsCache) {
-    methodsCache = await api<{ methods: MethodInfo[]; default: string }>('mawaqit/methods');
-  }
-  return methodsCache!;
 }

@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
-import { getPrayerTimes } from '../lib/mawaqit';
+import { getMosqueTimes } from '../lib/mawaqit';
 import { type PrayerKey } from '../lib/prayer';
 
 interface Trigger {
@@ -82,11 +82,10 @@ export function useQuestNotifications() {
   const { user } = useAuth();
   const lastFired = useRef<Record<string, string>>({});
 
-  const lat = settings.mawaqitLatitude;
-  const lon = settings.mawaqitLongitude;
+  const mosqueId = settings.mawaqitMosqueId;
 
   useEffect(() => {
-    if (!settings.prayerNotifications || !user || !lat || !lon) return;
+    if (!settings.prayerNotifications || !user || !mosqueId) return;
 
     let cancelled = false;
 
@@ -105,7 +104,7 @@ export function useQuestNotifications() {
         const pending = quests.filter((q) => !q.done);
         if (pending.length === 0) return;
 
-        const times = await getPrayerTimes(lat, lon, settings.prayerMethod ?? 'uoif');
+        const times = await getMosqueTimes(mosqueId);
         if (!times) return;
 
         const now = new Date();
@@ -144,5 +143,5 @@ export function useQuestNotifications() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [settings.prayerNotifications, lat, lon, settings.prayerMethod, user]);
+  }, [settings.prayerNotifications, mosqueId, user]);
 }

@@ -4,7 +4,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
 import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
-import { searchMosques, listMethods, type MawaqitMosque, type MethodInfo } from '../lib/mawaqit';
+import { searchMosques, type MawaqitMosque } from '../lib/mawaqit';
 import { PrayerCircles } from './PrayerCircles';
 import { PrayerPauseModal } from './PrayerPauseModal';
 
@@ -29,10 +29,6 @@ export function PrayerView() {
   const [message, setMessage] = useState<string | null>(null);
   const [showSearch, setShowSearch] = useState(false);
 
-  // Méthodes
-  const [methods, setMethods] = useState<MethodInfo[]>([]);
-  useEffect(() => { listMethods().then(m => setMethods(m.methods)).catch(() => {}); }, []);
-
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
   const pauseRemaining = isPaused ? formatPauseRemaining(settings.prayerPauseUntil! - Date.now()) : null;
   const canPause = user?.profile?.gender === 'female';
@@ -43,8 +39,6 @@ export function PrayerView() {
     const timer = setInterval(() => setNow(Date.now()), 30_000);
     return () => clearInterval(timer);
   }, []);
-
-  const methodLabel = (id: string) => methods.find(m => m.id === id)?.label ?? id;
 
   // Prières manquées
   const missed = useMemo(() => {
@@ -78,10 +72,8 @@ export function PrayerView() {
   const selectMosque = (m: MawaqitMosque) => {
     setSettings((s) => ({
       ...s,
-      mawaqitMosqueId: m.uuid,
+      mawaqitMosqueId: m.slug || m.uuid,
       mawaqitMosqueName: m.name,
-      mawaqitLatitude: m.latitude,
-      mawaqitLongitude: m.longitude,
     }));
     setResults([]);
     setQuery('');
@@ -178,7 +170,7 @@ export function PrayerView() {
             ))}
           </div>
           <p className="mt-2 text-center text-[10px] text-stone-500">
-            🕌 {settings.mawaqitMosqueName ?? t('prayer.defaultCity')} · {methodLabel(settings.prayerMethod ?? 'uoif')}
+            🕌 {settings.mawaqitMosqueName ?? t('prayer.defaultCity')} · {t('prayer.mawaqitSource')}
           </p>
         </>
       )}
@@ -243,21 +235,6 @@ export function PrayerView() {
           </div>
         )}
 
-        {/* Méthode de calcul */}
-        {methods.length > 0 && (
-          <div className="pt-2 border-t border-stone-800/50">
-            <label className="text-[10px] text-stone-500">{t('prayer.method')}</label>
-            <select
-              value={settings.prayerMethod ?? 'uoif'}
-              onChange={(e) => setSettings((s) => ({ ...s, prayerMethod: e.target.value }))}
-              className="input mt-1 w-full text-xs"
-            >
-              {methods.map((m) => (
-                <option key={m.id} value={m.id}>{m.label}</option>
-              ))}
-            </select>
-          </div>
-        )}
       </div>
 
       {/* Modal pause */}

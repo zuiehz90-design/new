@@ -25,16 +25,10 @@ export interface Settings {
   lang: 'fr' | 'en' | 'ar';
   theme: 'dark' | 'light';
   model: string;
-  /** UUID de la mosquée MAWAQIT sélectionnée (null = non configurée). */
+  /** Slug de la mosquée MAWAQIT sélectionnée (null = non configurée). */
   mawaqitMosqueId: string | null;
   /** Nom de la mosquée sélectionnée (affiché dans l'UI). */
   mawaqitMosqueName: string | null;
-  /** Latitude de la mosquée sélectionnée. */
-  mawaqitLatitude: number | null;
-  /** Longitude de la mosquée sélectionnée. */
-  mawaqitLongitude: number | null;
-  /** Méthode de calcul (uoif, paris, mwl, karachi). */
-  prayerMethod: string;
   reciter: string;
   translation: 'fr' | 'en';
   prayerNotifications: boolean;

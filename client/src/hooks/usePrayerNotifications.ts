@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { getPrayerTimes } from '../lib/mawaqit';
+import { getMosqueTimes } from '../lib/mawaqit';
 import { PRAYER_KEYS, type PrayerKey } from '../lib/prayer';
 
 function parseTime(timeStr: string | undefined): Date | null {
@@ -23,18 +23,17 @@ export function usePrayerNotifications() {
   const lastFired = useRef<Record<string, string>>({});
 
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
-  const lat = settings.mawaqitLatitude;
-  const lon = settings.mawaqitLongitude;
+  const mosqueId = settings.mawaqitMosqueId;
 
   useEffect(() => {
-    if (!settings.prayerNotifications || !lat || !lon || typeof Notification === 'undefined' || isPaused) return;
+    if (!settings.prayerNotifications || !mosqueId || typeof Notification === 'undefined' || isPaused) return;
 
     let cancelled = false;
 
     const check = async () => {
       if (cancelled) return;
       try {
-        const times = await getPrayerTimes(lat, lon, settings.prayerMethod ?? 'uoif');
+        const times = await getMosqueTimes(mosqueId);
         if (!times) return;
         const now = new Date();
         for (const key of PRAYER_KEYS) {
@@ -66,5 +65,5 @@ export function usePrayerNotifications() {
       cancelled = true;
       clearInterval(id);
     };
-  }, [settings.prayerNotifications, lat, lon, settings.prayerMethod, isPaused]);
+  }, [settings.prayerNotifications, mosqueId, isPaused]);
 }
