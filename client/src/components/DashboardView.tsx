@@ -99,8 +99,8 @@ export function DashboardView() {
               <p className="mt-1 text-xs leading-relaxed text-stone-300">{t('dashboard.desktopDesc')}</p>
               <div className="mt-3 flex flex-wrap items-center gap-2">
                 <a
-                  href="/download/nour-setup.exe"
-                  className="btn-gold text-xs"
+                  href="https://github.com/zuiehz90-design/new/releases"
+                  className="btn-gold text-xs" target="_blank" rel="noopener"
                 >
                   ⬇️ {t('dashboard.desktopCta')}
                 </a>

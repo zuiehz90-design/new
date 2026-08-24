@@ -151,16 +151,9 @@ if (fs.existsSync(clientDist)) {
     },
   }));
 
-  // Route de téléchargement direct : priorité sur la SPA
-  const downloadsDir = path.resolve(__dirname, '../../public/downloads');
-  const desktopExePath = path.join(downloadsDir, 'Nour-1.0.0-portable.exe');
+  // Redirection vers les GitHub Releases (l'exe n'est pas déployé sur Render)
   app.get('/download/nour-setup.exe', (_req, res) => {
-    if (fs.existsSync(desktopExePath)) {
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      res.download(desktopExePath, 'Nour-Setup.exe');
-    } else {
-      res.status(404).json({ error: 'Le fichier n\'est pas disponible actuellement.' });
-    }
+    res.redirect(301, 'https://github.com/zuiehz90-design/new/releases');
   });
 
   app.get(/^\/(?!api\/|robots\.txt$|sitemap\.xml$|download\/).*/, sendIndex);
