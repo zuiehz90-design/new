@@ -13,7 +13,7 @@ const TIER_COLOR: Record<string, string> = {
 };
 
 /**
- * Modal des rangs : n'affiche que les paliers qui ont au moins un joueur.
+ * Modal des rangs : affiche TOUS les paliers (même vides, grisés).
  */
 export function RankModal({
   open,
@@ -43,14 +43,18 @@ export function RankModal({
 
   const tiers = data?.ranks ?? [];
 
-  // Grouper par palier, ne garder que ceux qui ont au moins 1 joueur
+  // Grouper par palier (tous, même vides)
   const tierGroups: { tier: string; icon: string; color: string; entries: RankDistributionEntry[] }[] = [];
   for (const r of tiers.filter((x) => x.id !== 'legende')) {
     const last = tierGroups[tierGroups.length - 1];
     if (last && last.tier === r.tier) last.entries.push(r);
     else tierGroups.push({ tier: r.tier, icon: r.icon, color: r.color, entries: [r] });
   }
-  const populatedGroups = tierGroups.filter(g => g.entries.reduce((a, e) => a + e.count, 0) > 0);
+  // Tous les paliers, peuplés ou non
+  const allGroups = tierGroups;
+
+  // Déterminer l'index du palier actuel pour griser ceux d'après
+  const currentGroupIdx = allGroups.findIndex(g => g.tier === currentRank.tier);
 
   const legendeEntry = tiers.find((r) => r.id === 'legende');
   const isCurrentRank = (r: RankDistributionEntry) => r.id === currentRank.id;
@@ -113,39 +117,46 @@ export function RankModal({
             <div className="py-10 text-center text-sm text-stone-500">{t('common.loading')}</div>
           )}
 
-          {!loading && populatedGroups.length === 0 && (
+          {!loading && allGroups.length === 0 && (
             <div className="py-8 text-center">
               <p className="text-sm text-stone-400">{t('rank.noPlayers')}</p>
             </div>
           )}
 
-          {/* Ladder : seuls les paliers peuplés */}
-          {!loading && populatedGroups.map((group, gi) => {
+          {/* Ladder : TOUS les paliers */}
+          {!loading && allGroups.map((group, gi) => {
             const color = TIER_COLOR[group.tier] ?? '#e8a24f';
             const groupCount = group.entries.reduce((a, e) => a + e.count, 0);
+            // Paliers au-dessus du rang actuel : grisés (verrouillés)
+            const isLocked = gi > currentGroupIdx;
+            const effectiveColor = isLocked ? '#555' : color;
+            const dimmed = isLocked ? 'opacity-40' : '';
+
             return (
               <div key={group.tier} className={gi > 0 ? 'mt-3' : ''}>
                 {/* Bandeau du palier */}
                 <div
-                  className="mb-1.5 flex items-center gap-2 rounded-lg px-3 py-1.5"
+                  className={`mb-1.5 flex items-center gap-2 rounded-lg px-3 py-1.5 ${dimmed}`}
                   style={{
-                    background: color + '15',
-                    border: '1px solid ' + color + '25',
+                    background: isLocked ? '#ffffff08' : (color + '15'),
+                    border: '1px solid ' + (isLocked ? '#ffffff10' : color + '25'),
                   }}
                 >
-                  <span className="text-base">{group.icon}</span>
-                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color }}>{group.tier}</span>
-                  <span className="ml-auto text-[10px] text-stone-500">{groupCount} {t('rank.players')}</span>
+                  <span className="text-base">{isLocked ? '🔒' : group.icon}</span>
+                  <span className="text-xs font-bold uppercase tracking-wider" style={{ color: isLocked ? '#666' : color }}>{group.tier}</span>
+                  <span className="ml-auto text-[10px]" style={{ color: isLocked ? '#555' : undefined }}>
+                    {groupCount} {t('rank.players')}
+                  </span>
                 </div>
 
                 {/* Entrées du palier */}
                 <div className="space-y-1">
-                  {group.entries.filter(e => e.count > 0 || e.id === currentRank.id).map((r) => {
+                  {group.entries.map((r) => {
                     const isCurrent = isCurrentRank(r);
                     return (
                       <div
                         key={r.id}
-                        className="flex items-center gap-2 rounded-lg px-3 py-2 transition-all"
+                        className={`flex items-center gap-2 rounded-lg px-3 py-2 transition-all ${dimmed}`}
                         style={{
                           border: '1px solid ' + (isCurrent ? color + '40' : 'transparent'),
                           background: isCurrent ? color + '0a' : 'transparent',
@@ -164,8 +175,8 @@ export function RankModal({
                           <p className="text-[10px] text-stone-500">{r.min} pts</p>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-bold" style={{ color }}>{r.count}</p>
-                          <p className="text-[9px] text-stone-600">{r.pct}%</p>
+                          <p className="text-sm font-bold" style={{ color: effectiveColor }}>{isLocked ? '—' : r.count}</p>
+                          <p className="text-[9px] text-stone-600">{isLocked ? '—' : r.pct + '%'}</p>
                         </div>
                       </div>
                     );
@@ -174,15 +185,6 @@ export function RankModal({
               </div>
             );
           })}
-
-          {/* Prochains paliers (vides) */}
-          {!loading && populatedGroups.length > 0 && (
-            <div className="mt-4 text-center">
-              <p className="text-[10px] text-stone-600">
-                {t('rank.next')} — {t('rank.noPlayers')}
-              </p>
-            </div>
-          )}
 
           {/* Légende (toujours visible en dernier) */}
           {!loading && legendeEntry && (

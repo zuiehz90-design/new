@@ -12,7 +12,7 @@ import { useAiSetup } from '../hooks/useAiSetup';
 import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
 import { MoonIcon } from './icons';
-import { isDesktop } from '../lib/desktop';
+import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
 const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export function DashboardView() {
@@ -27,6 +27,7 @@ export function DashboardView() {
   const [desktopBannerDismissed, setDesktopBannerDismissed] = useState(
     () => localStorage.getItem('nour-desktop-banner-dismissed') === '1'
   );
+  const [desktopOnline, setDesktopOnline] = useState<boolean | null>(null);
   const aiSetup = useAiSetup();
   const aiConfigured = aiSetup.status !== 'missing';
 
@@ -34,6 +35,13 @@ export function DashboardView() {
     localStorage.setItem('nour-desktop-banner-dismissed', '1');
     setDesktopBannerDismissed(true);
   };
+
+  // Vérifier si l'app desktop est connectée à la base en ligne
+  useEffect(() => {
+    if (isDesktop) {
+      isDesktopOnline().then(setDesktopOnline);
+    }
+  }, []);
 
   // Vérifier si la pause est active
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
@@ -71,6 +79,16 @@ export function DashboardView() {
         <h1 className="mt-2 text-2xl font-bold">
           {t('dashboard.title')} <MoonIcon className="inline h-5 w-5 text-gold-400" />
         </h1>
+        {/* Indicateur synchro desktop */}
+        {isDesktop && desktopOnline !== null && (
+          <p className="mt-1 text-[10px]">
+            {desktopOnline ? (
+              <span className="text-emerald-400">🟢 Synchronisé avec le compte en ligne</span>
+            ) : (
+              <span className="text-amber-400">🟠 Mode hors-ligne — données locales uniquement</span>
+            )}
+          </p>
+        )}
       </div>
 
       {/* Bannière app desktop (web uniquement) */}

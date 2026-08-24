@@ -9,6 +9,7 @@ export interface NourDesktop {
   openFile: (path: string) => Promise<void>;
   getDbPath: () => Promise<string>;
   getVersion: () => Promise<string>;
+  getDatabaseUrl: () => Promise<string>;
 }
 
 const win = window as typeof window & { nourDesktop?: NourDesktop };
@@ -18,3 +19,14 @@ export const isDesktop = !!win.nourDesktop?.isDesktop;
 
 /** API desktop sécurisée, null si mode web */
 export const desktop: NourDesktop | null = win.nourDesktop ?? null;
+
+/** Vérifie si l'app desktop est connectée à la base en ligne */
+export async function isDesktopOnline(): Promise<boolean> {
+  if (!desktop) return false;
+  try {
+    const url = await desktop.getDatabaseUrl();
+    return !!url;
+  } catch {
+    return false;
+  }
+}

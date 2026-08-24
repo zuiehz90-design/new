@@ -182,6 +182,30 @@ export function PrayerView() {
         </section>
       )}
 
+      {times && (
+        <>
+          {times.next && (
+            <div className="card mb-4 border-gold-500/40 bg-gold-500/5 p-4 text-center shadow-glow">
+              <p className="text-xs text-gold-400">{t('prayer.next')}</p>
+              <p className="text-lg font-bold text-gold-300">{t(PRAYER_LABELS[times.next.key] ?? times.next.key)}</p>
+            </div>
+          )}
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+            {(['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((k) => (
+              <div key={k} className="card p-3 text-center">
+                <p className="text-xs text-stone-400">{t(PRAYER_LABELS[k])}</p>
+                <p className="text-lg font-semibold">{times[k]}</p>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+
+      {!active && !loading && (
+        <p className="text-center text-sm text-stone-500">{t('prayer.geoError')}</p>
+      )}
+
+
       {/* Localisation */}
       <div className="card mb-4 p-4 space-y-3">
         <h3 className="text-sm font-bold text-gold-400">📍 {t('prayer.location')}</h3>
@@ -264,29 +288,6 @@ export function PrayerView() {
           ))}
         </select>
       </div>
-
-      {times && (
-        <>
-          {times.next && (
-            <div className="card mb-4 border-gold-500/40 bg-gold-500/5 p-4 text-center shadow-glow">
-              <p className="text-xs text-gold-400">{t('prayer.next')}</p>
-              <p className="text-lg font-bold text-gold-300">{t(PRAYER_LABELS[times.next.key] ?? times.next.key)}</p>
-            </div>
-          )}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
-            {(['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((k) => (
-              <div key={k} className="card p-3 text-center">
-                <p className="text-xs text-stone-400">{t(PRAYER_LABELS[k])}</p>
-                <p className="text-lg font-semibold">{times[k]}</p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-
-      {!active && !loading && (
-        <p className="text-center text-sm text-stone-500">{t('prayer.geoError')}</p>
-      )}
 
       {/* Modal de pause */}
       <PrayerPauseModal open={pauseOpen} onClose={() => setPauseOpen(false)} />

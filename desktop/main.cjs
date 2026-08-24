@@ -10,6 +10,94 @@ const isDev = !app.isPackaged;
 const SERVER_PORT = 3001;
 const BASE_URL = `http://localhost:${SERVER_PORT}`;
 
+// ---- Gestion de la configuration (DATABASE_URL) ----
+function getConfigPath() {
+  return path.join(app.getPath('userData'), 'config.json');
+}
+
+function loadConfig() {
+  try {
+    const raw = fs.readFileSync(getConfigPath(), 'utf8');
+    return JSON.parse(raw);
+  } catch {
+    return {};
+  }
+}
+
+function saveConfig(data) {
+  fs.writeFileSync(getConfigPath(), JSON.stringify(data, null, 2), 'utf8');
+}
+
+function getDatabaseUrl() {
+  const cfg = loadConfig();
+  // Priorité : variable d'environnement > config locale
+  return process.env.DATABASE_URL || cfg.databaseUrl || '';
+}
+
+async function askForDatabaseUrl() {
+  const result = await dialog.showMessageBox(mainWindow || undefined, {
+    type: 'question',
+    title: 'Configuration — Base de données',
+    message: 'Pour synchroniser vos données entre le desktop et le web,\nNour doit se connecter à votre base PostgreSQL Neon.',
+    detail: 'Collez votre DATABASE_URL (Neon) dans le champ ci-dessous.\n\nExemple : postgresql://...@ep-....neon.tech/...\n\nSi vous ne l\'avez pas, vous pouvez utiliser l\'app en mode hors-ligne\n(sans synchronisation).',
+    buttons: ['Configurer', 'Mode hors-ligne'],
+    defaultId: 0,
+    cancelId: 1,
+  });
+
+  if (result.response === 0) {
+    // L'utilisateur veut configurer → on lit depuis le presse-papier ou on demande
+    // Electron ne permet pas un vrai input dans showMessageBox, donc on crée une fenêtre temporaire
+    return promptForUrl();
+  }
+  return ''; // Mode hors-ligne
+}
+
+async function promptForUrl() {
+  return new Promise((resolve) => {
+    const promptWin = new BrowserWindow({
+      width: 520,
+      height: 320,
+      resizable: false,
+      frame: true,
+      title: 'Nour — Configuration base de données',
+      webPreferences: { nodeIntegration: true, contextIsolation: false },
+    });
+
+    const html = `
+      <html>
+      <head><meta charset="utf-8"><title>Configuration</title></head>
+      <body style="font-family:system-ui;background:#0a1a14;color:#e2e8f0;padding:20px;display:flex;flex-direction:column;height:100vh;box-sizing:border-box;margin:0">
+        <h2 style="color:#cfa14a;margin:0 0 4px">Base de données PostgreSQL</h2>
+        <p style="font-size:12px;color:#9ca3af;margin:0 0 16px">Collez votre DATABASE_URL Neon pour synchroniser vos données.</p>
+        <input id="url" type="text" placeholder="postgresql://user:pass@host/db" style="padding:8px;border:1px solid #334155;border-radius:8px;background:#0f1f1b;color:#e2e8f0;width:100%;box-sizing:border-box;font-size:12px;margin-bottom:8px" />
+        <p style="font-size:10px;color:#9ca3af;margin:0 0 16px">Vous pouvez aussi passer en mode hors-ligne : fermez cette fenêtre.</p>
+        <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:auto">
+          <button id="skip" style="padding:6px 14px;border:1px solid #334155;border-radius:8px;background:transparent;color:#9ca3af;cursor:pointer">Hors-ligne</button>
+          <button id="save" style="padding:6px 14px;border:none;border-radius:8px;background:#cfa14a;color:#0a1a14;cursor:pointer;font-weight:bold">Connecter</button>
+        </div>
+        <script>
+          const { ipcRenderer } = require('electron');
+          document.getElementById('save').onclick = () => {
+            const url = document.getElementById('url').value.trim();
+            if (url) ipcRenderer.send('set-database-url', url);
+            window.close();
+          };
+          document.getElementById('skip').onclick = () => window.close();
+          document.getElementById('url').onkeydown = (e) => {
+            if (e.key === 'Enter') document.getElementById('save').click();
+          };
+          document.getElementById('url').focus();
+        </script>
+      </body>
+      </html>
+    `;
+
+    promptWin.loadURL(`data:text/html;charset=utf-8,${encodeURIComponent(html)}`);
+    promptWin.on('closed', () => resolve(''));
+  });
+}
+
 // ---- Fenêtre principale ----
 function createWindow() {
   mainWindow = new BrowserWindow({
@@ -51,15 +139,41 @@ function buildMenu() {
       ],
     },
     {
+      label: 'Base de données',
+      submenu: [
+        {
+          label: 'Reconfigurer la connexion...',
+          click: async () => {
+            await promptForUrl();
+            // Redémarrer le serveur avec la nouvelle config
+            stopServer();
+            startServer();
+            try { await waitForServer(); } catch { /* ignore */ }
+            mainWindow?.reload();
+          },
+        },
+        {
+          label: 'Mode hors-ligne (données locales)',
+          click: () => {
+            saveConfig({ databaseUrl: '' });
+            stopServer();
+            startServer();
+            mainWindow?.reload();
+          },
+        },
+        { type: 'separator' },
+        {
+          label: 'Dossier des données',
+          click: () => shell.openPath(app.getPath('userData')),
+        },
+      ],
+    },
+    {
       label: 'Aide',
       submenu: [
         {
           label: 'Ouvrir dans le navigateur',
           click: () => shell.openExternal(BASE_URL),
-        },
-        {
-          label: 'Dossier des données',
-          click: () => shell.openPath(app.getPath('userData')),
         },
         { type: 'separator' },
         { label: 'À propos', click: () => {
@@ -67,7 +181,7 @@ function buildMenu() {
             type: 'info',
             title: 'Nour',
             message: 'Nour — Chat islamique avec IA',
-            detail: 'Application gratuite et open source.\nDonnées stockées localement sur votre PC.',
+            detail: `Application gratuite et open source.\n\nBase de données : ${getDatabaseUrl() ? 'PostgreSQL Neon (synchronisé)' : 'SQLite locale (hors-ligne)'}`,
           });
         }},
       ],
@@ -80,7 +194,15 @@ function buildMenu() {
 
 // ---- Démarrage du serveur Express local ----
 function startServer() {
+  const databaseUrl = getDatabaseUrl();
   const serverEntry = path.join(__dirname, '..', 'server', 'dist', 'index.js');
+
+  if (databaseUrl) {
+    console.log('[nour] Mode connecté : PostgreSQL Neon');
+  } else {
+    console.log('[nour] Mode hors-ligne : SQLite locale');
+  }
+
   if (!fs.existsSync(serverEntry)) {
     // Mode dev : utiliser tsx pour exécuter directement le .ts
     const tsEntry = path.join(__dirname, '..', 'server', 'src', 'index.ts');
@@ -89,7 +211,7 @@ function startServer() {
         require.resolve('tsx/dist/cli.mjs'),
         [tsEntry],
         {
-          env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: '' },
+          env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl },
           stdio: 'pipe',
           silent: true,
         },
@@ -99,16 +221,21 @@ function startServer() {
   } else {
     // Mode production : node direct
     serverProcess = fork(serverEntry, [], {
-      env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: '' },
+      env: { ...process.env, NODE_ENV: 'production', DATABASE_URL: databaseUrl },
       stdio: 'pipe',
       silent: true,
     });
     console.log('[nour] Serveur démarré en mode production');
   }
 
-  serverProcess.on('error', (err) => {
-    console.error('[nour] Erreur serveur:', err.message);
-  });
+  if (serverProcess) {
+    serverProcess.on('error', (err) => {
+      console.error('[nour] Erreur serveur:', err.message);
+    });
+    serverProcess.stderr?.on('data', (chunk) => {
+      console.error('[nour]', chunk.toString());
+    });
+  }
 }
 
 function stopServer() {
@@ -118,7 +245,7 @@ function stopServer() {
   }
 }
 
-function waitForServer(maxRetries = 30) {
+function waitForServer(maxRetries = 40) {
   return new Promise((resolve, reject) => {
     let tries = 0;
     const check = () => {
@@ -142,6 +269,14 @@ function waitForServer(maxRetries = 30) {
 // ---- App lifecycle ----
 app.whenReady().then(async () => {
   buildMenu();
+
+  // Premier lancement : demander la DATABASE_URL
+  const cfg = loadConfig();
+  if (cfg.databaseUrl === undefined) {
+    const url = await askForDatabaseUrl();
+    saveConfig({ databaseUrl: url || '' });
+  }
+
   startServer();
   try {
     await waitForServer();
@@ -161,7 +296,7 @@ app.on('before-quit', () => {
   stopServer();
 });
 
-// ---- IPC handlers - exposer les APIs locales au renderer ----
+// ---- IPC handlers ----
 ipcMain.handle('get-user-data-path', () => app.getPath('userData'));
 
 ipcMain.handle('save-file', async (_, { defaultName, content }) => {
@@ -179,3 +314,10 @@ ipcMain.handle('open-file', async (_, filePath) => {
 });
 
 ipcMain.handle('get-version', () => app.getVersion());
+
+ipcMain.handle('get-database-url', () => getDatabaseUrl());
+
+ipcMain.on('set-database-url', (_event, url) => {
+  saveConfig({ databaseUrl: url || '' });
+  console.log('[nour] DATABASE_URL enregistrée');
+});

@@ -24,4 +24,7 @@ contextBridge.exposeInMainWorld('nourDesktop', {
 
   /** Version de l'app */
   getVersion: () => ipcRenderer.invoke('get-version'),
+
+  /** DATABASE_URL configurée (vide = mode hors-ligne SQLite) */
+  getDatabaseUrl: () => ipcRenderer.invoke('get-database-url'),
 });
