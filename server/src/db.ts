@@ -8,7 +8,7 @@ import { createPgDb, type SyncDb } from './pgSync.js';
 //  - production    : si DATABASE_URL est défini, PostgreSQL (Neon) via
 //    l'adaptateur synchrone pgSync (aucune route modifiée).
 
-const usePg = Boolean(process.env.DATABASE_URL);
+const usePg = Boolean(process.env.DATABASE_URL) && process.env.ENABLE_SYNC !== 'true';
 
 function createSqliteDb(): DatabaseSync {
   const DB_DIR = path.resolve(process.cwd(), 'server/data');

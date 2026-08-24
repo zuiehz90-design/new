@@ -15,6 +15,7 @@ let pushTimer: ReturnType<typeof setInterval> | null = null;
 let pullTimer: ReturnType<typeof setInterval> | null = null;
 let pgPool: any = null;
 let lastSyncAt: string | null = null;
+let syncReady = false;
 
 /** Start background sync with Neon */
 export async function startSync(databaseUrl: string): Promise<void> {
@@ -40,6 +41,8 @@ export async function startSync(databaseUrl: string): Promise<void> {
   // Initial sync
   await pushToRemote().catch(e => console.error('[sync] Initial push failed:', e.message));
   await pullFromRemote().catch(e => console.error('[sync] Initial pull failed:', e.message));
+  syncReady = true;
+  console.log('[sync] Initial sync complete, cache prêt');
 
   pushTimer = setInterval(() => {
     pushToRemote().catch(e => console.error('[sync] Push error:', e.message));
@@ -57,12 +60,13 @@ export function stopSync(): void {
   if (pushTimer) { clearInterval(pushTimer); pushTimer = null; }
   if (pullTimer) { clearInterval(pullTimer); pullTimer = null; }
   if (pgPool) { pgPool.end().catch(() => {}); pgPool = null; }
+  syncReady = false;
   console.log('[sync] Stopped');
 }
 
 /** Get sync status */
-export function getSyncStatus(): { active: boolean; lastSync: string | null } {
-  return { active: Boolean(pushTimer), lastSync: lastSyncAt };
+export function getSyncStatus(): { active: boolean; ready: boolean; lastSync: string | null } {
+  return { active: Boolean(pushTimer), ready: syncReady, lastSync: lastSyncAt };
 }
 
 /** Push local SQLite data to Neon */
