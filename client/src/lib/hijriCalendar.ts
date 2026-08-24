@@ -36,13 +36,13 @@ export const HIJRI_MONTHS = [
 ];
 
 export const ISLAMIC_EVENTS: IslamicEvent[] = [
-  { month: 1, day: 1, name: 'Nouvel an hégirien', nameAr: 'رأس السنة الهجرية', description: 'Début de l\'année islamique (1er Mouharram).', type: 'holiday' },
+  { month: 1, day: 1, name: 'Nouvel an hégirien', nameAr: 'رأس السنة الهجرية', description: 'Début de l\'année islamique (1er Mouharram).', type: 'historical' },
   { month: 1, day: 10, name: 'Achoura', nameAr: 'عَاشُورَاء', description: 'Jour de jeûne recommandé (10 Mouharram). Commémore le sauvetage de Moussa (as) et le martyr de l\'Imam Hussein.', type: 'recommended' },
-  { month: 3, day: 12, name: 'Mawlid an-Nabawi', nameAr: 'الْمَوْلِدُ النَّبَوِي', description: 'Anniversaire de la naissance du Prophète Muhammad ﷺ (12 Rabi\` al-Awwal).', type: 'holiday' },
+  { month: 3, day: 12, name: 'Mawlid an-Nabawi', nameAr: 'الْمَوْلِدُ النَّبَوِي', description: 'Anniversaire de la naissance du Prophète Muhammad ﷺ (12 Rabi\` al-Awwal).', type: 'recommended' },
   { month: 7, day: 1, name: 'Début de Rajab', nameAr: 'بِدَايَةُ رَجَب', description: 'Un des quatre mois sacrés. Premier mois de jeûne recommandé avant Ramadan.', type: 'recommended' },
   { month: 7, day: 27, name: 'Al-Isra\' wal-Mi\'raj', nameAr: 'الْإِسْرَاءُ وَالْمِعْرَاج', description: 'Le voyage nocturne et l\'ascension du Prophète ﷺ de La Mecque à Jérusalem puis vers les cieux (27 Rajab).', type: 'historical' },
   { month: 8, day: 15, name: 'Laylat al-Bara\'ah', nameAr: 'لَيْلَةُ الْبَرَاءَة', description: 'Nuit du milieu de Cha\`ban (15 Cha\`ban), nuit du pardon et de la miséricorde.', type: 'recommended' },
-  { month: 9, day: 1, name: 'Début du Ramadan', nameAr: 'بِدَايَةُ رَمَضَان', description: 'Premier jour du mois béni de Ramadan, mois du jeûne obligatoire.', type: 'holiday' },
+  { month: 9, day: 1, name: 'Début du Ramadan', nameAr: 'بِدَايَةُ رَمَضَان', description: 'Premier jour du mois béni de Ramadan, mois du jeûne obligatoire.', type: 'recommended' },
   { month: 9, day: 27, name: 'Laylat al-Qadr', nameAr: 'لَيْلَةُ الْقَدْر', description: 'La Nuit du Destin (27 Ramadan), « meilleure que mille mois » (Sourate 97).', type: 'recommended' },
   { month: 10, day: 1, name: 'Aïd al-Fitr', nameAr: 'عِيدُ الْفِطْر', description: 'Fête de la rupture du jeûne (1er Chawwal). L\'une des deux fêtes majeures de l\'Islam.', type: 'holiday' },
   { month: 12, day: 8, name: 'Jour de Arafah', nameAr: 'يَوْمُ عَرَفَة', description: 'Jour du wukuf à Arafat pendant le Hajj (8 Dhou al-Hijja). Jeûne recommandé pour les non-pèlerins.', type: 'recommended' },

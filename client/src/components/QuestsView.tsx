@@ -153,7 +153,6 @@ export function QuestsView() {
   return (
     <div className="mx-auto max-w-xl px-4 pb-8 pt-4 animate-fade-in">
       <div className="mb-6 text-center">
-        <div className="font-quran text-4xl text-gold-400">﷽</div>
         <h1 className="mt-2 text-2xl font-bold">
           ⚔️ {t('dashboard.quests')}
         </h1>

@@ -47,7 +47,7 @@ html.light {
   --scrollbar-thumb: rgba(160, 168, 150, 0.40);
 }
 
-body { background-color: var(--bg-base); color: var(--text-primary); }
+body { background-color: var(--bg-base); color: var(--text-primary); overflow-x: hidden; }
 
 body::before { content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none; background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(16, 185, 129, 0.10), transparent 60%), radial-gradient(ellipse 60% 40% at 90% 110%, rgba(207, 161, 74, 0.07), transparent 60%); }
 html.light body::before { background-image: radial-gradient(ellipse 80% 50% at 50% -10%, rgba(4, 120, 87, 0.06), transparent 60%), radial-gradient(ellipse 60% 40% at 90% 110%, rgba(146, 116, 43, 0.06), transparent 60%); }

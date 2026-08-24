@@ -119,8 +119,15 @@ export function QuranView() {
       {searching && <p className="text-sm text-stone-400">{t('quran.loading')}</p>}
 
       {results.length > 0 && !selected && (
-        <div className="card mb-4 p-3" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-          <SearchResults
+        <>
+          <button
+            onClick={() => { setResults([]); setQuery(''); }}
+            className="btn-ghost mb-2 text-xs"
+          >
+            ← Retour à la liste
+          </button>
+          <div className="card mb-4 p-3" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+            <SearchResults
             results={results}
             onOpen={(s, v) => {
               setSelected(s);
@@ -128,6 +135,7 @@ export function QuranView() {
             }}
           />
         </div>
+        </>
       )}
 
       {results.length === 0 && !searching && query.trim().length >= 2 && !selected && (

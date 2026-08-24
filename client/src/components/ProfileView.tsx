@@ -102,7 +102,6 @@ export function ProfileView() {
       return (
         <div className="mx-auto max-w-md px-4 pb-10 pt-8 animate-fade-in">
           <div className="mb-6 text-center">
-            <div className="font-quran text-4xl text-gold-400">﷽</div>
             <h1 className="mt-2 text-2xl font-bold">{t('profile.title')}</h1>
           </div>
           <OnboardingCarousel onDone={() => setOnboarding(false)} onCancel={() => setOnboarding(false)} />
@@ -113,7 +112,6 @@ export function ProfileView() {
     return (
       <div className="mx-auto max-w-md px-4 pb-10 pt-8 animate-fade-in">
         <div className="mb-6 text-center">
-          <div className="font-quran text-4xl text-gold-400">﷽</div>
           <h1 className="mt-2 text-2xl font-bold">{t('profile.title')}</h1>
           <p className="mt-1 text-sm text-stone-400">{t('profile.subtitle')}</p>
         </div>

@@ -188,7 +188,7 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
 
         {/* ====== CONTENU PRINCIPAL ====== */}
         <main className="flex flex-1 flex-col overflow-hidden">
-          <div ref={scrollRef} className="flex-1 overflow-y-auto">
+          <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">
             <Routes>
               <Route path="/" element={<DashboardView />} />
               <Route path="/chat" element={<ChatView />} />
@@ -317,6 +317,26 @@ function AppInner() {
  * Le remount via key={scope} garantit qu'aucune donnée d'un autre compte
  * n'apparaît après connexion / déconnexion.
  */
+const LOADING_QUOTES = [
+  { text: "Inna ma'l-usri yusra", sub: "Certes, avec la difficulte vient la facilité. (94:6)" },
+  { text: "Fabi-ayyi ala-i rabbikuma tukazzibani", sub: "Quel bienfait de votre Seigneur donc, hommes, nierez-vous ? (55:13)" },
+  { text: "Qul huwa Allahu ahad", sub: "Dis : Il est Allah, l'Un. (112:1)" },
+  { text: "Wa huwa ma'akum aina ma kuntum", sub: "Il est avec vous où que vous soyez. (57:4)" },
+  { text: "Inna-llaha ala kulli shay'in qadir", sub: "Certes, Allah est Omnipotent. (2:20)" },
+  { text: "Rabbana la tuzigh qulubana", sub: "Seigneur, ne laisse pas nos cœurs dévier. (3:8)" },
+  { text: "Hasbiyallahu la ilaha illa hu", sub: "Allah me suffit, point de divinité si Lui. (9:129)" },
+];
+
+const LOADING_TIPS = [
+  "Astuce : Utilisez le mode Coran pour lire sans distraction.",
+  "Astuce : Appuyez sur Espace dans le compteur Dhikr.",
+  "Astuce : Épinglez vos versets préférés pour les retrouver vite.",
+  "Astuce : Le chat IA peut répondre à vos questions sur l'islam.",
+  "Astuce : Les 99 noms d'Allah ont une signification profonde.",
+  "Astuce : Le Quiz hebdomadaire renforce votre savoir.",
+  "Astuce : Le mode concentration masque les notifications.",
+];
+
 function AuthGate() {
   const { loading, scope } = useAuth();
   const { t } = useI18n();
