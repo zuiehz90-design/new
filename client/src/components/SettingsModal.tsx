@@ -136,6 +136,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
                   ['dhikr', '📿', t('notif.type.dhikr')],
                   ['sleep', '🌙', t('notif.type.sleep')],
                   ['streak', '🔥', t('notif.type.streak')],
+                  ['story', '📖', t('notif.type.story')],
                 ] as [keyof NotificationPrefs, string, string][]).map(([key, icon, label]) => (
                   <button
                     key={key}

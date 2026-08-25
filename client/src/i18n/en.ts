@@ -313,6 +313,11 @@ export const en: Record<string, string> = {
   'prophets.verses': 'Verses',
   'prophets.progressTitle': 'Stories completed',
   'prophets.badgeTitle': 'Historian badge:',
+  'prophets.weeklyTitle': 'Challenge of the week',
+  'prophets.weeklyRead': 'Read his story',
+  'prophets.weeklyReview': 'Re-read',
+  'prophets.weeklyDone': 'Completed this week',
+  'prophets.weeklyDaysLeft': 'Days left',
   /* -- 99 Names of Allah -- */
   'names99.title': 'The 99 Names of Allah',
   'names99.subtitle': 'Learn and memorize the divine names',
@@ -403,6 +408,7 @@ export const en: Record<string, string> = {
   'notif.type.dhikr': 'Dhikr reminder',
   'notif.type.sleep': 'Evening reminder',
   'notif.type.streak': 'Streak reminder',
+  'notif.type.story': 'Weekly prophet challenge',
 'quran.backToSearch': 'Back to search',
   // Greetings based on time of day
   'dashboard.greeting.dawn': 'Good Fajr morning 🌅',

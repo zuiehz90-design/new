@@ -267,6 +267,11 @@ export const ar: Record<string, string> = {
   'prophets.verses': 'آيات',
   'prophets.progressTitle': 'القصص المكتملة',
   'prophets.badgeTitle': 'شارة المؤرخ:',
+  'prophets.weeklyTitle': 'تحدي الأسبوع',
+  'prophets.weeklyRead': 'اقرأ قصته',
+  'prophets.weeklyReview': 'أعد القراءة',
+  'prophets.weeklyDone': 'أنجزت هذا الأسبوع',
+  'prophets.weeklyDaysLeft': 'أيام متبقية',
   /* -- أسماء الله الحسنى -- */
   'names99.title': 'أسماء الله الحسنى',
   'names99.subtitle': 'تعلّم واحفظ الأسماء الإلهية',
@@ -378,6 +383,7 @@ export const ar: Record<string, string> = {
   'notif.type.dhikr': 'تذكير الذكر',
   'notif.type.sleep': 'تذكير المساء',
   'notif.type.streak': 'تذكير السلسلة',
+  'notif.type.story': 'تحدي نبي الأسبوع',
 
 };
 

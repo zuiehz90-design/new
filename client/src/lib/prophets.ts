@@ -270,3 +270,19 @@ export const PROPHETS: ProphetStory[] = [
     ],
   },
 ];
+
+/** Sélection déterministe du prophète de la semaine (change le lundi). */
+export function getFeaturedProphet(): { prophet: ProphetStory; weekStart: string; weekEnd: string; daysLeft: number } {
+  const now = new Date();
+  const day = now.getDay(); // 0 = dimanche
+  const diffToMonday = (day + 6) % 7;
+  const monday = new Date(now);
+  monday.setDate(now.getDate() - diffToMonday);
+  monday.setHours(0, 0, 0, 0);
+  const weekNumber = Math.floor(monday.getTime() / (7 * 24 * 3600 * 1000));
+  const prophet = PROPHETS[weekNumber % PROPHETS.length];
+  const weekEnd = new Date(monday);
+  weekEnd.setDate(monday.getDate() + 7);
+  const daysLeft = Math.max(0, Math.ceil((weekEnd.getTime() - now.getTime()) / (24 * 3600 * 1000)));
+  return { prophet, weekStart: monday.toISOString().slice(0, 10), weekEnd: weekEnd.toISOString().slice(0, 10), daysLeft };
+}

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { push, requestPermission } from '../lib/notifications';
 import { getMosqueTimes } from '../lib/mawaqit';
 import { PRAYER_KEYS } from '../lib/prayer';
+import { getFeaturedProphet } from '../lib/prophets';
 
 /**
  * Notifications quotidiennes intelligentes :
@@ -143,6 +144,23 @@ export function useDailyNotifications() {
               title: '🔥 Garde ta série !',
               body: 'N\'oublie pas de compléter tes prières du jour pour maintenir ta série.',
               clickUrl: '/prayer',
+            });
+          }
+        }
+
+        // 5. Défi de la semaine — prophète en vedette (matin, Fajr + 90min ou 10h00)
+        const storyKey = 'story-' + today;
+        if (!lastFired.current[storyKey] && !firedOn('story')) {
+          const storyTarget = fajr ? fajr.getHours() * 60 + fajr.getMinutes() + 90 : 10 * 60;
+          if (nowMin >= storyTarget) {
+            lastFired.current[storyKey] = today;
+            markFired('story');
+            const featured = getFeaturedProphet();
+            void push({
+              type: 'story',
+              title: '📖 Défi de la semaine',
+              body: "Lis l'histoire de " + featured.prophet.nameFr + " — le prophète de la semaine.",
+              clickUrl: '/prophets',
             });
           }
         }

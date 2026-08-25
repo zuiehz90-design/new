@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n';
-import { PROPHETS, type ProphetStory } from '../lib/prophets';
+import { PROPHETS, getFeaturedProphet, type ProphetStory } from '../lib/prophets';
 import { getProphetAudio } from '../lib/prophetsAudio';
 import { PodcastPlayer } from './PodcastPlayer';
 import { apiCompleteQuiz, apiQuizProgress, type ProphetProgressEntry, type QuizResult } from '../lib/api';
@@ -195,6 +195,34 @@ export function ProphetsView() {
         <h2 className="text-2xl font-bold text-gold-400">{t('prophets.title')}</h2>
         <p className="mt-1 text-xs text-stone-400">{t('prophets.subtitle')}</p>
       </div>
+
+      {/* Défi : prophète de la semaine */}
+      {(() => {
+        const featured = getFeaturedProphet();
+        const fpr = progressFor(featured.prophet.name);
+        const fdone = fpr?.completed;
+        return (
+          <div className="card mb-4 overflow-hidden border-gold-500/50 bg-gradient-to-br from-gold-500/15 via-stone-900/60 to-emerald-500/10 p-4">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-gold-500/20 text-xl">📖</div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[11px] font-bold uppercase tracking-wide text-gold-300">{t('prophets.weeklyTitle')}</p>
+                <p className="truncate text-sm font-bold text-stone-100">
+                  <span className="font-quran text-base text-gold-300" dir="rtl">{featured.prophet.nameAr}</span>{' '}
+                  {featured.prophet.nameFr}
+                </p>
+                <p className="text-[10px] text-stone-400">
+                  {fdone ? '✅ ' + t('prophets.weeklyDone') : t('prophets.weeklyDaysLeft') + ' : ' + featured.daysLeft}
+                </p>
+              </div>
+              <button onClick={() => setSelected(featured.prophet)}
+                className={'btn-gold shrink-0 px-3 py-2 text-[11px] ' + (fdone ? '!bg-emerald-600/80' : '')}>
+                {fdone ? t('prophets.weeklyReview') : t('prophets.weeklyRead')}
+              </button>
+            </div>
+          </div>
+        );
+      })()}
 
       {/* Progression globale : barre + badge Connaisseur historique */}
       <div className="card mb-4 p-4">
