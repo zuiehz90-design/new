@@ -198,7 +198,7 @@ export function DashboardView() {
           {achievements && (
             <RankCard
               achievements={achievements}
-              points={quests?.lifetime ?? 0}
+              points={achievements?.rankProgress?.current ?? 0}
             />
           )}
 
