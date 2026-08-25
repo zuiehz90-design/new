@@ -8,6 +8,7 @@ import {
   apiPrayers,
   apiQuests,
   apiUncheckPrayer,
+  skipNextCache,
   type PrayerStatus,
   type QuestsData,
 } from '../lib/api';
@@ -121,6 +122,7 @@ export function useDevotion() {
       else res = await apiCheckPrayer(prayer, opts);
       // Small delay to let server commit before re-fetching
       await new Promise(r => setTimeout(r, 150));
+      skipNextCache();
       await load();
       // Toast de promotion de rang (façon jeu vidéo)
       const newRank = res?.newRank as RankInfo | undefined;
@@ -162,11 +164,13 @@ export function useDevotion() {
       const res = (await apiCompleteQuest(questId, opts)) as any;
       // Verification refusee (priere non cochee, quiz faux) : rollback
       if (res && res.ok === false) {
+        skipNextCache();
         await load();
         return res;
       }
       // Small delay to let server commit before re-fetching
       await new Promise(r => setTimeout(r, 150));
+      skipNextCache();
       await load();
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {

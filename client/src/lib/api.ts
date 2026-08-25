@@ -212,6 +212,10 @@ export function setToken(token: string | null): void {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
+let _skipCache = false;
+/** Call before a GET to bypass the mobile cache (e.g. after a mutation). */
+export function skipNextCache(): void { _skipCache = true; }
+
 async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEFAULT_API_TIMEOUT_MS): Promise<T> {
   const headers: Record<string, string> = {
     ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
