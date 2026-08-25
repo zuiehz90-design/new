@@ -295,6 +295,11 @@ export async function apiMe(): Promise<User | null> {
   }
 }
 
+/** Enregistre la clé API OpenRouter sur le compte (jamais stockée côté client). */
+export async function apiSaveApiKey(key: string): Promise<void> {
+  await apiFetch('/api/setup/setup-key', { method: 'POST', body: JSON.stringify({ key: key.trim() }) });
+}
+
 export async function apiUpdateProfile(patch: { name?: string; profile?: UserProfile }): Promise<User> {
   const res = await apiFetch<{ user: User }>('/api/profile', {
     method: 'PUT',

@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useChatContext } from '../App';
+import { useAiSetup } from '../hooks/useAiSetup';
+import { useAuth } from '../context/AuthContext';
 import { useI18n } from '../i18n';
 import { useOffline } from '../hooks/useOffline';
 import { useSettings } from '../context/SettingsContext';
@@ -22,6 +24,9 @@ export function ChatView() {
   const chat = useChatContext();
   const { t } = useI18n();
   const offline = useOffline();
+  const navigate = useNavigate();
+  const { status: aiStatus, open: openAiSetup } = useAiSetup();
+  const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const askHandledRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
@@ -241,6 +246,27 @@ export function ChatView() {
       {offline && (
         <div className="mb-3 rounded-xl border border-gold-500/40 bg-gold-500/10 px-4 py-2 text-center text-xs text-gold-300">
           {t('offline.banner')}
+        </div>
+      )}
+
+      {/* IA non configurée : bannière discrète, pas de popup intrusive */}
+      {aiStatus === 'missing' && (
+        <div className="mb-3 rounded-xl border border-gold-500/30 bg-stone-900/60 px-4 py-2.5 text-center text-xs text-stone-300">
+          {user?.isAnonymous || !user ? (
+            <span>
+              {t('chat.aiNeedsAccount')}{' '}
+              <button className="underline text-gold-300" onClick={() => navigate('/profile')}>
+                {t('chat.aiLogin')}
+              </button>
+            </span>
+          ) : (
+            <span>
+              {t('chat.aiNeedsKey')}{' '}
+              <button className="underline text-gold-300" onClick={() => openAiSetup()}>
+                {t('chat.aiAddKey')}
+              </button>
+            </span>
+          )}
         </div>
       )}
 

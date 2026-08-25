@@ -72,7 +72,9 @@ export function AiSetupProvider({ children }: { children: ReactNode }) {
   const value = useMemo<AiSetupValue>(
     () => ({
       status,
-      show: (status === 'missing' && !dismissed) || manualOpen,
+      // Plus d'ouverture automatique : le modal ne s'ouvre que si l'utilisateur
+      // clique sur « Ajouter ma clé » (bannière du chat, réglages, etc.).
+      show: manualOpen,
       check,
       saveKey,
       dismiss,

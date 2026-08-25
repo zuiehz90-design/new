@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
+import { apiSaveApiKey } from '../lib/api';
 import { AVATARS, ACCENTS, GOALS, SURAHS, acMap, NOTE_TAGS } from '../lib/profileOptions';
 
 interface Props {
@@ -15,6 +16,7 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
   const [step, setStep] = useState(0);
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [avatar, setAvatar] = useState('initial');
   const [accent, setAccent] = useState('gold');
   const [gender, setGender] = useState<'male' | 'female' | ''>('');
@@ -61,6 +63,10 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
       setSubmitting(true);
       try {
         await register(name.trim(), password);
+        // Clé API optionnelle saisie à la création du compte (stockée au compte).
+        if (apiKey.trim()) {
+          await apiSaveApiKey(apiKey).catch(() => {});
+        }
         setStep(step + 1);
       } catch (err) {
         setError((err as Error).message);
@@ -163,6 +169,19 @@ export function OnboardingCarousel({ onDone, onCancel }: Props) {
                 minLength={6}
                 onKeyDown={(e) => { if (e.key === 'Enter') void next(); }}
               />
+            </div>
+            <div>
+              <label className="mb-1 block text-xs text-stone-500">{t('profile.apiKeyOptional')}</label>
+              <input
+                type="password"
+                value={apiKey}
+                onChange={(e) => setApiKey(e.target.value)}
+                className="input text-sm"
+                placeholder="sk-or-v1-…"
+                autoComplete="off"
+                spellCheck={false}
+              />
+              <p className="mt-1 text-[10px] text-stone-500">{t('profile.apiKeyHint')}</p>
             </div>
           </div>
         )}

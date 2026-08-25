@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
+import { apiSaveApiKey } from '../lib/api';
 import { AVATARS, ACCENTS, GOALS, SURAHS, getAccent, acMap, NOTE_TAGS } from '../lib/profileOptions';
 import { OnboardingCarousel } from './OnboardingCarousel';
 
@@ -14,6 +15,7 @@ export function ProfileView() {
   const [onboarding, setOnboarding] = useState(false);
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
+  const [apiKey, setApiKey] = useState('');
   const [formError, setFormError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -78,6 +80,10 @@ export function ProfileView() {
     setSubmitting(true);
     try {
       await login(name, password);
+      // Clé API optionnelle saisie à la connexion (stockée au compte).
+      if (apiKey.trim()) {
+        await apiSaveApiKey(apiKey).catch(() => {});
+      }
     } catch (err) {
       setFormError((err as Error).message);
     } finally {
@@ -140,6 +146,11 @@ export function ProfileView() {
             <form onSubmit={submit} className="space-y-3">
               <div><label className="mb-1 block text-xs text-stone-500">{t('profile.name')}</label><input value={name} onChange={(e) => setName(e.target.value)} className="input text-sm" required minLength={2} /></div>
               <div><label className="mb-1 block text-xs text-stone-500">{t('profile.password')}</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input text-sm" required minLength={6} /></div>
+              <div>
+                <label className="mb-1 block text-xs text-stone-500">{t("profile.apiKeyOptional")}</label>
+                <input type="password" value={apiKey} onChange={(e) => setApiKey(e.target.value)} className="input text-sm" autoComplete="off" spellCheck={false} placeholder="sk-or-v1-…" />
+                <p className="mt-1 text-[10px] text-stone-500">{t("profile.apiKeyHint")}</p>
+              </div>
               {formError && <p className="text-xs text-red-400">{formError}</p>}
               <button type="submit" disabled={submitting} className="btn-gold w-full text-sm">{submitting ? t('common.loading') : t('profile.login')}</button>
             </form>
