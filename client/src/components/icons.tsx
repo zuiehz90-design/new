@@ -230,3 +230,14 @@ export function QuizIcon(props: IconProps) {
     </Svg>
   );
 }
+
+export function TrophyIcon(props: IconProps) {
+  return (
+    <Svg width={20} height={20} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      <path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 5 7 9v0a5 5 0 0 0 5 5h0a5 5 0 0 0 5-5v0c0-4 1-5 2.5-5a2.5 2.5 0 0 1 0 5H18" />
+      <path d="M12 14v7" />
+      <path d="M9 21h6" />
+      <path d="M7 4h10" />
+    </Svg>
+  );
+}

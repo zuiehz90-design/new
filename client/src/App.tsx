@@ -10,6 +10,7 @@ import { useQuestNotifications } from './hooks/useQuestNotifications';
 import { useKeyboardHeight } from './hooks/useKeyboard';
 import { initMobileCache } from './lib/mobileCache';
 import { DashboardView } from './components/DashboardView';
+import { BadgesView } from './components/BadgesView';
 import { ChatView } from './components/ChatView';
 import { QuranView } from './components/QuranView';
 import { PrayerView } from './components/PrayerView';
@@ -29,7 +30,7 @@ import { AuthProvider, useAuth } from './context/AuthContext';
 import { AiSetupProvider } from './hooks/useAiSetup';
 import { AudioPlayerProvider } from './context/AudioPlayerContext';
 import { ToastProvider } from './context/ToastContext';
-import { MoonIcon, PlusIcon, HomeIcon, ChatIcon, BookIcon, MosqueIcon, SwordsIcon, UserIcon, ProphetsIcon, NamesIcon, CalendarIcon, BookOpenIcon, BeadsIcon, QuizIcon, type IconProps } from './components/icons';
+import { MoonIcon, PlusIcon, HomeIcon, ChatIcon, BookIcon, MosqueIcon, SwordsIcon, UserIcon, ProphetsIcon, NamesIcon, CalendarIcon, BookOpenIcon, BeadsIcon, QuizIcon, TrophyIcon, type IconProps } from './components/icons';
 
 /* ---- Scroll position memory ----
    Stored at module level (not in refs) so the values survive React re-renders
@@ -113,6 +114,7 @@ function Shell() {
     { to: '/glossary', label: 'Lexique', icon: 'glossary' },
     { to: '/dhikr', label: 'Dhikr', icon: 'dhikr' },
     { to: '/quiz', label: 'Quiz', icon: 'quiz' },
+    { to: '/badges', label: 'Badges', icon: 'badges' },
     { to: '/profile', label: 'Profil', icon: 'profile' },
   ];
   const navItems = [...primaryNav, ...secondaryNav];
@@ -133,6 +135,7 @@ const NAV_ICONS: Record<string, (p: IconProps) => ReactElement> = {
   dhikr: BeadsIcon,
   quiz: QuizIcon,
   profile: UserIcon,
+  badges: TrophyIcon,
 };
 function NavIcon({ name, className, style }: { name: string; className?: string; style?: React.CSSProperties }) {
   const Icon = NAV_ICONS[name];
@@ -213,6 +216,7 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
               <Route path="/hijri" element={<HijriCalendarView />} />
               <Route path="/glossary" element={<GlossaryView />} />
               <Route path="/dhikr" element={<DhikrCounterView />} />
+              <Route path="/badges" element={<BadgesView />} />
               <Route path="/quiz" element={<QuizView />} />
             </Routes>
           </div>
