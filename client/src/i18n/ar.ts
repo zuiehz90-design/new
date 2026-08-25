@@ -259,6 +259,7 @@ export const ar: Record<string, string> = {
   'prophets.speed': 'السرعة',
   'prophets.pause': 'إيقاف مؤقت',
   'prophets.play': 'تشغيل',
+  'prophets.originalEpisode': 'عرض الحلقة الأصلية',
   'prophets.resume': 'متابعة',
   'prophets.stop': 'إيقاف',
   'prophets.playing': 'جارٍ التشغيل…',

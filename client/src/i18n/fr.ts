@@ -324,6 +324,7 @@ export const fr: Record<string, string> = {
   'prophets.speed': 'Vitesse',
   'prophets.pause': 'Pause',
   'prophets.play': 'Lecture',
+  'prophets.originalEpisode': 'Voir l\'épisode original',
   'prophets.resume': 'Reprendre',
   'prophets.stop': 'Arrêter',
   'prophets.playing': 'Lecture en cours…',

@@ -90,7 +90,12 @@ export function PodcastPlayer({ audio }: { audio: ProphetAudio }) {
         </button>
         <div className="flex-1 min-w-0">
           <p className="text-xs font-semibold text-stone-100 truncate">🎙️ {audio.title}</p>
-          <p className="text-[10px] text-stone-500 truncate">{audio.source}</p>
+          <p className="text-[10px] text-stone-500 truncate">
+            {audio.author} ·{' '}
+            <a href={audio.podcastUrl} target="_blank" rel="noopener noreferrer" className="text-stone-400 underline hover:text-stone-200">
+              {audio.source}
+            </a>
+          </p>
         </div>
       </div>
 
@@ -130,6 +135,19 @@ export function PodcastPlayer({ audio }: { audio: ProphetAudio }) {
         {error && (
           <span className="ml-auto text-[10px] text-red-400">⚠️ Épisode indisponible</span>
         )}
+      </div>
+
+      {/* Crédit + lien vers l'épisode original */}
+      <div className="mt-3 flex items-center justify-between gap-2 border-t border-white/5 pt-2">
+        <p className="text-[10px] text-stone-600 truncate">© {audio.author}</p>
+        <a
+          href={audio.episodeUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-[10px] shrink-0 text-emerald-400 underline hover:text-emerald-300"
+        >
+          {t('prophets.originalEpisode')} ↗
+        </a>
       </div>
     </div>
   );

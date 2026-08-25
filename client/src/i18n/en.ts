@@ -305,6 +305,7 @@ export const en: Record<string, string> = {
   'prophets.speed': 'Speed',
   'prophets.pause': 'Pause',
   'prophets.play': 'Play',
+  'prophets.originalEpisode': 'See original episode',
   'prophets.resume': 'Resume',
   'prophets.stop': 'Stop',
   'prophets.playing': 'Playing…',
