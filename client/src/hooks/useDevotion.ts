@@ -106,6 +106,18 @@ export function useDevotion() {
       navigator.vibrate?.(12);
     } catch { /* haptique non disponible */ }
     const checked = prayers.checked.includes(prayer);
+    // Optimistic update — turn green/red instantly before server responds
+    if (!checked && prayers) {
+      setPrayers({
+        ...prayers,
+        checked: [...prayers.checked, prayer],
+      });
+    } else if (checked && prayers) {
+      setPrayers({
+        ...prayers,
+        checked: prayers.checked.filter((k) => k !== prayer),
+      });
+    }
     try {
       let res: any;
       if (checked) res = await apiUncheckPrayer(prayer);
@@ -137,10 +149,22 @@ export function useDevotion() {
   /** Complete une quete ; retourne la reponse du serveur (verification incluse). */
   const toggleQuest = useCallback(async (questId: string, opts?: { answer?: number }) => {
     if (!user) return null;
+    // Optimistic update — mark quest as done instantly
+    if (quests) {
+      setQuests({
+        ...quests,
+        quests: quests.quests.map((q) =>
+          q.quest_id === questId ? { ...q, done: 1 } : q
+        ),
+      });
+    }
     try {
       const res = (await apiCompleteQuest(questId, opts)) as any;
-      // Verification refusee (priere non cochee, quiz faux) : on laisse l'UI gerer
-      if (res && res.ok === false) return res;
+      // Verification refusee (priere non cochee, quiz faux) : rollback
+      if (res && res.ok === false) {
+        await load();
+        return res;
+      }
       await load();
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {

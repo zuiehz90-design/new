@@ -58,18 +58,18 @@ export function PrayerCircles({
             key={key}
             onClick={() => {
               if (done) {
+                // Already done — uncheck
                 onToggle(key);
                 setJustToggled(null);
               } else if (hasPassed && time) {
+                // Prayer already passed — open late modal
                 setLateModal({ key, prayerTime: time });
               } else {
-                onToggle(key);
-                // Trigger confirmation animation
+                // Future prayer — mark as done instantly
                 setJustToggled(key);
-                // Vibrate on mobile
                 try { navigator.vibrate?.(30); } catch {}
-                // Clear animation after delay
-                setTimeout(() => setJustToggled(null), 600);
+                setTimeout(() => setJustToggled(null), 800);
+                onToggle(key);
               }
             }}
             disabled={blocked}
