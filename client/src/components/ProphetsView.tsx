@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useI18n } from '../i18n';
 import { PROPHETS, type ProphetStory } from '../lib/prophets';
+import { useNarration } from '../lib/useNarration';
 
 export function ProphetsView() {
   const { t } = useI18n();
@@ -10,6 +11,7 @@ export function ProphetsView() {
   const [quizScore, setQuizScore] = useState(0);
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [quizDone, setQuizDone] = useState(false);
+  const narration = useNarration();
 
   const startQuiz = (p: ProphetStory) => {
     setSelected(p);
@@ -36,25 +38,102 @@ export function ProphetsView() {
   };
 
   if (selected) {
+    const paragraphs = selected.story.split('\n\n').filter(Boolean);
+    const isActive = narration.playing || narration.paused;
     return (
       <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
-        <button onClick={() => { setSelected(null); setQuizActive(false); }} className="btn-ghost mb-4 text-xs">
-          ← {t('quran.back')}
+        <button
+          onClick={() => { narration.stop(); setSelected(null); setQuizActive(false); }}
+          className="btn-ghost mb-4 text-xs"
+        >
+          ← {t('prophets.backToList')}
         </button>
+
         <div className="card mb-4 p-5 border-gold-500/40">
           <div className="font-quran text-3xl text-gold-300" dir="rtl">{selected.nameAr}</div>
           <h2 className="mt-1 text-xl font-bold text-gold-400">{selected.nameFr}</h2>
           <p className="text-xs text-stone-400">{selected.title}</p>
         </div>
+
+        {/* Barre de narration audio */}
+        {narration.supported && (
+          <div className="card mb-4 p-4 !border-emerald-500/40">
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                onClick={() => (narration.playing && !narration.paused ? narration.pause() : narration.playing ? narration.resume() : narration.play(selected.story))}
+                className="btn-gold flex-shrink-0 !px-4 !py-2 text-xs"
+              >
+                {narration.playing && !narration.paused ? '⏸' : narration.paused ? '▶' : '▶️'} {t('prophets.narrate')}
+              </button>
+              {isActive && (
+                <button onClick={narration.stop} className="btn-ghost text-xs">
+                  ⏹ {t('prophets.stop')}
+                </button>
+              )}
+              <div className="flex items-center gap-1.5 ml-auto">
+                <span className="text-[10px] text-stone-500">{t('prophets.speed')}</span>
+                {narration.rates.map((r) => (
+                  <button
+                    key={r}
+                    onClick={() => narration.changeRate(r)}
+                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${
+                      narration.rate === r
+                        ? 'bg-emerald-500/25 text-emerald-300 ring-1 ring-emerald-500/60'
+                        : 'bg-white/5 text-stone-400 hover:bg-white/10'
+                    }`}
+                  >
+                    {r}×
+                  </button>
+                ))}
+              </div>
+            </div>
+            <p className="mt-2 text-[10px] text-stone-500">
+              {narration.playing && !narration.paused
+                ? <span className="animate-pulse text-emerald-400">🔊 {t('prophets.playing')}</span>
+                : narration.paused
+                  ? <span className="text-gold-400">⏸ {t('prophets.resume')}</span>
+                  : '🎧 ' + t('prophets.narrateHint')}
+            </p>
+          </div>
+        )}
+
+        {/* Contexte historique */}
+        <div className="card p-4 mb-4 !border-gold-500/20">
+          <p className="text-[11px] font-bold text-gold-400/80 uppercase tracking-wide mb-1">{t('prophets.context')}</p>
+          <p className="text-xs leading-relaxed text-stone-400 italic">{selected.context}</p>
+        </div>
+
+        {/* Histoire */}
         <div className="card p-4 mb-4">
-          <p className="text-sm leading-relaxed text-stone-200 whitespace-pre-line">{selected.story}</p>
-          <p className="mt-3 text-[11px] text-stone-500 italic">{selected.reference}</p>
+          <p className="text-[11px] font-bold text-gold-400/80 uppercase tracking-wide mb-2">{t('prophets.story')}</p>
+          <div className="space-y-3">
+            {paragraphs.map((p, i) => (
+              <p key={i} className="text-sm leading-relaxed text-stone-200">{p}</p>
+            ))}
+          </div>
+          <p className="mt-4 text-[11px] text-stone-500 italic">📖 {selected.reference}</p>
         </div>
-        <div className="mb-4 flex flex-wrap gap-1.5">
-          {selected.lessons.map((l) => (
-            <span key={l} className="chip !border-emerald-500/50 !text-emerald-300 text-[11px]">✨ {l}</span>
-          ))}
+
+        {/* Versets */}
+        <div className="mb-4">
+          <p className="text-[11px] font-bold text-gold-400/80 uppercase tracking-wide mb-2">{t('prophets.verses')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {selected.verses.map((v) => (
+              <span key={v} className="chip !border-gold-500/40 !text-gold-300 text-[11px]">📜 {v}</span>
+            ))}
+          </div>
         </div>
+
+        {/* Leçons */}
+        <div className="mb-4">
+          <p className="text-[11px] font-bold text-gold-400/80 uppercase tracking-wide mb-2">{t('prophets.lessons')}</p>
+          <div className="flex flex-wrap gap-1.5">
+            {selected.lessons.map((l) => (
+              <span key={l} className="chip !border-emerald-500/50 !text-emerald-300 text-[11px]">✨ {l}</span>
+            ))}
+          </div>
+        </div>
+
         {quizActive ? (
           <div className="card p-4 border-gold-500/30">
             {quizDone ? (
@@ -64,12 +143,12 @@ export function ProphetsView() {
                   {quizScore === selected.quiz.length ? '🎉 Parfait !' : '📖 Continue à apprendre !'}
                 </p>
                 <button onClick={() => { setQuizActive(false); setQuizDone(false); }} className="btn-gold mt-3 text-xs">
-                  {t('quran.back')}
+                  {t('prophets.backToList')}
                 </button>
               </div>
             ) : (
               <>
-                <p className="mb-3 text-xs text-gold-400">Question {quizIdx + 1}/{selected.quiz.length}</p>
+                <p className="mb-3 text-xs text-gold-400">{t('prophets.quiz')} {quizIdx + 1}/{selected.quiz.length}</p>
                 <p className="mb-3 text-sm font-semibold text-stone-100">{selected.quiz[quizIdx].question}</p>
                 <div className="space-y-2">
                   {selected.quiz[quizIdx].options.map((opt, i) => {
@@ -83,7 +162,7 @@ export function ProphetsView() {
                 </div>
                 {quizAnswer !== null && (
                   <button onClick={nextQuestion} className="btn-gold mt-3 w-full text-xs">
-                    {quizIdx + 1 >= selected.quiz.length ? 'Voir le score' : 'Question suivante →'}
+                    {quizIdx + 1 >= selected.quiz.length ? t('prophets.finish') : t('prophets.next')}
                   </button>
                 )}
               </>
@@ -91,7 +170,7 @@ export function ProphetsView() {
           </div>
         ) : (
           <button onClick={() => startQuiz(selected)} className="btn-gold w-full text-xs">
-            🧠 Tester ses connaissances
+            🧠 {t('prophets.quiz')}
           </button>
         )}
       </div>
