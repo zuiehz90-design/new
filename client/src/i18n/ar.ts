@@ -266,6 +266,7 @@ export const ar: Record<string, string> = {
   'prophets.playing': 'جارٍ التشغيل…',
   'prophets.context': 'السياق',
   'prophets.verses': 'آيات',
+  'prophets.practice': 'درس لتطبيقه اليوم',
   'prophets.askAI': 'اسأل عن هذا النبي',
   'prophets.readInQuran': 'اقرأ في القرآن',
   'prophets.progressTitle': 'القصص المكتملة',

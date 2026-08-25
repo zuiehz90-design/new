@@ -14,6 +14,8 @@ export interface ProphetStory {
   name: string; nameAr: string; nameFr: string;
   title: string; story: string; chapters: ProphetChapter[]; reference: string; context: string;
   verses: string[]; lessons: string[]; quiz: QuizQuestion[];
+  /** Leçon pratique à appliquer aujourd'hui. */
+  practice: string;
 }
 
 export const PROPHETS: ProphetStory[] = [
@@ -30,6 +32,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "La création du premier homme, avant l'histoire écrite, constitue le récit fondateur de l'humanité.",
     verses: ['Coran 2:30', 'Coran 2:37', 'Coran 7:23'],
     lessons: ['Humilité', 'Repentir sincère', 'Enseignement', 'Obéissance à Allah', 'La science des noms'],
+    practice: "Aujourd'hui, je peux faire un petit effort d'humilité : reconnaître une erreur, demander pardon à quelqu'un ou commencer mon apprentissage par une bonne intention.",
     quiz: [
       { question: 'De quoi Adam fut-il créé ?', options: ['D\'eau', 'D\'argile', 'De feu'], correct: 1 },
       { question: 'Qui refusa de se prosterner devant Adam ?', options: ['Les anges', 'Iblis', 'Les djinns'], correct: 1 },
@@ -51,6 +54,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "Premier grand récit de châtiment divin ; Noé est l'un des cinq prophètes de la détermination, les Ulul-Azm.",
     verses: ['Coran 11:36', 'Coran 11:42', 'Coran 71:26'],
     lessons: ['Patience inébranlable', 'Persévérance', 'La foi avant les liens du sang', 'Confiance en l\'ordre d\'Allah', 'Da\'wa sans relâche'],
+    practice: "Aujourd'hui, face à une difficulté, je peux appliquer la patience de Nouh : persévérer sans me plaindre, en gardant confiance en Allah.",
     quiz: [
       { question: 'Combien de temps Noé prêcha-t-il ?', options: ['100 ans', '950 ans', '500 ans'], correct: 1 },
       { question: 'Qu\'ordonna Allah à Noé ?', options: ['Fuir', 'Construire une arche', 'Combattre'], correct: 1 },
@@ -72,6 +76,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "Père spirituel des trois monothéismes ; l'épreuve du sacrifice est commémorée chaque année par l'Aïd al-Adha.",
     verses: ['Coran 6:76-79', 'Coran 21:69', 'Coran 37:102'],
     lessons: ['Monothéisme pur', 'Courage face au feu', 'Soumission totale', 'Sacrifice et confiance', 'Construction de la Kaaba'],
+    practice: "Aujourd'hui, je peux faire un sacrifice concret : renoncer à un petit plaisir pour Allah, ou poser un acte de confiance même si je ne vois pas encore le résultat.",
     quiz: [
       { question: 'Que fit Abraham des idoles ?', options: ['Les adora', 'Les brisa', 'Les cacha'], correct: 1 },
       { question: 'Dans quoi fut-il jeté ?', options: ['L\'eau', 'Le feu', 'Un puits'], correct: 1 },
@@ -93,6 +98,7 @@ export const PROPHETS: ProphetStory[] = [
     context: 'La sourate Yusuf est entièrement consacrée à son récit, surnommé « la plus belle des histoires ».',
     verses: ['Coran 12:4', 'Coran 12:33', 'Coran 12:92'],
     lessons: ['Pardon magnanime', 'Chasteté', 'Patience dans l\'épreuve', 'Confiance dans les rêves d\'Allah', 'La ruse divine'],
+    practice: "Aujourd'hui, je peux pardonner à quelqu'un qui m'a fait du tort, comme Youssouf a pardonné à ses frères, sans attendre d'excuses en retour.",
     quiz: [
       { question: 'Où ses frères le jetèrent-ils ?', options: ['Un puits', 'Le désert', 'Un lac'], correct: 0 },
       { question: 'Quel don possédait-il ?', options: ['L\'interprétation des rêves', 'La guerre', 'La musique'], correct: 0 },
@@ -114,6 +120,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "Moïse est le prophète le plus cité dans le Coran ; il est appelé « interlocuteur d'Allah » car Allah lui parla directement.",
     verses: ['Coran 20:17-21', 'Coran 26:63', 'Coran 28:7'],
     lessons: ['Courage face au tyran', 'Confiance en Allah', 'Patience avec son peuple', 'La parole d\'Allah', 'La délivrance des opprimés'],
+    practice: "Aujourd'hui, je peux prendre la défense de quelqu'un d'opprimé ou dire la vérité avec courage, même si c'est inconfortable.",
     quiz: [
       { question: 'Où sa mère le déposa-t-elle ?', options: ['Dans une corbeille sur le Nil', 'Dans le désert', 'Chez un berger'], correct: 0 },
       { question: 'Qui l\'éleva ?', options: ['Son oncle', 'La famille de Pharaon', 'Les magiciens'], correct: 1 },
@@ -135,6 +142,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "Jésus est l'un des cinq prophètes Ulul-Azm. Marie, sa mère, est la seule femme nommée dans le Coran, avec une sourate entière à son nom.",
     verses: ['Coran 19:30-33', 'Coran 3:49', 'Coran 4:157-158'],
     lessons: ['Miracles par la permission d\'Allah', 'Humilité du serviteur', 'Honorer sa mère', 'Unicité d\'Allah', 'La puissance de la création'],
+    practice: "Aujourd'hui, je peux appeler ma mère (ou lui écrire) et lui témoigner de la bonté, en m'inspirant de l'exemple de 'Issa.",
     quiz: [
       { question: 'Comment naquit-il ?', options: ['D\'un père et d\'une mère', 'D\'une vierge, sans père', 'Adopté'], correct: 1 },
       { question: 'Que fit-il dès le berceau ?', options: ['Pleura', 'Parla', 'Dormit'], correct: 1 },
@@ -156,6 +164,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "L'invocation de Jonas, « La ilaha illa anta », est enseignée comme la supplication du détresse, exaucée même dans la pire situation.",
     verses: ['Coran 21:87', 'Coran 37:142', 'Coran 37:146'],
     lessons: ['La puissance de l\'invocation', 'Ne jamais désespérer', 'Le repentir sincère', 'La miséricorde d\'Allah', 'Reprendre sa mission'],
+    practice: "Aujourd'hui, dans une situation difficile, je peux invoquer Allah avec l'invocation de Younous : « La ilaha illa anta, subhanaka, inni kuntu mina dhalimin » et ne pas désespérer.",
     quiz: [
       { question: 'Qui l\'avala ?', options: ['Un requin', 'Une baleine', 'Un serpent de mer'], correct: 1 },
       { question: 'Combien de temps ?', options: ['1 nuit', '3 jours', '7 jours'], correct: 1 },
@@ -177,6 +186,7 @@ export const PROPHETS: ProphetStory[] = [
     context: 'David reçut le Zabur (Psaumes). Il est célèbre pour sa justice et le jeûne alterné qu\'il pratiquait.',
     verses: ['Coran 2:251', 'Coran 38:20', 'Coran 34:10'],
     lessons: ['Justice', 'La force de la foi', 'L\'humilité du pouvoir', 'La beauté de la récitation', 'La victoire vient d\'Allah'],
+    practice: "Aujourd'hui, je peux rendre la justice dans une petite décision du quotidien ou lire quelques versets à voix haute avec concentration, comme Dawoud récitait.",
     quiz: [
       { question: 'Contre qui combattit-il ?', options: ['Goliath', 'Pharaon', 'Iblis'], correct: 0 },
       { question: 'Avec quelle arme ?', options: ['Une épée', 'Une fronde', 'Un arc'], correct: 1 },
@@ -198,6 +208,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "Job est cité comme modèle de patience. Le Coran le montre frappant le sol d'où jaillit une source de guérison.",
     verses: ['Coran 21:83', 'Coran 38:41', 'Coran 38:44'],
     lessons: ['Patience absolue', 'Ne pas douter d\'Allah', 'Louer dans l\'épreuve', 'La guérison vient d\'Allah', 'La miséricorde après l\'épreuve'],
+    practice: "Aujourd'hui, je peux louer Allah dans une épreuve, même petite, en disant « Alhamdulillah » et en gardant la certitude que la guérison et l'issue viendront de Lui.",
     quiz: [
       { question: 'Que perdit Job ?', options: ['Sa foi', 'Biens, enfants et santé', 'Son peuple'], correct: 1 },
       { question: 'Sa réaction ?', options: ['Colère', 'Patience et louange', 'Fuite'], correct: 1 },
@@ -219,6 +230,7 @@ export const PROPHETS: ProphetStory[] = [
     context: 'Salomon est célèbre pour sa sagesse, sa justice et le don de comprendre le langage des animaux et du vent.',
     verses: ['Coran 27:19', 'Coran 27:40', 'Coran 38:35'],
     lessons: ['Sagesse', 'Gratitude pour les dons', 'Humilité malgré le pouvoir', 'Appeler à Allah avec tact', 'La justice'],
+    practice: "Aujourd'hui, je peux remercier Allah pour un don que j'ai reçu (connaissance, patience, famille) et l'utiliser avec humilité au service des autres.",
     quiz: [
       { question: 'Quel don reçut-il ?', options: ['Voler', 'Comprendre les animaux', 'Voir l\'avenir'], correct: 1 },
       { question: 'Qui lui apporta la nouvelle de Saba ?', options: ['Une fourmi', 'La huppe', 'Un ange'], correct: 1 },
@@ -240,6 +252,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "Le peuple d'Âd, mentionné comme un des peuples anéantis, vivait dans les dunes de l'Arabie du Sud. Hud est l'un des prophètes arabes.",
     verses: ['Coran 46:21', 'Coran 46:24', 'Coran 7:69'],
     lessons: ['Humilité face à la puissance', 'Ne pas se moquer des avertissements', 'La douceur dans l\'appel', 'La force sans foi est vaine', 'La transience des biens'],
+    practice: "Aujourd'hui, je peux faire preuve de douceur dans mes paroles, même envers ceux qui ne partagent pas mon avis, en suivant la manière de Hoûd.",
     quiz: [
       { question: 'Quel était le péché d\'Âd ?', options: ['La jalousie', 'L\'orgueil et l\'idolâtrie', 'Le mensonge'], correct: 1 },
       { question: 'Quel châtiment vint ?', options: ['Le feu', 'Un vent dévastateur', 'L\'eau'], correct: 1 },
@@ -261,6 +274,7 @@ export const PROPHETS: ProphetStory[] = [
     context: "Le récit de Sodome sert d'avertissement contre la dépravation. La femme de Lot, qui trahit la mission, périt avec le peuple.",
     verses: ['Coran 11:77', 'Coran 11:81', 'Coran 7:84'],
     lessons: ['Résister à la dépravation', 'Défendre la justice', 'La conséquence des actes', 'Ne pas suivre les injustes', 'La protection d\'Allah pour les croyants'],
+    practice: "Aujourd'hui, je peux résister à une tentation ou à une pression du groupe, comme Loût, et rester fidèle à ce qui est juste.",
     quiz: [
       { question: 'De qui était-il le neveu ?', options: ['Noé', 'Abraham', 'Ismaël'], correct: 1 },
       { question: 'Son peuple était…', options: ['Écoutant', 'Dépravé et moqueur', 'Converti'], correct: 1 },

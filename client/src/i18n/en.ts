@@ -312,6 +312,7 @@ export const en: Record<string, string> = {
   'prophets.playing': 'Playing…',
   'prophets.context': 'Context',
   'prophets.verses': 'Verses',
+  'prophets.practice': 'Lesson to apply today',
   'prophets.askAI': 'Ask a question about this prophet',
   'prophets.readInQuran': 'Read in the Quran',
   'prophets.progressTitle': 'Stories completed',

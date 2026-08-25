@@ -129,6 +129,14 @@ export function ProphetsView() {
           </div>
         </div>
 
+        {/* Leçon à appliquer aujourd'hui */}
+        {selected.practice && (
+          <div className="card mb-4 border-emerald-500/40 bg-gradient-to-br from-emerald-500/10 to-stone-900/40 p-4">
+            <p className="text-[11px] font-bold text-emerald-300 uppercase tracking-wide mb-2">🎯 {t('prophets.practice')}</p>
+            <p className="text-sm leading-relaxed text-stone-200">{selected.practice}</p>
+          </div>
+        )}
+
         {/* Poser une question à l'IA sur ce prophète */}
         <button
           onClick={() => navigate('/chat?ask=' + encodeURIComponent(selected.nameFr))}
