@@ -120,10 +120,6 @@ export function useDevotion() {
       let res: any;
       if (wasChecked) res = await apiUncheckPrayer(prayer);
       else res = await apiCheckPrayer(prayer, opts);
-      // Small delay to let server commit before re-fetching
-      await new Promise(r => setTimeout(r, 150));
-      skipNextCache();
-      await load();
       // Toast de promotion de rang (façon jeu vidéo)
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {
@@ -144,6 +140,8 @@ export function useDevotion() {
           showToast('✅', 'Salat check-in', '+10 pts', 'bg-emerald-500');
         }
       }
+      // Delayed refresh: let Neon sync before re-fetching
+      setTimeout(() => { skipNextCache(); load(); }, 2000);
     } catch { /* ignore */ }
   }, [user, load, showToast]);
 
@@ -164,14 +162,19 @@ export function useDevotion() {
       const res = (await apiCompleteQuest(questId, opts)) as any;
       // Verification refusee (priere non cochee, quiz faux) : rollback
       if (res && res.ok === false) {
-        skipNextCache();
-        await load();
+        setQuests((prev) => {
+          if (!prev) return prev;
+          return {
+            ...prev,
+            quests: prev.quests.map((q) =>
+              q.quest_id === questId ? { ...q, done: 0 } : q
+            ),
+          };
+        });
         return res;
       }
-      // Small delay to let server commit before re-fetching
-      await new Promise(r => setTimeout(r, 150));
-      skipNextCache();
-      await load();
+      // Delayed refresh: let Neon sync
+      setTimeout(() => { skipNextCache(); load(); }, 2000);
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {
         showToast(newRank.icon, newRank.name, 'Rang augmenté !', 'bg-gold-500');
