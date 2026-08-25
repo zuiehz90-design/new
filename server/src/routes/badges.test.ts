@@ -2,14 +2,14 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { computeNewBadges, BADGE_FAMILIES, badgeId } from './badges.js';
 
-const base = { existing: new Set<string>(), points: 0, totalPrayers: 0, fullDays: 0, streakBest: 0, questsDone: 0 };
+const base = { existing: new Set<string>(), points: 0, totalPrayers: 0, fullDays: 0, streakBest: 0, questsDone: 0, storiesDone: 0 };
 
 test('aucun badge au départ', () => {
   assert.deepEqual(computeNewBadges(base), []);
 });
 
-test('5 familles × 3 niveaux définies', () => {
-  assert.equal(BADGE_FAMILIES.length, 5);
+test('6 familles × 3 niveaux définies', () => {
+  assert.equal(BADGE_FAMILIES.length, 6);
   for (const f of BADGE_FAMILIES) {
     assert.equal(f.tiers.length, 3, 'famille ' + f.id);
     assert.deepEqual(f.tiers.map(t => t.level), ['bronze', 'silver', 'gold']);
@@ -57,6 +57,13 @@ test('badges déjà obtenus ne sont pas re-débloqués', () => {
     computeNewBadges({ ...base, existing, points: 5000, totalPrayers: 500, fullDays: 100, streakBest: 500, questsDone: 200 }),
     []
   );
+});
+
+test('histoires : bronze 3, argent 6, or 12 (Connaisseur historique)', () => {
+  assert.ok(computeNewBadges({ ...base, storiesDone: 3 }).includes('stories_bronze'));
+  assert.ok(computeNewBadges({ ...base, storiesDone: 6 }).includes('stories_silver'));
+  assert.ok(computeNewBadges({ ...base, storiesDone: 12 }).includes('stories_gold'));
+  assert.ok(!computeNewBadges({ ...base, storiesDone: 2 }).includes('stories_bronze'));
 });
 
 test('chaque famille ne débloque que ses propres niveaux', () => {

@@ -146,6 +146,19 @@ async function pushToRemote(): Promise<void> {
       );
     }
 
+    // Quiz completions
+    const quizRows = db.prepare('SELECT * FROM quiz_completions').all() as any[];
+    for (const q of quizRows) {
+      await client.query(
+        `INSERT INTO quiz_completions (user_id, prophet, score, total, points_awarded, completed_at)
+         VALUES ($1,$2,$3,$4,$5,$6)
+         ON CONFLICT (user_id, prophet) DO UPDATE SET
+           score=EXCLUDED.score, total=EXCLUDED.total,
+           points_awarded=EXCLUDED.points_awarded, completed_at=EXCLUDED.completed_at`,
+        [q.user_id, q.prophet, q.score, q.total, q.points_awarded, q.completed_at]
+      );
+    }
+
     lastSyncAt = new Date().toISOString();
   } finally {
     client.release();
@@ -221,6 +234,18 @@ async function pullFromRemote(): Promise<void> {
          VALUES (?,?)
          ON CONFLICT (user_id) DO UPDATE SET total=excluded.total`
       ).run(d.user_id, d.total);
+    }
+
+    // Quiz completions
+    const { rows: quizRows } = await client.query('SELECT * FROM quiz_completions');
+    for (const q of quizRows) {
+      db.prepare(
+        `INSERT INTO quiz_completions (user_id, prophet, score, total, points_awarded, completed_at)
+         VALUES (?,?,?,?,?,?)
+         ON CONFLICT (user_id, prophet) DO UPDATE SET
+           score=excluded.score, total=excluded.total,
+           points_awarded=excluded.points_awarded, completed_at=excluded.completed_at`
+      ).run(q.user_id, q.prophet, q.score, q.total, q.points_awarded, q.completed_at);
     }
 
     lastSyncAt = new Date().toISOString();

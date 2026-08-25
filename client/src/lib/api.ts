@@ -353,6 +353,40 @@ export function apiCompleteQuest(questId: string, opts?: CompleteQuestOpts): Pro
   return apiFetch(`/api/quests/${questId}/complete`, { method: 'POST', body: opts ? JSON.stringify(opts) : undefined });
 }
 
+export interface QuizResult {
+  ok: boolean;
+  prophet: string;
+  score: number;
+  total: number;
+  points: number;
+  first: boolean;
+  best: boolean;
+  newBadges?: string[];
+  newRank?: any;
+}
+
+export function apiCompleteQuiz(prophet: string, score: number, total: number): Promise<QuizResult> {
+  return apiFetch('/api/quiz/complete', { method: 'POST', body: JSON.stringify({ prophet, score, total }) });
+}
+
+export interface ProphetProgressEntry {
+  prophet: string;
+  score: number;
+  total: number;
+  points: number;
+  completed: boolean;
+  completedAt: string;
+}
+
+export async function apiQuizProgress(): Promise<ProphetProgressEntry[]> {
+  try {
+    const res = await apiFetch<{ progress: ProphetProgressEntry[] }>('/api/quiz/progress');
+    return res.progress ?? [];
+  } catch {
+    return [];
+  }
+}
+
 export interface RankDistributionEntry {
   id: string; tier: string; division: number | null; name: string;
   min: number; icon: string; color: string; count: number; pct: number;

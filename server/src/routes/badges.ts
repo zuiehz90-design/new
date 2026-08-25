@@ -73,6 +73,17 @@ export const BADGE_FAMILIES: BadgeFamily[] = [
       { level: 'gold', threshold: 950 },
     ],
   },
+  {
+    id: 'stories',
+    name: 'Connaisseur historique',
+    icon: '📜',
+    description: 'Histoires de prophètes terminées (quiz réussi)',
+    tiers: [
+      { level: 'bronze', threshold: 3 },
+      { level: 'silver', threshold: 6 },
+      { level: 'gold', threshold: 12 },
+    ],
+  },
 ];
 
 export function badgeId(family: string, level: BadgeLevel): string {
@@ -86,6 +97,7 @@ export interface BadgeProgress {
   fullDays: number;
   streakBest: number;
   questsDone: number;
+  storiesDone: number;
 }
 
 export interface BadgeInputs extends BadgeProgress {
@@ -105,6 +117,8 @@ export function familyProgress(i: BadgeProgress, familyId: string): number {
       return i.questsDone;
     case 'rank':
       return i.points;
+    case 'stories':
+      return i.storiesDone;
     default:
       return 0;
   }

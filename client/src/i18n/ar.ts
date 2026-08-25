@@ -265,6 +265,8 @@ export const ar: Record<string, string> = {
   'prophets.playing': 'جارٍ التشغيل…',
   'prophets.context': 'السياق',
   'prophets.verses': 'آيات',
+  'prophets.progressTitle': 'القصص المكتملة',
+  'prophets.badgeTitle': 'شارة المؤرخ:',
   /* -- أسماء الله الحسنى -- */
   'names99.title': 'أسماء الله الحسنى',
   'names99.subtitle': 'تعلّم واحفظ الأسماء الإلهية',

@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n';
 import { PROPHETS, type ProphetStory } from '../lib/prophets';
 import { getProphetAudio } from '../lib/prophetsAudio';
 import { PodcastPlayer } from './PodcastPlayer';
+import { apiCompleteQuiz, apiQuizProgress, type ProphetProgressEntry, type QuizResult } from '../lib/api';
 
 export function ProphetsView() {
   const { t } = useI18n();
@@ -12,6 +13,15 @@ export function ProphetsView() {
   const [quizScore, setQuizScore] = useState(0);
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [quizDone, setQuizDone] = useState(false);
+  const [quizReward, setQuizReward] = useState<QuizResult | null>(null);
+  const [quizSending, setQuizSending] = useState(false);
+  const [progress, setProgress] = useState<ProphetProgressEntry[]>([]);
+
+  const refreshProgress = () => {
+    apiQuizProgress().then(setProgress).catch(() => {});
+  };
+
+  useEffect(() => { refreshProgress(); }, []);
 
   const startQuiz = (p: ProphetStory) => {
     setSelected(p);
@@ -20,6 +30,7 @@ export function ProphetsView() {
     setQuizScore(0);
     setQuizAnswer(null);
     setQuizDone(false);
+    setQuizReward(null);
   };
 
   const answerQuiz = (idx: number) => {
@@ -31,6 +42,12 @@ export function ProphetsView() {
   const nextQuestion = () => {
     if (quizIdx + 1 >= selected!.quiz.length) {
       setQuizDone(true);
+      // Envoi au serveur : attribue les points (anti-farm, meilleur score)
+      setQuizSending(true);
+      apiCompleteQuiz(selected!.name, quizScore, selected!.quiz.length)
+        .then((r) => { setQuizReward(r); refreshProgress(); })
+        .catch(() => setQuizReward(null))
+        .finally(() => setQuizSending(false));
     } else {
       setQuizIdx(quizIdx + 1);
       setQuizAnswer(null);
@@ -108,7 +125,25 @@ export function ProphetsView() {
                 <p className="text-sm text-stone-300">
                   {quizScore === selected.quiz.length ? '🎉 Parfait !' : '📖 Continue à apprendre !'}
                 </p>
-                <button onClick={() => { setQuizActive(false); setQuizDone(false); }} className="btn-gold mt-3 text-xs">
+                {quizSending && <p className="mt-2 text-xs text-stone-500">⏳ Attribution des points…</p>}
+                {!quizSending && quizReward && quizReward.points > 0 && (
+                  <p className="mt-2 inline-block rounded-full bg-emerald-500/15 px-3 py-1 text-xs font-bold text-emerald-300">
+                    🏆 +{quizReward.points} points
+                    {quizReward.best ? ' (nouveau record !)' : ''}
+                  </p>
+                )}
+                {!quizSending && quizReward && quizReward.points === 0 && (
+                  <p className="mt-2 text-xs text-stone-500">
+                    {quizReward.first ? '' : 'Déjà récompensé — améliore ton score pour gagner plus de points.'}
+                  </p>
+                )}
+                {!quizSending && quizReward && quizReward.newBadges && quizReward.newBadges.length > 0 && (
+                  <p className="mt-2 text-xs text-gold-300">🏅 Badge débloqué !</p>
+                )}
+                {!quizSending && quizReward && quizReward.newRank && (
+                  <p className="mt-2 text-xs text-gold-300">⬆️ Montée de rang : {quizReward.newRank.name}</p>
+                )}
+                <button onClick={() => { setQuizActive(false); setQuizDone(false); setQuizReward(null); }} className="btn-gold mt-3 text-xs">
                   {t('prophets.backToList')}
                 </button>
               </div>
@@ -143,26 +178,74 @@ export function ProphetsView() {
     );
   }
 
+  const progressFor = (name: string) => progress.find((pr) => pr.prophet === name);
+
+  const completedCount = PROPHETS.filter((p) => progressFor(p.name)?.completed).length;
+  const totalStories = PROPHETS.length;
+  const globalPct = Math.round((completedCount / totalStories) * 100);
+  const badgeTiers = [
+    { label: '🥉 3', threshold: 3, color: 'text-amber-600' },
+    { label: '🥈 6', threshold: 6, color: 'text-stone-400' },
+    { label: '🥇 12', threshold: 12, color: 'text-gold-400' },
+  ];
+
   return (
     <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
       <div className="mb-4 text-center">
         <h2 className="text-2xl font-bold text-gold-400">{t('prophets.title')}</h2>
         <p className="mt-1 text-xs text-stone-400">{t('prophets.subtitle')}</p>
       </div>
+
+      {/* Progression globale : barre + badge Connaisseur historique */}
+      <div className="card mb-4 p-4">
+        <div className="flex items-center justify-between">
+          <p className="text-xs font-bold text-gold-400">📜 {t('prophets.progressTitle')}</p>
+          <p className="text-xs font-semibold text-stone-300">{completedCount}/{totalStories}</p>
+        </div>
+        <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-stone-800">
+          <div className="h-full rounded-full bg-gradient-to-r from-emerald-500 to-gold-500 transition-all duration-500"
+            style={{ width: globalPct + '%' }} />
+        </div>
+        <div className="mt-2 flex flex-wrap items-center gap-1.5">
+          <span className="text-[10px] text-stone-500">{t('prophets.badgeTitle')}</span>
+          {badgeTiers.map((b) => (
+            <span key={b.threshold} className={
+              'chip text-[10px] ' + (completedCount >= b.threshold
+                ? '!border-gold-500/60 !text-gold-300'
+                : '!border-stone-700 !text-stone-500 opacity-60')
+            }>
+              {b.label}
+            </span>
+          ))}
+        </div>
+      </div>
+
       <div className="space-y-2">
-        {PROPHETS.map((p) => (
-          <button key={p.name} onClick={() => setSelected(p)}
-            className="card card-clickable w-full p-4 text-left transition hover:border-gold-500/50">
-            <div className="flex items-center gap-3">
-              <div className="font-quran text-2xl text-gold-300 shrink-0" dir="rtl">{p.nameAr}</div>
-              <div className="flex-1 min-w-0">
-                <div className="font-semibold text-stone-100">{p.nameFr}</div>
-                <div className="text-[11px] text-stone-400 truncate">{p.title}</div>
+        {PROPHETS.map((p) => {
+          const pr = progressFor(p.name);
+          const done = pr?.completed;
+          const pct = done ? 100 : 0;
+          return (
+            <button key={p.name} onClick={() => setSelected(p)}
+              className="card card-clickable w-full p-4 text-left transition hover:border-gold-500/50">
+              <div className="flex items-center gap-3">
+                <div className="font-quran text-2xl text-gold-300 shrink-0" dir="rtl">{p.nameAr}</div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <div className="font-semibold text-stone-100">{p.nameFr}</div>
+                    {done && <span className="text-xs">✅</span>}
+                  </div>
+                  <div className="text-[11px] text-stone-400 truncate">{p.title}</div>
+                  <div className="mt-1.5 h-1.5 w-full overflow-hidden rounded-full bg-stone-800">
+                    <div className={'h-full rounded-full transition-all duration-500 ' + (done ? 'bg-emerald-500' : 'bg-stone-700')}
+                      style={{ width: pct + '%' }} />
+                  </div>
+                </div>
+                <span className="text-xs text-stone-500">{done ? '✅' : '🧠'}</span>
               </div>
-              <span className="text-xs text-stone-500">🧠</span>
-            </div>
-          </button>
-        ))}
+            </button>
+          );
+        })}
       </div>
     </div>
   );

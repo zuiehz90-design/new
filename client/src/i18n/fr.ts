@@ -330,6 +330,8 @@ export const fr: Record<string, string> = {
   'prophets.playing': 'Lecture en cours…',
   'prophets.context': 'Contexte',
   'prophets.verses': 'Versets',
+  'prophets.progressTitle': 'Histoires terminées',
+  'prophets.badgeTitle': 'Badge Connaisseur historique :',
   /* -- 99 Noms d'Allah -- */
   'names99.title': 'Les 99 Noms d\'Allah',
   'names99.subtitle': 'Apprenez et mémorisez les noms divins',

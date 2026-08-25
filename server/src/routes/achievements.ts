@@ -162,8 +162,9 @@ export function userPoints(userId: number): number {
             WHEN late = 1 THEN -10
             ELSE 0
           END), 0) FROM prayers WHERE user_id = ?)
-      + (SELECT COALESCE(SUM(points), 0) FROM quests WHERE user_id = ? AND done = 1) AS n
-  `).get(userId, userId, userId) as { n: number } | undefined;
+      + (SELECT COALESCE(SUM(points), 0) FROM quests WHERE user_id = ? AND done = 1)
+      + (SELECT COALESCE(SUM(points_awarded), 0) FROM quiz_completions WHERE user_id = ?) AS n
+  `).get(userId, userId, userId, userId) as { n: number } | undefined;
   return row?.n ?? 0;
 }
 
@@ -178,6 +179,7 @@ export interface Stats {
   fullDays: number;
   streakBest: number;
   questsDone: number;
+  storiesDone: number;
 }
 
 /** Statistiques monotones : utilise userPoints pour la source unique de verite. */
@@ -186,8 +188,9 @@ export function computeStats(userId: number): Stats {
   const row = db.prepare(`
     SELECT
       (SELECT COUNT(*) FROM prayers WHERE user_id = ?) AS total_prayers,
-      (SELECT COUNT(*) FROM quests WHERE user_id = ? AND done = 1) AS quests_done
-  `).get(userId, userId) as { total_prayers: number; quests_done: number } | undefined;
+      (SELECT COUNT(*) FROM quests WHERE user_id = ? AND done = 1) AS quests_done,
+      (SELECT COUNT(*) FROM quiz_completions WHERE user_id = ? AND score > 0) AS stories_done
+  `).get(userId, userId, userId) as { total_prayers: number; quests_done: number; stories_done: number } | undefined;
   const days = prayerDayRows(userId);
   const streak = streakFromActiveDays(new Set(days.filter((r) => r.n >= 1).map((r) => r.date)), toLocalDate());
   return {
@@ -196,6 +199,7 @@ export function computeStats(userId: number): Stats {
     fullDays: days.filter((r) => r.n >= 5).length,
     streakBest: streak.best,
     questsDone: row?.quests_done ?? 0,
+    storiesDone: row?.stories_done ?? 0,
   };
 }
 
@@ -245,6 +249,7 @@ export function checkAchievements(userId: number, statsOverride?: Stats): string
     fullDays: stats.fullDays,
     streakBest: stats.streakBest,
     questsDone: stats.questsDone,
+    storiesDone: stats.storiesDone,
   };
   const newBadges = computeNewBadges(inputs);
   for (const b of newBadges) {
