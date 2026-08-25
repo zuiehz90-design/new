@@ -50,9 +50,86 @@ function coerceRows(rows: Record<string, unknown>[]): Record<string, unknown>[] 
   });
 }
 
-let client: pg.Client;
+let client: pg.Client | null = null;
+let needsReconnect = false;
+
+/** Détecte les erreurs de connexion (vs erreurs SQL) : seul ce cas déclenche une reconnexion. */
+function isConnectionError(err: unknown): boolean {
+  const e = err as { message?: string; code?: string };
+  const msg = String(e?.message ?? e ?? '');
+  const code = String(e?.code ?? '');
+  return (
+    code === 'ECONNRESET' || code === 'ECONNREFUSED' || code === 'ETIMEDOUT' ||
+    code === 'EPIPE' || code === 'EHOSTUNREACH' ||
+    code === '57P01' || code === '57P02' || code === '57P03' ||
+    code === '08006' || code === '08003' || code === '08001' ||
+    msg.includes('not queryable') ||
+    msg.includes('Connection terminated') ||
+    msg.includes('connection error') ||
+    msg.includes('terminated unexpectedly') ||
+    msg.includes('socket hang up') ||
+    msg.includes('ECONNRESET') ||
+    msg.includes('Client has encountered') ||
+    msg.includes('server closed the connection') ||
+    msg.includes('server conn crashed') ||
+    msg.includes('connection terminated')
+  );
+}
+
+async function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * (Re)connecte le client PostgreSQL avec retries et backoff.
+ * Neon ferme les connexions inactives : sans reconnexion, le serveur
+ * reste bloqué avec « Client has encountered a connection error ».
+ */
+async function connectWithRetry(): Promise<void> {
+  let lastErr: unknown = new Error('connexion impossible');
+  for (let attempt = 1; attempt <= 5; attempt++) {
+    try {
+      const useSsl = /[?&]sslmode=(require|verify-ca|verify-full)/i.test(init.databaseUrl) || /neon.tech/i.test(init.databaseUrl);
+      const c = new pg.Client({
+        connectionString: init.databaseUrl,
+        ssl: useSsl ? { rejectUnauthorized: false } : false,
+        connectionTimeoutMillis: 15_000,
+        query_timeout: 60_000,
+        keepAlive: true,
+        keepAliveInitialDelayMillis: 10_000,
+      });
+      c.on('error', () => {
+        // La connexion a été coupée : les requêtes suivantes doivent reconnecter.
+        needsReconnect = true;
+      });
+      await c.connect();
+      client = c;
+      needsReconnect = false;
+      return;
+    } catch (error) {
+      lastErr = error;
+      if (attempt < 5) await sleep(400 * attempt);
+    }
+  }
+  throw lastErr;
+}
+
+/** Exécute une requête en reconnectant automatiquement si la connexion est morte. */
+async function executeWithReconnect(kind: string, sql: string, params: unknown[]): Promise<unknown> {
+  for (let attempt = 0; attempt < 3; attempt++) {
+    if (needsReconnect || !client) await connectWithRetry();
+    try {
+      return await execute(kind, sql, params);
+    } catch (err) {
+      if (!isConnectionError(err) || attempt >= 2) throw err;
+      needsReconnect = true;
+    }
+  }
+  throw new Error('connexion impossible après plusieurs tentatives');
+}
 
 async function execute(kind: string, rawSql: string, params: unknown[]): Promise<unknown> {
+  if (!client) throw new Error('PostgreSQL non connecté.');
   if (kind === 'exec') {
     const statements = translateExec(rawSql);
     if (statements.length > 0) await client.query(statements.join(';\n'));
@@ -77,17 +154,7 @@ async function execute(kind: string, rawSql: string, params: unknown[]): Promise
 
 async function main(): Promise<void> {
   try {
-    const useSsl = /[?&]sslmode=(require|verify-ca|verify-full)/i.test(init.databaseUrl) || /neon\.tech/i.test(init.databaseUrl);
-    client = new Client({
-      connectionString: init.databaseUrl,
-      ssl: useSsl ? { rejectUnauthorized: false } : false,
-      connectionTimeoutMillis: 15_000,
-      query_timeout: 60_000,
-    });
-    client.on('error', () => {
-      // Les requêtes suivantes reçoivent une erreur explicite.
-    });
-    await client.connect();
+    await connectWithRetry();
   } catch (error) {
     const err = error as Error & { code?: string };
     writePayload({ error: err.message || err.code || String(error) }, 6);
@@ -109,7 +176,7 @@ async function main(): Promise<void> {
         sql: string;
         params?: unknown[];
       };
-      writePayload(await execute(request.kind, request.sql, request.params ?? []), 2);
+      writePayload(await executeWithReconnect(request.kind, request.sql, request.params ?? []), 2);
     } catch (error) {
       writePayload({ error: (error as Error).message || String(error) }, 3);
     }
