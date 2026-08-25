@@ -129,6 +129,14 @@ export function ProphetsView() {
           </div>
         </div>
 
+        {/* Poser une question à l'IA sur ce prophète */}
+        <button
+          onClick={() => navigate('/chat?ask=' + encodeURIComponent(selected.nameFr))}
+          className="btn-ghost mb-4 w-full border-gold-500/40 text-xs"
+        >
+          💬 {t('prophets.askAI')}
+        </button>
+
         {quizActive ? (
           <div className="card p-4 border-gold-500/30">
             {quizDone ? (

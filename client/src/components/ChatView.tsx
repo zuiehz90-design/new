@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type FormEvent } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useChatContext } from '../App';
 import { useI18n } from '../i18n';
 import { useOffline } from '../hooks/useOffline';
@@ -21,11 +22,24 @@ export function ChatView() {
   const chat = useChatContext();
   const { t } = useI18n();
   const offline = useOffline();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const askHandledRef = useRef(false);
   const bottomRef = useRef<HTMLDivElement>(null);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   // Track if user is near the bottom (auto-scroll only when user is reading the latest)
   const atBottomRef = useRef(true);
   const messages = chat.active?.messages ?? [];
+
+  // Prompt prérempli via /chat?ask=<nom> (bouton « Poser une question » sur les prophètes).
+  useEffect(() => {
+    const ask = searchParams.get('ask');
+    if (!ask || askHandledRef.current) return;
+    askHandledRef.current = true;
+    setSearchParams({}, { replace: true }); // nettoie l'URL (pas de renvoi au refresh)
+    const prompt = t('chat.askAbout', { name: ask });
+    // Laisse le temps au store de se monter puis envoie le message.
+    setTimeout(() => { chat.send(prompt); }, 250);
+  }, [searchParams, setSearchParams, chat.send, t]);
 
   // Smart auto-scroll: only scroll to bottom if user is already near the bottom.
   // If user scrolled up to read earlier messages, don't force them down.
