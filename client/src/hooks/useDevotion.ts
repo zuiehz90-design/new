@@ -100,28 +100,27 @@ export function useDevotion() {
   useEffect(() => { load(); }, [load]);
 
   const togglePrayer = useCallback(async (prayer: string, opts?: { late?: boolean; lateMinutes?: number }) => {
-    if (!user || !prayers) return;
     // Feedback haptique (Android/Chrome) : petite pulsation tactile au toucher
     try {
       navigator.vibrate?.(12);
     } catch { /* haptique non disponible */ }
-    const checked = prayers.checked.includes(prayer);
-    // Optimistic update — turn green/red instantly before server responds
-    if (!checked && prayers) {
-      setPrayers({
-        ...prayers,
-        checked: [...prayers.checked, prayer],
-      });
-    } else if (checked && prayers) {
-      setPrayers({
-        ...prayers,
-        checked: prayers.checked.filter((k) => k !== prayer),
-      });
-    }
+    // Use functional updater to always read latest state
+    let wasChecked = false;
+    setPrayers((prev) => {
+      if (!prev) return prev;
+      wasChecked = prev.checked.includes(prayer);
+      if (!wasChecked) {
+        return { ...prev, checked: [...prev.checked, prayer] };
+      } else {
+        return { ...prev, checked: prev.checked.filter((k) => k !== prayer) };
+      }
+    });
     try {
       let res: any;
-      if (checked) res = await apiUncheckPrayer(prayer);
+      if (wasChecked) res = await apiUncheckPrayer(prayer);
       else res = await apiCheckPrayer(prayer, opts);
+      // Small delay to let server commit before re-fetching
+      await new Promise(r => setTimeout(r, 150));
       await load();
       // Toast de promotion de rang (façon jeu vidéo)
       const newRank = res?.newRank as RankInfo | undefined;
@@ -135,7 +134,7 @@ export function useDevotion() {
           const info = describeBadge(b);
           showToast(info.icon, info.name, 'Badge débloqué !', 'bg-amber-400');
         });
-      } else if (!checked && !newRank) {
+      } else if (!wasChecked && !newRank) {
         const penalty = res?.penalty ?? 0;
         if (opts?.late && penalty < 0) {
           showToast('⏰', 'Prière en retard', `${penalty} pts`, 'bg-amber-500');
@@ -144,20 +143,21 @@ export function useDevotion() {
         }
       }
     } catch { /* ignore */ }
-  }, [user, prayers, load, showToast]);
+  }, [user, load, showToast]);
 
   /** Complete une quete ; retourne la reponse du serveur (verification incluse). */
   const toggleQuest = useCallback(async (questId: string, opts?: { answer?: number }) => {
     if (!user) return null;
     // Optimistic update — mark quest as done instantly
-    if (quests) {
-      setQuests({
-        ...quests,
-        quests: quests.quests.map((q) =>
+    setQuests((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        quests: prev.quests.map((q) =>
           q.quest_id === questId ? { ...q, done: 1 } : q
         ),
-      });
-    }
+      };
+    });
     try {
       const res = (await apiCompleteQuest(questId, opts)) as any;
       // Verification refusee (priere non cochee, quiz faux) : rollback
@@ -165,6 +165,8 @@ export function useDevotion() {
         await load();
         return res;
       }
+      // Small delay to let server commit before re-fetching
+      await new Promise(r => setTimeout(r, 150));
       await load();
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {
