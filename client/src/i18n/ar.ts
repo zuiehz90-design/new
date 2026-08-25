@@ -275,6 +275,7 @@ export const ar: Record<string, string> = {
   'prophets.speed': 'السرعة',
   'prophets.pause': 'إيقاف مؤقت',
   'prophets.play': 'تشغيل',
+  'prophets.listen': 'استمع إلى البودكاست',
   'prophets.originalEpisode': 'عرض الحلقة الأصلية',
   'prophets.resume': 'متابعة',
   'prophets.stop': 'إيقاف',

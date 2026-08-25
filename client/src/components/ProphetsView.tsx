@@ -17,6 +17,7 @@ export function ProphetsView() {
   const [quizDone, setQuizDone] = useState(false);
   const [quizReward, setQuizReward] = useState<QuizResult | null>(null);
   const [quizSending, setQuizSending] = useState(false);
+  const [showPodcast, setShowPodcast] = useState(false);
   const [progress, setProgress] = useState<ProphetProgressEntry[]>([]);
 
   const refreshProgress = () => {
@@ -61,7 +62,7 @@ export function ProphetsView() {
     return (
       <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
         <button
-          onClick={() => { setSelected(null); setQuizActive(false); }}
+          onClick={() => { setSelected(null); setQuizActive(false); setShowPodcast(false); }}
           className="btn-ghost mb-4 text-xs"
         >
           ← {t('prophets.backToList')}
@@ -73,8 +74,19 @@ export function ProphetsView() {
           <p className="text-xs text-stone-400">{selected.title}</p>
         </div>
 
-        {/* Podcast audio (épisode réel) */}
-        {audio && <PodcastPlayer audio={audio} />}
+        {/* Podcast audio (épisode réel) — toggle */}
+        {audio && (
+          showPodcast ? (
+            <PodcastPlayer audio={audio} />
+          ) : (
+            <button
+              onClick={() => setShowPodcast(true)}
+              className="btn-gold mb-4 w-full text-xs"
+            >
+              🎙️ {t("prophets.listen")} : {audio.title}
+            </button>
+          )
+        )}
 
         {/* Contexte historique */}
         <div className="card p-4 mb-4 !border-gold-500/20">
