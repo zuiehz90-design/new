@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { PROPHETS, getFeaturedProphet, type ProphetStory } from '../lib/prophets';
 import { getProphetAudio } from '../lib/prophetsAudio';
@@ -7,6 +8,7 @@ import { apiCompleteQuiz, apiQuizProgress, type ProphetProgressEntry, type QuizR
 
 export function ProphetsView() {
   const { t } = useI18n();
+  const navigate = useNavigate();
   const [selected, setSelected] = useState<ProphetStory | null>(null);
   const [quizActive, setQuizActive] = useState(false);
   const [quizIdx, setQuizIdx] = useState(0);
@@ -97,13 +99,23 @@ export function ProphetsView() {
           <p className="mt-4 text-[11px] text-stone-500 italic">📖 {selected.reference}</p>
         </div>
 
-        {/* Versets */}
+        {/* Versets liés — ouverture directe dans le Coran */}
         <div className="mb-4">
           <p className="text-[11px] font-bold text-gold-400/80 uppercase tracking-wide mb-2">{t('prophets.verses')}</p>
           <div className="flex flex-wrap gap-1.5">
-            {selected.verses.map((v) => (
-              <span key={v} className="chip !border-gold-500/40 !text-gold-300 text-[11px]">📜 {v}</span>
-            ))}
+            {selected.verses.map((v) => {
+              const ref = parseVerseRef(v);
+              return (
+                <button
+                  key={v}
+                  onClick={() => ref && navigate('/quran?surah=' + ref.surah + '&verse=' + ref.verse)}
+                  className="chip !border-gold-500/40 !bg-gold-500/5 !text-gold-300 text-[11px] transition hover:!border-gold-400 hover:!bg-gold-500/15 active:opacity-70"
+                  title={ref ? t('prophets.readInQuran') : undefined}
+                >
+                  📜 {v} {ref && <span className="ml-0.5 text-gold-400/80">→ {t('prophets.readInQuran')}</span>}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -277,4 +289,15 @@ export function ProphetsView() {
       </div>
     </div>
   );
+}
+
+
+/** Parse « Coran 6:76-79 » → { surah: 6, verse: 76 } (premier verset de l'intervalle). */
+function parseVerseRef(ref: string): { surah: number; verse: number } | null {
+  const m = ref.match(/Coran\s+(\d{1,3}):(\d{1,3})(?:-\d{1,3})?/);
+  if (!m) return null;
+  const surah = Number(m[1]);
+  const verse = Number(m[2]);
+  if (surah < 1 || surah > 114 || verse < 1) return null;
+  return { surah, verse };
 }

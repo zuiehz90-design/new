@@ -331,6 +331,7 @@ export const fr: Record<string, string> = {
   'prophets.playing': 'Lecture en cours…',
   'prophets.context': 'Contexte',
   'prophets.verses': 'Versets',
+  'prophets.readInQuran': 'Lire dans le Coran',
   'prophets.progressTitle': 'Histoires terminées',
   'prophets.badgeTitle': 'Badge Connaisseur historique :',
   'prophets.weeklyTitle': 'Défi de la semaine',

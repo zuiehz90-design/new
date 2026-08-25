@@ -311,6 +311,7 @@ export const en: Record<string, string> = {
   'prophets.playing': 'Playing…',
   'prophets.context': 'Context',
   'prophets.verses': 'Verses',
+  'prophets.readInQuran': 'Read in the Quran',
   'prophets.progressTitle': 'Stories completed',
   'prophets.badgeTitle': 'Historian badge:',
   'prophets.weeklyTitle': 'Challenge of the week',
