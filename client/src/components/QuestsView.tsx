@@ -241,7 +241,7 @@ export function QuestsView() {
         </h1>
       </div>
 
-      {achievements && <RankCard achievements={achievements} points={achievements?.rankProgress?.current ?? 0} />}
+      {achievements && <RankCard achievements={achievements} />}
 
       {/* Stats rapides */}
       <div className="mb-4 grid grid-cols-3 gap-2">

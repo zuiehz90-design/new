@@ -180,39 +180,22 @@ export interface Stats {
   questsDone: number;
 }
 
-/** Statistiques monotones avec deux lectures Neon au lieu de six. */
+/** Statistiques monotones : utilise userPoints pour la source unique de verite. */
 export function computeStats(userId: number): Stats {
-  const totals = db.prepare(`
+  // Single lightweight query for counts (not recomputing points here).
+  const row = db.prepare(`
     SELECT
       (SELECT COUNT(*) FROM prayers WHERE user_id = ?) AS total_prayers,
-      (SELECT COALESCE(SUM(
-          CASE
-            WHEN late = 1 AND late_minutes <= 15 THEN 0
-            WHEN late = 1 AND late_minutes <= 60 THEN -2
-            WHEN late = 1 AND late_minutes <= 120 THEN -5
-            WHEN late = 1 AND late_minutes <= 240 THEN -8
-            WHEN late = 1 THEN -10
-            ELSE 0
-          END), 0) FROM prayers WHERE user_id = ?) AS late_penalty,
-      (SELECT COALESCE(SUM(points), 0) FROM quests WHERE user_id = ? AND done = 1) AS quest_points,
       (SELECT COUNT(*) FROM quests WHERE user_id = ? AND done = 1) AS quests_done
-  `).get(userId, userId, userId, userId) as {
-    total_prayers: number;
-    late_penalty: number;
-    quest_points: number;
-    quests_done: number;
-  };
+  `).get(userId, userId) as { total_prayers: number; quests_done: number } | undefined;
   const days = prayerDayRows(userId);
   const streak = streakFromActiveDays(new Set(days.filter((r) => r.n >= 1).map((r) => r.date)), toLocalDate());
-  const totalPrayers = totals?.total_prayers ?? 0;
-  const questPoints = totals?.quest_points ?? 0;
-  const latePenalty = totals?.late_penalty ?? 0;
   return {
-    points: totalPrayers * 10 + questPoints + latePenalty,
-    totalPrayers,
+    points: userPoints(userId),   // ← single source of truth
+    totalPrayers: row?.total_prayers ?? 0,
     fullDays: days.filter((r) => r.n >= 5).length,
     streakBest: streak.best,
-    questsDone: totals?.quests_done ?? 0,
+    questsDone: row?.quests_done ?? 0,
   };
 }
 

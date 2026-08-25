@@ -12,18 +12,22 @@ const TIER_COLOR: Record<string, string> = {
   Légende: '#d8b4fe',
 };
 
+/** Safe number: returns 0 for NaN/Infinity/undefined/null. */
+function safeNum(v: unknown, fallback = 0): number {
+  const n = Number(v);
+  return Number.isFinite(n) ? n : fallback;
+}
+
 /**
- * Carte de rang mobile-first : icône grande + nom + barre + bouton.
+ * Carte de rang : lit les donnees directement depuis achievements.
+ * Plus besoin de prop points separee.
  */
-export function RankCard({
-  achievements,
-  points,
-}: {
-  achievements: Achievements;
-  points: number;
-}) {
+export function RankCard({ achievements }: { achievements: Achievements }) {
   const r: RankInfo = achievements.rank;
   const rp = achievements.rankProgress;
+  const pts = safeNum(rp.current);
+  const pct = safeNum(rp.pct);
+  const needed = safeNum(rp.pointsNeeded);
   const filledPips = r.division == null ? 3 : 3 - r.division;
   const { t } = useI18n();
   const [ranksOpen, setRanksOpen] = useState(false);
@@ -53,9 +57,9 @@ export function RankCard({
               )}
             </div>
             <p className="text-[10px] text-stone-500 mt-0.5">
-              {points} pts
-              {!rp.maxed && (
-                <span className="text-stone-600"> · {t('rank.next')} : {rp.pointsNeeded} pts</span>
+              {pts} pts
+              {!rp.maxed && needed > 0 && (
+                <span className="text-stone-600"> · {t('rank.next')} : {needed} pts</span>
               )}
             </p>
           </div>
@@ -67,11 +71,11 @@ export function RankCard({
             <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: (rp.maxed ? 100 : rp.pct) + '%', background: color }}
+                style={{ width: Math.min(100, Math.max(0, rp.maxed ? 100 : pct)) + '%', background: color }}
               />
             </div>
             {!rp.maxed && (
-              <span className="text-xs tabular-nums font-semibold" style={{ color }}>{rp.pct}%</span>
+              <span className="text-xs tabular-nums font-semibold" style={{ color }}>{pct}%</span>
             )}
             {rp.maxed && (
               <span className="text-xs font-bold" style={{ color }}>MAX</span>
@@ -89,7 +93,7 @@ export function RankCard({
         </button>
       </div>
 
-      <RankModal open={ranksOpen} onClose={() => setRanksOpen(false)} currentRank={r} points={points} />
+      <RankModal open={ranksOpen} onClose={() => setRanksOpen(false)} currentRank={r} points={pts} />
     </>
   );
 }

@@ -196,10 +196,7 @@ export function DashboardView() {
         <>
           {/* Rang façon jeu vidéo */}
           {achievements && (
-            <RankCard
-              achievements={achievements}
-              points={achievements?.rankProgress?.current ?? 0}
-            />
+            <RankCard achievements={achievements} />
           )}
 
           {/* Stats rapides */}
