@@ -140,8 +140,7 @@ export function useDevotion() {
           showToast('✅', 'Salat check-in', '+10 pts', 'bg-emerald-500');
         }
       }
-      // Delayed refresh: let Neon sync before re-fetching
-      setTimeout(() => { skipNextCache(); load(); }, 2000);
+
     } catch { /* ignore */ }
   }, [user, load, showToast]);
 
@@ -173,8 +172,7 @@ export function useDevotion() {
         });
         return res;
       }
-      // Delayed refresh: let Neon sync
-      setTimeout(() => { skipNextCache(); load(); }, 2000);
+
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {
         showToast(newRank.icon, newRank.name, 'Rang augmenté !', 'bg-gold-500');
