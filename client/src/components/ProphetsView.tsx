@@ -38,7 +38,6 @@ export function ProphetsView() {
   };
 
   if (selected) {
-    const paragraphs = selected.story.split('\n\n').filter(Boolean);
     const audio = getProphetAudio(selected.name);
     return (
       <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
@@ -64,12 +63,18 @@ export function ProphetsView() {
           <p className="text-xs leading-relaxed text-stone-400 italic">{selected.context}</p>
         </div>
 
-        {/* Histoire */}
+        {/* Histoire en chapitres */}
         <div className="card p-4 mb-4">
           <p className="text-[11px] font-bold text-gold-400/80 uppercase tracking-wide mb-2">{t('prophets.story')}</p>
-          <div className="space-y-3">
-            {paragraphs.map((p, i) => (
-              <p key={i} className="text-sm leading-relaxed text-stone-200">{p}</p>
+          <div className="space-y-4">
+            {(selected.chapters || []).map((ch, i) => (
+              <div key={i} className="rounded-xl border border-gold-500/20 bg-stone-900/40 p-3">
+                <p className="mb-1.5 flex items-center gap-2 text-[11px] font-bold text-gold-300">
+                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gold-500/15 text-[10px]">{i + 1}</span>
+                  {ch.title}
+                </p>
+                <p className="text-sm leading-relaxed text-stone-200">{ch.text}</p>
+              </div>
             ))}
           </div>
           <p className="mt-4 text-[11px] text-stone-500 italic">📖 {selected.reference}</p>

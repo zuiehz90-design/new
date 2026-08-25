@@ -5,9 +5,14 @@ export interface QuizQuestion {
   correct: number;
 }
 
+export interface ProphetChapter {
+  title: string;
+  text: string;
+}
+
 export interface ProphetStory {
   name: string; nameAr: string; nameFr: string;
-  title: string; story: string; reference: string; context: string;
+  title: string; story: string; chapters: ProphetChapter[]; reference: string; context: string;
   verses: string[]; lessons: string[]; quiz: QuizQuestion[];
 }
 
@@ -16,6 +21,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Adam', nameAr: 'آدم', nameFr: 'Adam',
     title: 'Le premier humain et le premier prophète',
     story: "Allah créa Adam de Sa main, à partir d'argile que Lui seul connaissait. Il lui enseigna les noms de toutes les créatures, honneur que nulle autre création n'avait reçu. Les anges, émerveillés, s'inclinèrent devant lui par obéissance à Allah.\n\nMais Iblis, orgueilleux, refusa : « Je suis meilleur que lui, Tu m'as créé de feu et lui d'argile. » Ce refus le fit chuter. Adam et Ève habitèrent le Paradis où Allah leur permit de manger de tout, sauf d'un arbre. Iblis les trompa, et ils en mangèrent.\n\nAdam se repentit sincèrement et Allah l'accepta. Il fut envoyé sur Terre comme khalifa, vice-gérant, et premier prophète. Son histoire enseigne que le repentir sincère efface la faute, et que l'humilité est la clé de toute élévation spirituelle.",
+    chapters: [
+      { title: "La creation", text: "Allah créa Adam de Sa main, à partir d'argile que Lui seul connaissait. Il lui enseigna les noms de toutes les créatures, honneur que nulle autre création n'avait reçu. Les anges, émerveillés, s'inclinèrent devant lui par obéissance à Allah." },
+      { title: "Le Paradis et la tentation", text: "Mais Iblis, orgueilleux, refusa : « Je suis meilleur que lui, Tu m'as créé de feu et lui d'argile. » Ce refus le fit chuter. Adam et Ève habitèrent le Paradis où Allah leur permit de manger de tout, sauf d'un arbre. Iblis les trompa, et ils en mangèrent." },
+      { title: "Le repentir et la mission", text: "Adam se repentit sincèrement et Allah l'accepta. Il fut envoyé sur Terre comme khalifa, vice-gérant, et premier prophète. Son histoire enseigne que le repentir sincère efface la faute, et que l'humilité est la clé de toute élévation spirituelle." },
+    ],
     reference: 'Coran 2:30-39 · 7:11-25 · 20:115-123',
     context: "La création du premier homme, avant l'histoire écrite, constitue le récit fondateur de l'humanité.",
     verses: ['Coran 2:30', 'Coran 2:37', 'Coran 7:23'],
@@ -32,6 +42,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Nuh', nameAr: 'نوح', nameFr: 'Noé',
     title: "Le prophète de l'arche, 950 ans de patience",
     story: "Noé appela son peuple à l'unicité d'Allah pendant 950 ans, sans relâche, de jour comme de nuit. Il patienta malgré les moqueries et les accusations de folie. Seuls quelques croyants le suivirent.\n\nSur l'ordre d'Allah, il construisit une immense arche sur la terre ferme. Les gens se moquaient : « Tu construis un bateau ici ? » Noé répondit : « Vous vous moquerez comme nous nous moquerons. » Quand le déluge arriva, chaque couple d'animaux monta à bord avec les croyants.\n\nLe fils de Noé, réfugié sur une montagne, fut englouti malgré l'appel de son père. Allah dit : « Rien ne protège aujourd'hui de l'ordre d'Allah. » Noé ne baissa jamais les bras, même pour sa propre famille.",
+    chapters: [
+      { title: "L'appel de 950 ans", text: "Noé appela son peuple à l'unicité d'Allah pendant 950 ans, sans relâche, de jour comme de nuit. Il patienta malgré les moqueries et les accusations de folie. Seuls quelques croyants le suivirent." },
+      { title: "La construction de l'arche", text: "Sur l'ordre d'Allah, il construisit une immense arche sur la terre ferme. Les gens se moquaient : « Tu construis un bateau ici ? » Noé répondit : « Vous vous moquerez comme nous nous moquerons. » Quand le déluge arriva, chaque couple d'animaux monta à bord avec les croyants." },
+      { title: "Le deluge et lecon", text: "Le fils de Noé, réfugié sur une montagne, fut englouti malgré l'appel de son père. Allah dit : « Rien ne protège aujourd'hui de l'ordre d'Allah. » Noé ne baissa jamais les bras, même pour sa propre famille." },
+    ],
     reference: 'Coran 11:25-49 · 71:1-28 · 37:75-77',
     context: "Premier grand récit de châtiment divin ; Noé est l'un des cinq prophètes de la détermination, les Ulul-Azm.",
     verses: ['Coran 11:36', 'Coran 11:42', 'Coran 71:26'],
@@ -48,6 +63,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Ibrahim', nameAr: 'إبراهيم', nameFr: 'Abraham',
     title: "Le père des monothéistes, l'ami d'Allah",
     story: "Abraham chercha la vérité dès l'enfance. Il contempla une étoile, puis la lune, puis le soleil et comprit : « Je tourne mon visage vers Celui qui a créé les cieux et la terre. » Il brisa les idoles de son peuple pour prouver leur impuissance.\n\nJeté dans un feu immense, Allah ordonna : « Ô feu, sois fraîcheur et paix pour Abraham. » Le feu devint inoffensif. Son peuple, ébranlé, ne put le vaincre. Il émigra et sa descendance devint le lignage des prophètes.\n\nMis à l'épreuve pour sacrifier son fils Ismaël, il s'apprêta à l'égorger par obéissance. Allah le racheta par un grand sacrifice. Abraham et Ismaël bâtirent la Kaaba, première maison dédiée au culte d'Allah sur Terre.",
+    chapters: [
+      { title: "La recherche de la verite", text: "Abraham chercha la vérité dès l'enfance. Il contempla une étoile, puis la lune, puis le soleil et comprit : « Je tourne mon visage vers Celui qui a créé les cieux et la terre. » Il brisa les idoles de son peuple pour prouver leur impuissance." },
+      { title: "Le feu et la confiance", text: "Jeté dans un feu immense, Allah ordonna : « Ô feu, sois fraîcheur et paix pour Abraham. » Le feu devint inoffensif. Son peuple, ébranlé, ne put le vaincre. Il émigra et sa descendance devint le lignage des prophètes." },
+      { title: "Le sacrifice et la Kaaba", text: "Mis à l'épreuve pour sacrifier son fils Ismaël, il s'apprêta à l'égorger par obéissance. Allah le racheta par un grand sacrifice. Abraham et Ismaël bâtirent la Kaaba, première maison dédiée au culte d'Allah sur Terre." },
+    ],
     reference: 'Coran 21:51-73 · 37:99-113 · 2:124-129',
     context: "Père spirituel des trois monothéismes ; l'épreuve du sacrifice est commémorée chaque année par l'Aïd al-Adha.",
     verses: ['Coran 6:76-79', 'Coran 21:69', 'Coran 37:102'],
@@ -64,6 +84,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Yusuf', nameAr: 'يوسف', nameFr: 'Joseph',
     title: 'Le prophète des rêves et du pardon',
     story: "Joseph, fils préféré de Jacob, fit un rêve : onze étoiles, le soleil et la lune se prosternaient devant lui. La jalousie de ses frères le conduisit au fond d'un puits, puis à la vente comme esclave en Égypte.\n\nTenté par la femme de son maître, il refusa par crainte d'Allah et préféra la prison : « Seigneur, la prison m'est plus chère que ce qu'elles m'invitent à faire. » En prison, il interpréta les rêves et sa science le fit appeler auprès du roi.\n\nÉlevé aux plus hautes fonctions de l'Égypte, il affronta la famine en sage administrateur. Ses frères, venus chercher du grain, ne le reconnurent pas. Au dénouement, Joseph révéla son identité et leur pardonna : « Pas de reproche aujourd'hui. Qu'Allah vous pardonne. »",
+    chapters: [
+      { title: "Le reve et la jalousie", text: "Joseph, fils préféré de Jacob, fit un rêve : onze étoiles, le soleil et la lune se prosternaient devant lui. La jalousie de ses frères le conduisit au fond d'un puits, puis à la vente comme esclave en Égypte." },
+      { title: "L'epreuve et la prison", text: "Tenté par la femme de son maître, il refusa par crainte d'Allah et préféra la prison : « Seigneur, la prison m'est plus chère que ce qu'elles m'invitent à faire. » En prison, il interpréta les rêves et sa science le fit appeler auprès du roi." },
+      { title: "Le pardon", text: "Élevé aux plus hautes fonctions de l'Égypte, il affronta la famine en sage administrateur. Ses frères, venus chercher du grain, ne le reconnurent pas. Au dénouement, Joseph révéla son identité et leur pardonna : « Pas de reproche aujourd'hui. Qu'Allah vous pardonne. »" },
+    ],
     reference: 'Coran 12 (la plus belle des histoires)',
     context: 'La sourate Yusuf est entièrement consacrée à son récit, surnommé « la plus belle des histoires ».',
     verses: ['Coran 12:4', 'Coran 12:33', 'Coran 12:92'],
@@ -80,6 +105,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Moussa', nameAr: 'موسى', nameFr: 'Moïse',
     title: "Le prophète libérateur, l'interlocuteur d'Allah",
     story: "Né à une époque où les garçons hébreux étaient tués, Moïse fut placé dans une corbeille sur le Nil par sa mère, guidée par Allah. Recueilli par la propre famille de Pharaon, il grandit dans le palais de son ennemi.\n\nAprès avoir fui vers Madyan, Allah lui parla dans le buisson ardent : « Ô Moïse, Je t'ai choisi. » Il reçut le bâton qui devint serpent et la main qui s'illumina. Devant Pharaon, il fit face aux magiciens qui finirent par croire et se prosterner.\n\nAllah ouvrit la mer pour faire passer les croyants, puis referma les eaux sur Pharaon et son armée. Moïse reçut la Thora sur le mont Sinaï et guida son peuple, éprouvé par l'adoration du veau d'or, avec patience et miséricorde.",
+    chapters: [
+      { title: "L'enfance sauvee des eaux", text: "Né à une époque où les garçons hébreux étaient tués, Moïse fut placé dans une corbeille sur le Nil par sa mère, guidée par Allah. Recueilli par la propre famille de Pharaon, il grandit dans le palais de son ennemi." },
+      { title: "Le buisson ardent et Pharaon", text: "Après avoir fui vers Madyan, Allah lui parla dans le buisson ardent : « Ô Moïse, Je t'ai choisi. » Il reçut le bâton qui devint serpent et la main qui s'illumina. Devant Pharaon, il fit face aux magiciens qui finirent par croire et se prosterner." },
+      { title: "La delivrance et la Thora", text: "Allah ouvrit la mer pour faire passer les croyants, puis referma les eaux sur Pharaon et son armée. Moïse reçut la Thora sur le mont Sinaï et guida son peuple, éprouvé par l'adoration du veau d'or, avec patience et miséricorde." },
+    ],
     reference: 'Coran 28:1-42 · 20:9-98 · 26:52-68',
     context: "Moïse est le prophète le plus cité dans le Coran ; il est appelé « interlocuteur d'Allah » car Allah lui parla directement.",
     verses: ['Coran 20:17-21', 'Coran 26:63', 'Coran 28:7'],
@@ -96,6 +126,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Isa', nameAr: 'عيسى', nameFr: 'Jésus',
     title: 'Le prophète guérisseur, né sans père',
     story: "Jésus naquit de Marie, vierge, par la volonté d'Allah — une naissance miraculeuse qui rappelle la puissance du Créateur. Dès le berceau, il parla pour défendre sa mère et proclamer qu'il était un serviteur d'Allah.\n\nIl reçut l'Évangile, l'Injil, et accomplit des miracles par la permission d'Allah : guérir l'aveugle et le lépreux, ressusciter les morts, et modeler un oiseau d'argile qui s'envolait.\n\nSon peuple le rejeta et complota contre lui, mais Allah l'éleva vers Lui. Pour les musulmans, Jésus est un prophète honoré, ni dieu ni fils de Dieu, et il reviendra à la fin des temps pour rétablir la justice.",
+    chapters: [
+      { title: "La naissance miraculeuse", text: "Jésus naquit de Marie, vierge, par la volonté d'Allah — une naissance miraculeuse qui rappelle la puissance du Créateur. Dès le berceau, il parla pour défendre sa mère et proclamer qu'il était un serviteur d'Allah." },
+      { title: "Les miracles", text: "Il reçut l'Évangile, l'Injil, et accomplit des miracles par la permission d'Allah : guérir l'aveugle et le lépreux, ressusciter les morts, et modeler un oiseau d'argile qui s'envolait." },
+      { title: "L'elevation et le retour", text: "Son peuple le rejeta et complota contre lui, mais Allah l'éleva vers Lui. Pour les musulmans, Jésus est un prophète honoré, ni dieu ni fils de Dieu, et il reviendra à la fin des temps pour rétablir la justice." },
+    ],
     reference: 'Coran 3:45-55 · 5:110 · 19:16-36',
     context: "Jésus est l'un des cinq prophètes Ulul-Azm. Marie, sa mère, est la seule femme nommée dans le Coran, avec une sourate entière à son nom.",
     verses: ['Coran 19:30-33', 'Coran 3:49', 'Coran 4:157-158'],
@@ -112,6 +147,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Yunus', nameAr: 'يونس', nameFr: 'Jonas',
     title: 'Le prophète de la baleine et de la miséricorde',
     story: "Jonas fut envoyé à Ninive, mais son peuple l'accusa de mensonge. Découragé, il quitta sa mission sans la permission d'Allah et monta sur un navire. En pleine tempête, il fut jeté à la mer et avalé par une immense baleine.\n\nDans les ténèbres de la mer, du ventre et de la nuit, il invoqua : « Il n'y a de divinité que Toi. Gloire à Toi ! J'ai été du nombre des injustes. » Cette invocation, la plus célèbre du Coran, est une clé du secours.\n\nAllah l'exauça et le rejeta sur la plage, affaibli, puis fit pousser un plant de courge sur lui. Il retourna vers son peuple : cette fois, cent mille âmes crurent et furent épargnées par la miséricorde divine.",
+    chapters: [
+      { title: "La fuite et la tempete", text: "Jonas fut envoyé à Ninive, mais son peuple l'accusa de mensonge. Découragé, il quitta sa mission sans la permission d'Allah et monta sur un navire. En pleine tempête, il fut jeté à la mer et avalé par une immense baleine." },
+      { title: "L'invocation dans les tenebres", text: "Dans les ténèbres de la mer, du ventre et de la nuit, il invoqua : « Il n'y a de divinité que Toi. Gloire à Toi ! J'ai été du nombre des injustes. » Cette invocation, la plus célèbre du Coran, est une clé du secours." },
+      { title: "Le retour et la misericorde", text: "Allah l'exauça et le rejeta sur la plage, affaibli, puis fit pousser un plant de courge sur lui. Il retourna vers son peuple : cette fois, cent mille âmes crurent et furent épargnées par la miséricorde divine." },
+    ],
     reference: 'Coran 37:139-148 · 21:87-88 · 68:48-50',
     context: "L'invocation de Jonas, « La ilaha illa anta », est enseignée comme la supplication du détresse, exaucée même dans la pire situation.",
     verses: ['Coran 21:87', 'Coran 37:142', 'Coran 37:146'],
@@ -128,6 +168,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Dawud', nameAr: 'داود', nameFr: 'David',
     title: 'Le roi-prophète, le psalmiste',
     story: "David fut choisi par Allah pour être prophète et roi. Jeune berger, il affronta le géant Goliath avec une simple fronde et le vainquit, une preuve que la victoire vient d'Allah, pas de la force.\n\nAllah lui donna le Zabur, les Psaumes, et lui soumit les montagnes et les oiseaux qui célébraient avec lui la gloire du Créateur. Il fut doué d'une voix si belle que sa récitation apaisait les cœurs.\n\nIl fut un juge juste, et son fils Salomon hérita de sa sagesse et de son royaume. Son histoire montre que la puissance et l'autorité sont une responsabilité : il les mit au service de la justice.",
+    chapters: [
+      { title: "Le berger face a Goliath", text: "David fut choisi par Allah pour être prophète et roi. Jeune berger, il affronta le géant Goliath avec une simple fronde et le vainquit, une preuve que la victoire vient d'Allah, pas de la force." },
+      { title: "Le Zabur et les montagnes", text: "Allah lui donna le Zabur, les Psaumes, et lui soumit les montagnes et les oiseaux qui célébraient avec lui la gloire du Créateur. Il fut doué d'une voix si belle que sa récitation apaisait les cœurs." },
+      { title: "Le roi juste", text: "Il fut un juge juste, et son fils Salomon hérita de sa sagesse et de son royaume. Son histoire montre que la puissance et l'autorité sont une responsabilité : il les mit au service de la justice." },
+    ],
     reference: 'Coran 38:17-26 · 34:10-11 · 2:251',
     context: 'David reçut le Zabur (Psaumes). Il est célèbre pour sa justice et le jeûne alterné qu\'il pratiquait.',
     verses: ['Coran 2:251', 'Coran 38:20', 'Coran 34:10'],
@@ -144,6 +189,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Ayyub', nameAr: 'أيوب', nameFr: 'Job',
     title: 'Le prophète de la patience absolue',
     story: "Job était riche et pieux, comblé de biens et d'enfants. Pour l'éprouver, Allah lui retira tout : ses troupeaux, ses récoltes, sa maison, puis ses enfants, et enfin sa santé. Il resta seul, malade, dans la pauvreté.\n\nPendant des années, il ne cessa jamais de louer Allah et de L'invoquer. Ni sa femme qui s'épuisait à le servir, ni les murmures des gens ne le firent douter. Sa patience était totale : il ne se plaignit que de l'épreuve, jamais de son Seigneur.\n\nQuand il invoqua : « Le mal m'a touché, et Tu es le plus Miséricordieux des miséricordieux », Allah lui ordonna de frapper le sol : une source jaillit pour se laver et boire. Il fut guéri, ses biens doublés, et sa patience devint un exemple éternel.",
+    chapters: [
+      { title: "L'epreuve totale", text: "Job était riche et pieux, comblé de biens et d'enfants. Pour l'éprouver, Allah lui retira tout : ses troupeaux, ses récoltes, sa maison, puis ses enfants, et enfin sa santé. Il resta seul, malade, dans la pauvreté." },
+      { title: "La patience des annees", text: "Pendant des années, il ne cessa jamais de louer Allah et de L'invoquer. Ni sa femme qui s'épuisait à le servir, ni les murmures des gens ne le firent douter. Sa patience était totale : il ne se plaignit que de l'épreuve, jamais de son Seigneur." },
+      { title: "La guerison et la recompense", text: "Quand il invoqua : « Le mal m'a touché, et Tu es le plus Miséricordieux des miséricordieux », Allah lui ordonna de frapper le sol : une source jaillit pour se laver et boire. Il fut guéri, ses biens doublés, et sa patience devint un exemple éternel." },
+    ],
     reference: 'Coran 21:83-84 · 38:41-44',
     context: "Job est cité comme modèle de patience. Le Coran le montre frappant le sol d'où jaillit une source de guérison.",
     verses: ['Coran 21:83', 'Coran 38:41', 'Coran 38:44'],
@@ -160,6 +210,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Sulayman', nameAr: 'سليمان', nameFr: 'Salomon',
     title: 'Le roi sage qui parlait aux animaux',
     story: "Salomon hérita de la sagesse de son père David et reçut un royaume sans pareil : le vent lui obéissait, les djinns travaillaient pour lui, et il comprenait le langage des oiseaux et des fourmis. Il rendait grâce à Allah pour ces dons.\n\nUn jour, la huppe lui apprit que le royaume de Saba adorait le soleil au lieu d'Allah. Salomon lui envoya une lettre. La reine de Saba, émerveillée, vint à lui et embrassa l'islam avec son peuple.\n\nMalgré sa puissance immense, Salomon resta humble : quand il vit le trône de la reine transporté en un clin d'œil, il dit : « Ceci est une faveur de mon Seigneur pour m'éprouver : serai-je reconnaissant ou ingrat ? »",
+    chapters: [
+      { title: "Le royaume sans pareil", text: "Salomon hérita de la sagesse de son père David et reçut un royaume sans pareil : le vent lui obéissait, les djinns travaillaient pour lui, et il comprenait le langage des oiseaux et des fourmis. Il rendait grâce à Allah pour ces dons." },
+      { title: "La reine de Saba", text: "Un jour, la huppe lui apprit que le royaume de Saba adorait le soleil au lieu d'Allah. Salomon lui envoya une lettre. La reine de Saba, émerveillée, vint à lui et embrassa l'islam avec son peuple." },
+      { title: "L'humilite du pouvoir", text: "Malgré sa puissance immense, Salomon resta humble : quand il vit le trône de la reine transporté en un clin d'œil, il dit : « Ceci est une faveur de mon Seigneur pour m'éprouver : serai-je reconnaissant ou ingrat ? »" },
+    ],
     reference: 'Coran 27:15-44 · 38:30-40 · 34:12-14',
     context: 'Salomon est célèbre pour sa sagesse, sa justice et le don de comprendre le langage des animaux et du vent.',
     verses: ['Coran 27:19', 'Coran 27:40', 'Coran 38:35'],
@@ -176,6 +231,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Hud', nameAr: 'هود', nameFr: 'Hud',
     title: "Le prophète envoyé au peuple d'Âd",
     story: "Hud fut envoyé au peuple d'Âd, des géants bâtisseurs qui vivaient dans des palais somptueux. Enivrés par leur puissance, ils disaient : « Qui est plus fort que nous ? » Ils adoraient des idoles et se moquaient des avertissements.\n\nHud les appela à adorer Allah seul, avec douceur et sagesse : « Ô mon peuple, adorez Allah, vous n'avez d'autre divinité que Lui. » Mais ils l'accusèrent de folie et le défièrent de faire venir le châtiment qu'il annonçait.\n\nAlors Allah envoya un vent glacial et dévastateur qui souffla sept nuits et huit jours, détruisant tout. Seuls Hud et les croyants furent épargnés. Les palais d'Âd disparurent, preuve que la force sans la foi ne protège de rien.",
+    chapters: [
+      { title: "Le peuple d'Ad", text: "Hud fut envoyé au peuple d'Âd, des géants bâtisseurs qui vivaient dans des palais somptueux. Enivrés par leur puissance, ils disaient : « Qui est plus fort que nous ? » Ils adoraient des idoles et se moquaient des avertissements." },
+      { title: "L'appel et les moqueries", text: "Hud les appela à adorer Allah seul, avec douceur et sagesse : « Ô mon peuple, adorez Allah, vous n'avez d'autre divinité que Lui. » Mais ils l'accusèrent de folie et le défièrent de faire venir le châtiment qu'il annonçait." },
+      { title: "Le vent devastateur", text: "Alors Allah envoya un vent glacial et dévastateur qui souffla sept nuits et huit jours, détruisant tout. Seuls Hud et les croyants furent épargnés. Les palais d'Âd disparurent, preuve que la force sans la foi ne protège de rien." },
+    ],
     reference: 'Coran 46:21-26 · 11:50-60 · 7:65-72',
     context: "Le peuple d'Âd, mentionné comme un des peuples anéantis, vivait dans les dunes de l'Arabie du Sud. Hud est l'un des prophètes arabes.",
     verses: ['Coran 46:21', 'Coran 46:24', 'Coran 7:69'],
@@ -192,6 +252,11 @@ export const PROPHETS: ProphetStory[] = [
     name: 'Lut', nameAr: 'لوط', nameFr: 'Lot',
     title: 'Le prophète de la justice face à la dépravation',
     story: "Lot, neveu d'Abraham, fut envoyé au peuple de Sodome, qui pratiquait des actes immoraux sans précédent dans l'histoire. Il les appela à la pureté : « Ne commettez pas l'immoralité que nul peuple avant vous n'a commise. »\n\nLe peuple se moqua et menaça de l'expulser. Lorsque des anges, sous l'apparence d'hommes, arrivèrent chez lui, les habitants assiégèrent sa maison. Lot était impuissant face à la foule : « Si seulement j'avais une force contre vous ! »\n\nLes anges révélèrent leur identité : le châtiment allait tomber à l'aube. Lot partit de nuit avec sa famille, sauf sa femme qui regarda en arrière. Un cri terrible saisit les injustes : Sodome fut retournée, et la justice d'Allah s'accomplit.",
+    chapters: [
+      { title: "L'appel a la purete", text: "Lot, neveu d'Abraham, fut envoyé au peuple de Sodome, qui pratiquait des actes immoraux sans précédent dans l'histoire. Il les appela à la pureté : « Ne commettez pas l'immoralité que nul peuple avant vous n'a commise. »" },
+      { title: "Les anges chez Lot", text: "Le peuple se moqua et menaça de l'expulser. Lorsque des anges, sous l'apparence d'hommes, arrivèrent chez lui, les habitants assiégèrent sa maison. Lot était impuissant face à la foule : « Si seulement j'avais une force contre vous ! »" },
+      { title: "Le chatiment et le depart", text: "Les anges révélèrent leur identité : le châtiment allait tomber à l'aube. Lot partit de nuit avec sa famille, sauf sa femme qui regarda en arrière. Un cri terrible saisit les injustes : Sodome fut retournée, et la justice d'Allah s'accomplit." },
+    ],
     reference: 'Coran 11:77-83 · 7:80-84 · 54:33-39',
     context: "Le récit de Sodome sert d'avertissement contre la dépravation. La femme de Lot, qui trahit la mission, périt avec le peuple.",
     verses: ['Coran 11:77', 'Coran 11:81', 'Coran 7:84'],
