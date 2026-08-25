@@ -130,7 +130,11 @@ function getQuestExtraLinks(quest: Quest): { label: string; href: string }[] {
   const text = (quest.title + ' ' + quest.description).toLowerCase();
   const links: { label: string; href: string }[] = [];
   if (/dhikr|tasbih|subhan|istighfar|100 fois|invocation|adkar|adhkar/.test(text)) {
+    if (/istighfar|astaghfir|pardon/.test(text)) {
+    links.push({ label: '📿 Istighfar', href: '/dhikr?id=istighfar-100' });
+  } else {
     links.push({ label: '📿 Compteur Dhikr', href: '/dhikr' });
+  }
   }
   if (/quiz|connaissance|hadith|apprends|enseigne/.test(text)) {
     links.push({ label: '🧠 Quiz', href: '/quiz' });

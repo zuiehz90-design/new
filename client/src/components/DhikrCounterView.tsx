@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { notify } from '../lib/desktop';
 import {
@@ -11,9 +12,15 @@ import {
 
 export function DhikrCounterView() {
   const { t, lang } = useI18n();
-  const [selected, setSelected] = useState<DhikrItem>(DHIKR_LIST[0]);
+  const [searchParams] = useSearchParams();
+  const initialDhikr = (() => {
+        const id = searchParams.get('id');
+        return id ? (DHIKR_LIST.find(d => d.id === id) ?? DHIKR_LIST[0]) : DHIKR_LIST[0];
+      })();
+  const [selected, setSelected] = useState<DhikrItem>(initialDhikr);
   const [count, setCount] = useState(0);
   const [target, setTarget] = useState(DHIKR_LIST[0].count);
+  const [editingTarget, setEditingTarget] = useState(false);
   const [showList, setShowList] = useState(false);
   const [stats, setStats] = useState(() => getDhikrStats());
   const [pulse, setPulse] = useState(false);
@@ -70,7 +77,12 @@ export function DhikrCounterView() {
     const onKey = (e: KeyboardEvent) => {
       if (e.code === 'Space' && !e.repeat) {
         e.preventDefault();
-        handleTap();
+        if (isComplete) {
+          setCount(0);
+          setTarget(selected.count);
+        } else {
+          handleTap();
+        }
       }
     };
     window.addEventListener('keydown', onKey);
@@ -207,7 +219,7 @@ export function DhikrCounterView() {
       </div>
 
       {/* Controls */}
-      <div className="flex justify-center gap-2">
+      <div className="flex justify-center gap-2 items-center">
         {!isComplete && (
           <>
             <button
@@ -216,11 +228,39 @@ export function DhikrCounterView() {
             >
               ↺ {t('dhikr.reset')}
             </button>
+            <div className="flex items-center gap-1 chip text-xs">
+              <span className="text-stone-400">Objectif :</span>
+              {editingTarget ? (
+                <input
+                  type="number"
+                  value={target}
+                  min={1}
+                  max={10000}
+                  autoFocus
+                  className="w-16 bg-transparent border-b border-gold-500 text-gold-300 text-xs text-center outline-none"
+                  onChange={(e) => {
+                    const v = parseInt(e.target.value, 10);
+                    if (v > 0) setTarget(v);
+                  }}
+                  onBlur={() => setEditingTarget(false)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') setEditingTarget(false);
+                  }}
+                />
+              ) : (
+                <button
+                  onClick={() => setEditingTarget(true)}
+                  className="font-bold text-gold-300 underline underline-offset-2 decoration-gold-500/40"
+                >
+                  {target}
+                </button>
+              )}
+            </div>
             <button
               onClick={() => setTarget((tg) => tg + selected.count)}
               className="chip text-xs"
             >
-              +{selected.count} {t('dhikr.addRound')}
+              +{selected.count}
             </button>
           </>
         )}
@@ -229,14 +269,14 @@ export function DhikrCounterView() {
             onClick={() => { setCount(0); setTarget(selected.count); }}
             className="btn-gold text-xs"
           >
-            🔄 {t('dhikr.again')}
+            🔄 {t('dhikr.again')}  <span className="text-[9px] opacity-60 ml-1">ou ␣</span>
           </button>
         )}
       </div>
 
       {/* Keyboard hint */}
       <p className="mt-3 text-center text-[10px] text-stone-600">
-        {t('dhikr.keyboardHint')}
+        ␣ Espace = compter · {isComplete ? 'Espace = recommencer' : 'Maintiens pour rapide'}
       </p>
     </div>
   );
