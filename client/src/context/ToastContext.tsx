@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
 
 interface Toast {
   id: number;
@@ -26,6 +26,16 @@ export function ToastProvider({ children }: { children: ReactNode }) {
     setToasts(prev => [...prev, { id, icon, title, subtitle, color }]);
     setTimeout(() => setToasts(prev => prev.filter(t => t.id !== id)), 3500);
   }, []);
+
+  // Écoute les toasts émis par le gestionnaire de notifications (lib/notifications.ts)
+  useEffect(() => {
+    const onToast = (e: Event) => {
+      const detail = (e as CustomEvent<{ icon: string; title: string; subtitle?: string; color?: string }>).detail;
+      if (detail) show(detail.icon, detail.title, detail.subtitle, detail.color);
+    };
+    window.addEventListener('nour:toast', onToast);
+    return () => window.removeEventListener('nour:toast', onToast);
+  }, [show]);
 
   return (
     <ToastContext.Provider value={{ toasts, show }}>

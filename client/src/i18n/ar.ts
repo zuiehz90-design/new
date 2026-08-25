@@ -346,4 +346,25 @@ export const ar: Record<string, string> = {
   'dashboard.suggest.glossary': 'المسرد الإسلامي',
   'dashboard.suggest.allPrayersDone': '🎉 اكتملت الصلوات!',
 
+  'notif.title': 'مركز الإشعارات',
+  'notif.empty': 'لا توجد إشعارات حالياً.',
+  'notif.emptyHint': 'ستظهر هنا إشعارات الصلاة والمهام والشارات.',
+  'notif.justNow': 'الآن',
+  'notif.dismiss': 'تجاهل',
+  'notif.clearAll': 'مسح الكل',
+  'notif.sectionTitle': 'تفضيلات الإشعارات',
+  'notif.enableButton': 'تفعيل الإشعارات',
+  'notif.permissionGranted': 'الإشعارات مسموحة',
+  'notif.permissionDenied': 'الإشعارات محظورة من المتصفح',
+  'notif.sound': 'صوت الإشعار',
+  'notif.type.prayer': 'أوقات الصلاة',
+  'notif.type.quest': 'المهام اليومية',
+  'notif.type.badge': 'الشارات المفتوحة',
+  'notif.type.rank': 'ترقية الرتبة',
+  'notif.type.dailyVerse': 'آية اليوم',
+  'notif.type.dhikr': 'تذكير الذكر',
+  'notif.type.sleep': 'تذكير المساء',
+  'notif.type.streak': 'تذكير السلسلة',
+
 };
+

@@ -5,6 +5,7 @@ import { ReadingPositionProvider, useReadingPosition } from './context/ReadingPo
 import { I18nProvider, useI18n } from './i18n';
 import { useChat, type ChatStore } from './hooks/useChat';
 import { usePrayerNotifications } from './hooks/usePrayerNotifications';
+import { useDailyNotifications } from './hooks/useDailyNotifications';
 import { useQuestNotifications } from './hooks/useQuestNotifications';
 import { useKeyboardHeight } from './hooks/useKeyboard';
 import { initMobileCache } from './lib/mobileCache';
@@ -23,6 +24,7 @@ import { GlossaryView } from './components/GlossaryView';
 import { DhikrCounterView } from './components/DhikrCounterView';
 import { QuizView } from './components/QuizView';
 import { MiniPlayer } from './components/MiniPlayer';
+import { NotificationCenter } from './components/NotificationCenter';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AiSetupProvider } from './hooks/useAiSetup';
 import { AudioPlayerProvider } from './context/AudioPlayerContext';
@@ -94,6 +96,7 @@ function Shell() {
   const chat = useChatContext();
   usePrayerNotifications();
   useQuestNotifications();
+  useDailyNotifications();
 
   // Navigation mobile : 5 principaux + bouton Plus
   const primaryNav = [
@@ -146,6 +149,20 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
           <MoonIcon className="h-6 w-6" style={{ color: "var(--accent-gold)" }} />
           <span className="font-quran text-lg font-bold" style={{ color: "var(--accent-gold)" }}>Nour</span>
         </div>
+        <div className="flex items-center gap-1">
+          <NotificationCenter />
+          <button
+            onClick={() => setSettingsOpen(true)}
+            aria-label="Réglages"
+            className="rounded-xl p-2 transition active:scale-90 hover:bg-white/5"
+            style={{ color: 'var(--text-secondary)' }}
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-6 w-6">
+              <circle cx="12" cy="12" r="3" />
+              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+          </button>
+        </div>
       </header>
 
       <div className="flex flex-1 overflow-hidden">
@@ -153,10 +170,11 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
         <aside className="nav-sidebar hidden w-72 shrink-0 flex-col p-4 lg:flex">
           <div className="mb-6 flex items-center gap-3">
             <MoonIcon className="h-9 w-9" style={{ color: "var(--accent-gold)" }} />
-            <div>
+            <div className="flex-1 min-w-0">
               <h1 className="font-quran text-xl font-bold" style={{ color: "var(--accent-gold)" }}>Nour</h1>
               <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Chat islamique</p>
             </div>
+            <NotificationCenter />
           </div>
           <nav className="flex flex-col gap-1 text-sm">
             {navItems.map((item) => (
@@ -170,7 +188,7 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
               </Link>
             ))}
           </nav>
-          <div className="mt-auto">
+          <div className="mt-auto space-y-1">
             <button
               onClick={() => setSettingsOpen(true)}
               className="btn-ghost w-full justify-start text-xs"

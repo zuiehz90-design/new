@@ -3,6 +3,7 @@ import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
 import { fetchModels, fetchHealth, type ModelOption } from '../lib/api';
 import { RECITERS } from '../lib/quran';
+import { getPrefs, setPrefs, permissionState, requestPermission, type NotificationPrefs } from '../lib/notifications';
 
 const LANGUAGES = [
   { id: 'fr', label: 'Français' },
@@ -15,11 +16,13 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const { settings, setSettings } = useSettings();
   const [models, setModels] = useState<ModelOption[]>([]);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
+  const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => getPrefs());
 
   useEffect(() => {
     if (!open) return;
     let alive = true;
     fetchHealth().then((h) => alive && setAiConfigured(h?.aiConfigured ?? false));
+    setNotifPrefs(getPrefs());
     fetchModels().then((m) => alive && setModels(m));
     return () => {
       alive = false;
@@ -104,6 +107,74 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
             {settings.prayerNotifications && typeof Notification !== 'undefined' && Notification.permission === 'denied' && (
               <p className="mt-1 text-[11px] text-red-400">{t('prayer.notifPermission')}</p>
             )}
+          </div>
+
+          {/* Préférences de notification par type */}
+          <div>
+            <label className="mb-1 block text-xs text-stone-500">{t('notif.sectionTitle')}</label>
+            <div className="card p-3 space-y-2" style={{ background: 'var(--bg-card)' }}>
+              {permissionState() === 'granted' ? (
+                <p className="text-[11px] font-semibold text-emerald-400">✅ {t('notif.permissionGranted')}</p>
+              ) : permissionState() === 'denied' ? (
+                <p className="text-[11px] font-semibold text-red-400">⛔ {t('notif.permissionDenied')}</p>
+              ) : (
+                <button
+                  onClick={async () => { await requestPermission(); setNotifPrefs(getPrefs()); }}
+                  className="chip w-full justify-center text-xs"
+                >
+                  🔔 {t('notif.enableButton')}
+                </button>
+              )}
+
+              <div className="grid grid-cols-2 gap-1.5">
+                {([
+                  ['prayer', '🕌', t('notif.type.prayer')],
+                  ['quest', '⚔️', t('notif.type.quest')],
+                  ['badge', '🏅', t('notif.type.badge')],
+                  ['rank', '🏆', t('notif.type.rank')],
+                  ['dailyVerse', '📖', t('notif.type.dailyVerse')],
+                  ['dhikr', '📿', t('notif.type.dhikr')],
+                  ['sleep', '🌙', t('notif.type.sleep')],
+                  ['streak', '🔥', t('notif.type.streak')],
+                ] as [keyof NotificationPrefs, string, string][]).map(([key, icon, label]) => (
+                  <button
+                    key={key}
+                    onClick={() => {
+                      const next = { ...notifPrefs, [key]: !notifPrefs[key] };
+                      setNotifPrefs(next);
+                      setPrefs({ [key]: !notifPrefs[key] });
+                    }}
+                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-left text-xs transition"
+                    style={{
+                      border: '1px solid',
+                      borderColor: notifPrefs[key] ? 'rgba(207, 161, 74, 0.4)' : 'rgba(255,255,255,0.1)',
+                      background: notifPrefs[key] ? 'rgba(207, 161, 74, 0.08)' : 'transparent',
+                      color: notifPrefs[key] ? 'var(--accent-gold)' : 'var(--text-tertiary)',
+                    }}
+                  >
+                    <span className="text-base shrink-0">{icon}</span>
+                    <span className="flex-1 min-w-0 truncate">{label}</span>
+                    <span className="h-2 w-2 shrink-0 rounded-full" style={{ background: notifPrefs[key] ? 'var(--accent-gold)' : 'rgba(255,255,255,0.15)' }} />
+                  </button>
+                ))}
+              </div>
+
+              <button
+                onClick={() => {
+                  const next = { ...notifPrefs, sound: !notifPrefs.sound };
+                  setNotifPrefs(next);
+                  setPrefs({ sound: next.sound });
+                }}
+                className="flex w-full items-center justify-between rounded-lg px-2 py-2 text-xs transition"
+                style={{
+                  background: notifPrefs.sound ? 'rgba(207, 161, 74, 0.08)' : 'rgba(255,255,255,0.03)',
+                  color: notifPrefs.sound ? 'var(--accent-gold)' : 'var(--text-tertiary)',
+                }}
+              >
+                <span className="flex items-center gap-2">🔊 {t('notif.sound')}</span>
+                <span className="h-2 w-2 rounded-full" style={{ background: notifPrefs.sound ? 'var(--accent-gold)' : 'rgba(255,255,255,0.15)' }} />
+              </button>
+            </div>
           </div>
 
           <div>

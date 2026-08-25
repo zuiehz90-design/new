@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { useSettings } from '../context/SettingsContext';
-import { notify } from '../lib/desktop';
+import { push } from '../lib/notifications';
 import { getMosqueTimes } from '../lib/mawaqit';
 import { PRAYER_KEYS, type PrayerKey } from '../lib/prayer';
 
@@ -51,9 +51,11 @@ export function usePrayerNotifications() {
             lastFired.current[lastKey] = now.toISOString();
             const title = key.charAt(0).toUpperCase() + key.slice(1);
             const time = prayerTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-            new Notification(`🕌 ${title} — ${time}`, {
-              body: 'C\u2019est l\u2019heure de la prière.',
-              icon: '/icon.svg',
+            void push({
+              type: 'prayer',
+              title: `🕌 ${title} — ${time}`,
+              body: 'C’est l’heure de la prière.',
+              clickUrl: '/prayer',
             });
           }
         }

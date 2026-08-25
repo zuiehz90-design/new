@@ -12,6 +12,7 @@ import {
   type PrayerStatus,
   type QuestsData,
 } from '../lib/api';
+import { notifyEvent } from '../lib/notifications';
 
 const TIER_NAMES: Record<string, string> = { bronze: 'Bronze', silver: 'Argent', gold: 'Or' };
 const TIER_ICONS: Record<string, string> = { bronze: '🥉', silver: '🥈', gold: '🥇' };
@@ -124,6 +125,7 @@ export function useDevotion() {
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {
         showToast(newRank.icon, newRank.name, 'Rang augmenté !', 'bg-gold-500');
+        notifyEvent({ type: 'rank', title: `${newRank.icon} ${newRank.name}`, body: 'Tu viens de monter de rang !', clickUrl: '/quests' });
       }
       // Show toasts for new badges
       const newBadges: string[] = res?.newBadges ?? [];
@@ -131,6 +133,7 @@ export function useDevotion() {
         newBadges.forEach(b => {
           const info = describeBadge(b);
           showToast(info.icon, info.name, 'Badge débloqué !', 'bg-amber-400');
+          notifyEvent({ type: 'badge', title: `${info.icon} ${info.name}`, body: 'Nouveau badge débloqué !', clickUrl: '/quests' });
         });
       } else if (!wasChecked && !newRank) {
         const penalty = res?.penalty ?? 0;
@@ -176,12 +179,14 @@ export function useDevotion() {
       const newRank = res?.newRank as RankInfo | undefined;
       if (newRank) {
         showToast(newRank.icon, newRank.name, 'Rang augmenté !', 'bg-gold-500');
+        notifyEvent({ type: 'rank', title: `${newRank.icon} ${newRank.name}`, body: 'Tu viens de monter de rang !', clickUrl: '/quests' });
       }
       const newBadges: string[] = res?.newBadges ?? [];
       if (newBadges.length > 0) {
         newBadges.forEach(b => {
           const info = describeBadge(b);
           showToast(info.icon, info.name, 'Badge débloqué !', 'bg-amber-400');
+          notifyEvent({ type: 'badge', title: `${info.icon} ${info.name}`, body: 'Nouveau badge débloqué !', clickUrl: '/quests' });
         });
       } else if (!newRank) {
         showToast('⚔️', 'Quête complétée', '+' + (res?.points ?? '?') + ' pts', 'bg-gold-500');
