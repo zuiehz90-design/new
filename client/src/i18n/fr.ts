@@ -323,6 +323,7 @@ export const fr: Record<string, string> = {
   'prophets.narrateHint': 'Voix douce · idéal avant de dormir ou en trajet',
   'prophets.speed': 'Vitesse',
   'prophets.pause': 'Pause',
+  'prophets.play': 'Lecture',
   'prophets.resume': 'Reprendre',
   'prophets.stop': 'Arrêter',
   'prophets.playing': 'Lecture en cours…',

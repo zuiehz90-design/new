@@ -258,6 +258,7 @@ export const ar: Record<string, string> = {
   'prophets.narrateHint': 'صوت هادئ · مثالي قبل النوم أو أثناء التنقل',
   'prophets.speed': 'السرعة',
   'prophets.pause': 'إيقاف مؤقت',
+  'prophets.play': 'تشغيل',
   'prophets.resume': 'متابعة',
   'prophets.stop': 'إيقاف',
   'prophets.playing': 'جارٍ التشغيل…',

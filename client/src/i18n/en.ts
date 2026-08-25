@@ -304,6 +304,7 @@ export const en: Record<string, string> = {
   'prophets.narrateHint': 'Soft voice · great before sleep or on the go',
   'prophets.speed': 'Speed',
   'prophets.pause': 'Pause',
+  'prophets.play': 'Play',
   'prophets.resume': 'Resume',
   'prophets.stop': 'Stop',
   'prophets.playing': 'Playing…',

@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useI18n } from '../i18n';
 import { PROPHETS, type ProphetStory } from '../lib/prophets';
-import { useNarration } from '../lib/useNarration';
+import { getProphetAudio } from '../lib/prophetsAudio';
+import { PodcastPlayer } from './PodcastPlayer';
 
 export function ProphetsView() {
   const { t } = useI18n();
@@ -11,7 +12,6 @@ export function ProphetsView() {
   const [quizScore, setQuizScore] = useState(0);
   const [quizAnswer, setQuizAnswer] = useState<number | null>(null);
   const [quizDone, setQuizDone] = useState(false);
-  const narration = useNarration();
 
   const startQuiz = (p: ProphetStory) => {
     setSelected(p);
@@ -39,11 +39,11 @@ export function ProphetsView() {
 
   if (selected) {
     const paragraphs = selected.story.split('\n\n').filter(Boolean);
-    const isActive = narration.playing || narration.paused;
+    const audio = getProphetAudio(selected.name);
     return (
       <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
         <button
-          onClick={() => { narration.stop(); setSelected(null); setQuizActive(false); }}
+          onClick={() => { setSelected(null); setQuizActive(false); }}
           className="btn-ghost mb-4 text-xs"
         >
           ← {t('prophets.backToList')}
@@ -55,47 +55,8 @@ export function ProphetsView() {
           <p className="text-xs text-stone-400">{selected.title}</p>
         </div>
 
-        {/* Barre de narration audio */}
-        {narration.supported && (
-          <div className="card mb-4 p-4 !border-emerald-500/40">
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                onClick={() => (narration.playing && !narration.paused ? narration.pause() : narration.playing ? narration.resume() : narration.play(selected.story))}
-                className="btn-gold flex-shrink-0 !px-4 !py-2 text-xs"
-              >
-                {narration.playing && !narration.paused ? '⏸' : narration.paused ? '▶' : '▶️'} {t('prophets.narrate')}
-              </button>
-              {isActive && (
-                <button onClick={narration.stop} className="btn-ghost text-xs">
-                  ⏹ {t('prophets.stop')}
-                </button>
-              )}
-              <div className="flex items-center gap-1.5 ml-auto">
-                <span className="text-[10px] text-stone-500">{t('prophets.speed')}</span>
-                {narration.rates.map((r) => (
-                  <button
-                    key={r}
-                    onClick={() => narration.changeRate(r)}
-                    className={`rounded-full px-2 py-0.5 text-[10px] font-bold transition ${
-                      narration.rate === r
-                        ? 'bg-emerald-500/25 text-emerald-300 ring-1 ring-emerald-500/60'
-                        : 'bg-white/5 text-stone-400 hover:bg-white/10'
-                    }`}
-                  >
-                    {r}×
-                  </button>
-                ))}
-              </div>
-            </div>
-            <p className="mt-2 text-[10px] text-stone-500">
-              {narration.playing && !narration.paused
-                ? <span className="animate-pulse text-emerald-400">🔊 {t('prophets.playing')}</span>
-                : narration.paused
-                  ? <span className="text-gold-400">⏸ {t('prophets.resume')}</span>
-                  : '🎧 ' + t('prophets.narrateHint')}
-            </p>
-          </div>
-        )}
+        {/* Podcast audio (épisode réel) */}
+        {audio && <PodcastPlayer audio={audio} />}
 
         {/* Contexte historique */}
         <div className="card p-4 mb-4 !border-gold-500/20">
