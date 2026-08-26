@@ -1,4 +1,4 @@
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useMemo, useEffect, type SVGProps, type ReactNode } from 'react';
 import { useI18n } from '../i18n';
 import {
   GLOSSARY,
@@ -8,6 +8,35 @@ import {
   type GlossaryCategory,
   type GlossaryTerm,
 } from '../lib/islamicGlossary';
+
+/** Icônes vectorielles fines par catégorie (lucide-style, stroke currentColor). */
+const CATEGORY_PATHS: Record<GlossaryCategory, ReactNode> = {
+  prayer: (<><path d="M4 21h16M6 21V10a6 6 0 0 1 12 0v11" /><path d="M12 2l3 5H9l3-5z" /></>),
+  quran: (<><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" /><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" /></>),
+  fiqh: (<><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></>),
+  spirituality: (<path d="M19 14c1.49-1.46 3-3.21 3-5.5A5.5 5.5 0 0 0 16.5 3c-1.76 0-3 .5-4.5 2-1.5-1.5-2.74-2-4.5-2A5.5 5.5 0 0 0 2 8.5c0 2.3 1.5 4.05 3 5.5l7 7Z" />),
+  pillars: (<><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z" /><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2" /><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2" /><path d="M10 6h4" /><path d="M10 10h4" /><path d="M10 14h4" /><path d="M10 18h4" /></>),
+  people: (<><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>),
+  places: (<><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z" /><circle cx="12" cy="10" r="3" /></>),
+  times: (<><circle cx="12" cy="12" r="10" /><polyline points="12 6 12 12 16 14" /></>),
+  concepts: (<><path d="M9 18h6" /><path d="M10 22h4" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" /></>),
+};
+
+function CatIcon({ cat, ...props }: { cat: GlossaryCategory } & SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" {...props}>
+      {CATEGORY_PATHS[cat]}
+    </svg>
+  );
+}
+
+function StarIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" {...props}>
+      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+    </svg>
+  );
+}
 
 export function GlossaryView() {
   const { t, lang } = useI18n();
@@ -55,7 +84,7 @@ export function GlossaryView() {
   return (
     <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
       <div className="mb-4 text-center">
-        <h2 className="text-2xl font-bold text-gold-400">{t('glossary.title')}</h2>
+        <h2 className="font-display text-2xl font-bold text-[#D4AF37]">{t('glossary.title')}</h2>
         <p className="mt-1 text-xs text-stone-400">{t('glossary.subtitle')}</p>
       </div>
 
@@ -72,20 +101,28 @@ export function GlossaryView() {
       </div>
 
       {/* Filtres par catégorie */}
-      <div className="mb-4 flex flex-wrap gap-1.5 justify-center">
+      <div className="mb-4 flex flex-wrap justify-center gap-3">
         <button
           onClick={() => setCategory('all')}
-          className={`chip text-xs ${category === 'all' ? '!border-gold-500/70 !text-gold-300' : ''}`}
+          className="flex items-center gap-2 rounded-full px-4 py-2 text-xs transition hover:shadow-[0_0_16px_rgba(212,175,55,0.3)]"
+          style={category === 'all'
+            ? { background: '#D4AF37', color: '#1a1a1a', border: '1px solid #D4AF37', fontWeight: 700 }
+            : { background: '#112925', color: '#F4D03F', border: '1px solid #D4AF37' }}
         >
-          📚 {t('glossary.all')}
+          <CatIcon cat="concepts" className="h-3.5 w-3.5" style={{ color: category === 'all' ? '#1a1a1a' : '#A3B1AC' }} />
+          {t('glossary.all')}
         </button>
         {ALL_CATEGORIES.map((cat) => (
           <button
             key={cat}
             onClick={() => setCategory(cat)}
-            className={`chip text-xs ${category === cat ? '!border-gold-500/70 !text-gold-300' : ''}`}
+            className="flex items-center gap-2 rounded-full px-4 py-2 text-xs transition hover:shadow-[0_0_16px_rgba(212,175,55,0.3)]"
+            style={category === cat
+              ? { background: '#D4AF37', color: '#1a1a1a', border: '1px solid #D4AF37', fontWeight: 700 }
+              : { background: '#112925', color: '#F4D03F', border: '1px solid #D4AF37' }}
           >
-            {CATEGORY_LABELS[cat].icon} {lang === 'ar' ? CATEGORY_LABELS[cat].ar : lang === 'en' ? CATEGORY_LABELS[cat].en : CATEGORY_LABELS[cat].fr}
+            <CatIcon cat={cat} className="h-3.5 w-3.5" style={{ color: category === cat ? '#D4AF37' : '#A3B1AC' }} />
+            {lang === 'ar' ? CATEGORY_LABELS[cat].ar : lang === 'en' ? CATEGORY_LABELS[cat].en : CATEGORY_LABELS[cat].fr}
           </button>
         ))}
       </div>
@@ -93,13 +130,13 @@ export function GlossaryView() {
       {/* Favoris */}
       {favTerms.length > 0 && !query && (
         <div className="mb-4">
-          <p className="mb-2 text-xs font-semibold text-gold-400">⭐ {t('glossary.favorites')}</p>
+          <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold text-[#D4AF37]"><StarIcon className="h-3.5 w-3.5" /> {t('glossary.favorites')}</p>
           <div className="flex flex-wrap gap-1.5">
             {favTerms.map((f) => (
               <button
                 key={f.term}
                 onClick={() => setSelected(f)}
-                className="chip !border-gold-500/40 !text-gold-200 text-xs"
+                className="chip !border-[#D4AF37]/40 !text-[#F4D03F] text-xs"
               >
                 {f.term}
               </button>
@@ -123,13 +160,13 @@ export function GlossaryView() {
                 <div className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <span className="font-semibold text-stone-100 text-sm">{term.term}</span>
-                      <span className="font-quran text-lg text-gold-300" dir="rtl">{term.termAr}</span>
+                      <span className="font-display text-sm font-bold text-white">{term.term}</span>
+                      <span className="font-quran text-lg text-[#D4AF37]" style={{ textShadow: '0 0 6px rgba(212,175,55,0.3)' }} dir="rtl">{term.termAr}</span>
                     </div>
-                    <p className="text-[11px] text-stone-400">{term.termFr}</p>
+                    <p className="text-[11px] text-[#A3B1AC]">{term.termFr}</p>
                   </div>
-                  <span className="text-xs text-stone-500 shrink-0">{CATEGORY_LABELS[term.category].icon}</span>
-                  {favorites.has(term.term) && <span className="text-xs text-gold-400">⭐</span>}
+                  <CatIcon cat={term.category} className="h-4 w-4 shrink-0" style={{ color: '#A3B1AC' }} />
+                  {favorites.has(term.term) && <StarIcon className="h-4 w-4 shrink-0 text-[#D4AF37]" />}
                 </div>
               </button>
             ))
@@ -139,11 +176,11 @@ export function GlossaryView() {
         /* Index alphabétique */
         <div className="space-y-4">
           {favTerms.length === 0 && (
-            <p className="text-center text-[11px] text-stone-500">{t('glossary.tapFav')}</p>
+            <p className="flex items-center justify-center gap-1.5 text-center text-[11px] text-[#A3B1AC]"><StarIcon className="h-3.5 w-3.5 text-[#D4AF37]" /> {t('glossary.tapFav')}</p>
           )}
           {letters.map((letter) => (
             <div key={letter}>
-              <p className="mb-1.5 text-sm font-bold text-gold-400">{letter}</p>
+              <p className="font-display mb-2 mt-5 text-2xl font-bold text-[#D4AF37]">{letter}</p>
               <div className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                 {alphaIndex![letter].map((term) => (
                   <button
@@ -154,12 +191,12 @@ export function GlossaryView() {
                     <div className="flex items-center gap-2">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5">
-                          <span className="text-sm font-medium text-stone-200">{term.term}</span>
-                          <span className="font-quran text-base text-gold-300" dir="rtl">{term.termAr}</span>
+                          <span className="font-display text-sm font-bold text-white">{term.term}</span>
+                          <span className="font-quran text-base text-[#D4AF37]" style={{ textShadow: '0 0 6px rgba(212,175,55,0.3)' }} dir="rtl">{term.termAr}</span>
                         </div>
-                        <p className="text-[10px] text-stone-500 truncate">{term.termFr}</p>
+                        <p className="truncate text-[10px] text-[#A3B1AC]">{term.termFr}</p>
                       </div>
-                      <span className="text-[10px] shrink-0">{CATEGORY_LABELS[term.category].icon}</span>
+                      <CatIcon cat={term.category} className="h-3.5 w-3.5 shrink-0" style={{ color: '#A3B1AC' }} />
                     </div>
                   </button>
                 ))}
@@ -182,10 +219,10 @@ export function GlossaryView() {
             <div className="mb-3 flex items-start justify-between">
               <div>
                 <div className="flex items-center gap-2">
-                  <h3 className="text-xl font-bold text-gold-300">{selected.term}</h3>
-                  <span className="font-quran text-2xl text-gold-400" dir="rtl">{selected.termAr}</span>
+                  <h3 className="font-display text-xl font-bold text-white">{selected.term}</h3>
+                  <span className="font-quran text-2xl text-[#D4AF37]" style={{ textShadow: '0 0 6px rgba(212,175,55,0.3)' }} dir="rtl">{selected.termAr}</span>
                 </div>
-                <p className="text-sm text-stone-400">{selected.termFr}</p>
+                <p className="text-sm text-[#A3B1AC]">{selected.termFr}</p>
               </div>
               <button onClick={() => setSelected(null)} className="text-stone-500 hover:text-stone-300">✕</button>
             </div>
@@ -197,7 +234,10 @@ export function GlossaryView() {
             <p className="text-sm leading-relaxed text-stone-200">{selected.definition}</p>
             <button
               onClick={() => toggleFav(selected.term)}
-              className={`mt-4 w-full rounded-lg py-2 text-xs font-semibold transition ${favorites.has(selected.term) ? 'bg-gold-500/20 text-gold-300 border border-gold-500/50' : 'bg-stone-800 text-stone-400 border border-stone-700'}`}
+              className={`mt-4 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition ${favorites.has(selected.term) ? 'text-black' : 'text-[#F4D03F]'}`}
+              style={favorites.has(selected.term)
+                ? { background: '#D4AF37', border: '1px solid #D4AF37' }
+                : { background: '#112925', border: '1px solid #D4AF37' }}
             >
               {favorites.has(selected.term) ? `⭐ ${t('glossary.inFav')}` : `☆ ${t('glossary.addFav')}`}
             </button>

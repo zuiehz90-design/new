@@ -118,7 +118,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // rafraîchit le profil en arrière-plan.
     const cachedUid = hadTokenAtStart ? getCachedUid() : null;
     if (hadTokenAtStart && cachedUid != null) {
-      setUser({ id: cachedUid } as User);
+      setUser({ id: cachedUid, name: '', profile: {}, createdAt: '' } as User);
       setLoading(false);
     }
     let retry = 0;

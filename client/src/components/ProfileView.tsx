@@ -144,7 +144,7 @@ export function ProfileView() {
             </div>
           ) : (
             <form onSubmit={submit} className="space-y-3">
-              <div><label className="mb-1 block text-xs text-stone-500">{t('profile.name')}</label><input value={name} onChange={(e) => setName(e.target.value)} className="input text-sm" required minLength={2} /></div>
+              <div><label className="mb-1 block text-xs text-[#A3B1AC]">{t('profile.name')}</label><input value={name} onChange={(e) => setName(e.target.value)} className="input text-sm" required minLength={2} /></div>
               <div><label className="mb-1 block text-xs text-stone-500">{t('profile.password')}</label><input type="password" value={password} onChange={(e) => setPassword(e.target.value)} className="input text-sm" required minLength={6} /></div>
               <div>
                 <label className="mb-1 block text-xs text-stone-500">{t("profile.apiKeyOptional")}</label>
@@ -165,23 +165,23 @@ export function ProfileView() {
 
   return (
     <div className="mx-auto max-w-xl px-4 pb-10 pt-8 animate-fade-in">
-      <div className="card mb-5 p-5 border-2" style={{ borderColor: ac.h + '99', backgroundColor: ac.b }}>
+      <div className="card mb-5 overflow-hidden p-5" style={{ borderColor: 'rgba(212,175,55,0.5)', background: 'radial-gradient(ellipse 70% 90% at 12% 40%, rgba(212,175,55,0.14), transparent 65%), #112925' }}>
         <div className="flex items-start gap-4">
-          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 text-3xl" style={{ borderColor: ac.h + '99', backgroundColor: ac.b }}>
-            {avatarIcon ?? user.name.trim().charAt(0).toUpperCase()}
+          <div className="flex h-16 w-16 shrink-0 items-center justify-center rounded-full border-2 text-3xl" style={{ borderColor: 'var(--accent-gold)', backgroundColor: '#0a2f26' }}>
+            {avatarIcon ?? (user.name || '?').trim().charAt(0).toUpperCase()}
           </div>
           <div className="flex-1 min-w-0">
-            <h1 className="text-xl font-bold" style={{ color: ac.h }}>{user.name}</h1>
+            <h1 className="font-display text-xl font-bold text-white">{user.name}</h1>
 
             {favoriteSurah && (
-              <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-700/40 bg-emerald-900/30 px-2 py-0.5 text-[11px] text-emerald-300">
+              <p className="mt-1 inline-flex items-center gap-1 rounded-full border border-emerald-300/40 bg-[#1F6E5C] px-2 py-0.5 text-[11px] text-white">
                 📖 {favoriteSurah}
               </p>
             )}
             {tags.length > 0 && (
               <div className="mt-2 flex flex-wrap gap-1">
                 {tags.map(tag => (
-                  <span key={tag} className="rounded-full border border-emerald-700/40 bg-emerald-900/30 px-2 py-0.5 text-[10px] text-emerald-300">#{tag}</span>
+                  <span key={tag} className="rounded-full bg-[#1F6E5C] px-2 py-0.5 text-[10px] text-white">#{tag}</span>
                 ))}
               </div>
             )}
@@ -191,20 +191,29 @@ export function ProfileView() {
 
       <div className="mb-4 grid grid-cols-3 gap-2">
         <div className="card p-3 text-center">
-          <p className="text-xl font-bold text-gold-400">🔥 {streak.current}</p>
-          <p className="text-[10px] text-stone-400">{t('profile.streak')}</p>
+          <p className="flex items-center justify-center gap-1.5 text-xl font-bold text-white">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" style={{ color: 'var(--accent-gold)' }} aria-hidden="true"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" /></svg>
+            {streak.current}
+          </p>
+          <p className="text-[10px] text-[#A3B1AC]">{t('profile.streak')}</p>
         </div>
         <div className="card p-3 text-center">
-          <p className="text-xl font-bold text-gold-400">🏆 {streak.best}</p>
-          <p className="text-[10px] text-stone-400">{t('profile.bestStreak')}</p>
+          <p className="flex items-center justify-center gap-1.5 text-xl font-bold text-white">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4" style={{ color: 'var(--accent-gold)' }} aria-hidden="true"><path d="M6 9H4.5a2.5 2.5 0 0 1 0-5C7 4 7 5 7 9v0a5 5 0 0 0 5 5h0a5 5 0 0 0 5-5v0c0-4 1-5 2.5-5a2.5 2.5 0 0 1 0 5H18" /><path d="M12 14v7" /><path d="M9 21h6" /></svg>
+            {streak.best}
+          </p>
+          <p className="text-[10px] text-[#A3B1AC]">{t('profile.bestStreak')}</p>
         </div>
         <div className="card p-3 text-center">
-          <p className="text-xl font-bold text-gold-400">⭐ {quests?.lifetime ?? 0}</p>
-          <p className="text-[10px] text-stone-400">{t('profile.points')}</p>
+          <p className="flex items-center justify-center gap-1.5 text-xl font-bold text-white">
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4" style={{ color: 'var(--accent-gold)' }} aria-hidden="true"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z" /></svg>
+            {quests?.lifetime ?? 0}
+          </p>
+          <p className="text-[10px] text-[#A3B1AC]">{t('profile.points')}</p>
         </div>
       </div>
 
-      <button onClick={logout} className="btn-ghost mb-4 w-full border border-red-500/40 text-sm text-red-400 hover:bg-red-500/10">
+      <button onClick={logout} className="mb-4 w-full rounded-xl border border-[#8B0000] px-4 py-2.5 text-sm font-semibold text-[#FF6B6B] transition hover:bg-[#8B0000]/15">
         {t('profile.logout')}
       </button>
 
@@ -212,8 +221,8 @@ export function ProfileView() {
         <div className="space-y-4">
           {/* Indicateur auto-save */}
           <div className="flex items-center justify-between">
-            <h2 className="text-sm font-bold" style={{ color: ac.h }}>{t('profile.edit')}</h2>
-            <span className={`text-[10px] font-medium transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`} style={{ color: ac.h }}>
+            <h2 className="font-display text-sm font-bold text-[#D4AF37]">{t('profile.edit')}</h2>
+            <span className={`text-[10px] font-medium transition-opacity duration-300 ${saved ? 'opacity-100' : 'opacity-0'}`} style={{ color: 'var(--accent-gold)' }}>
               {t('profile.saved')}
             </span>
           </div>
@@ -224,7 +233,7 @@ export function ProfileView() {
           </div>
 
           <div>
-            <label className="mb-2 block text-xs text-stone-500">{t('profile.avatar')}</label>
+            <label className="font-display mb-2 block text-sm font-bold text-[#D4AF37]">{t('profile.avatar')}</label>
             <div className="flex flex-wrap gap-2">
               {AVATARS.map((a) => (
                 <button key={a.id} onClick={() => setAvatar(a.id)} title={a.label}
@@ -238,22 +247,19 @@ export function ProfileView() {
           </div>
 
           <div>
-            <label className="mb-2 block text-xs text-stone-500">{t('profile.accent')}</label>
+            <label className="font-display mb-2 block text-sm font-bold text-[#D4AF37]">{t('profile.accent')}</label>
             <div className="flex flex-wrap gap-2">
               {ACCENTS.map((a) => (
-                <button key={a.id} onClick={() => setAccent(a.id)}
-                  className={`flex items-center gap-2 rounded-xl border-2 px-3 py-2 text-xs transition ${accent === a.id ? '' : 'border-transparent text-stone-400 hover:border-emerald-700/40'}`}
-                  style={accent === a.id ? { borderColor: acMap[a.id]?.h + '99', backgroundColor: acMap[a.id]?.b, color: acMap[a.id]?.h } : {}}
-                >
-                  <span className="h-4 w-4 rounded-full" style={{ backgroundColor: acMap[a.id]?.h }} />
-                  {a.label}
-                </button>
+                <button key={a.id} onClick={() => setAccent(a.id)} title={a.label} aria-label={a.label}
+                  className={`h-9 w-9 rounded-full transition ${accent === a.id ? 'border-[3px] border-gold-300' : 'border border-stone-600/60 hover:border-stone-400'}`}
+                  style={{ backgroundColor: acMap[a.id]?.h }}
+                />
               ))}
             </div>
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-stone-500">{t('profile.favoriteSurah')}</label>
+            <label className="mb-1 block text-xs text-[#A3B1AC]">{t('profile.favoriteSurah')}</label>
             <select value={favoriteSurah} onChange={(e) => setFavoriteSurah(e.target.value)} className="input text-sm">
               <option value="">— {t('profile.noFavoriteSurah')} —</option>
               {SURAHS.filter(Boolean).map((s, i) => (<option key={i} value={s}>{i + 1}. {s}</option>))}
@@ -261,40 +267,44 @@ export function ProfileView() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-stone-500">{t('profile.gender')}</label>
+            <label className="font-display mb-2 block text-sm font-bold text-[#D4AF37]">{t('profile.gender')}</label>
             <div className="flex gap-2">
               <button
                 onClick={() => setGender('male')}
-                className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm transition ${
+                className={`flex-1 rounded-xl border px-3 py-2 text-sm transition ${
                   gender === 'male'
-                    ? 'border-gold-500/60 bg-gold-500/15 text-gold-300'
-                    : 'border-emerald-900/40 text-stone-400 hover:border-emerald-700'
+                    ? 'border-[#D4AF37] bg-[#D4AF37] font-bold text-black'
+                    : 'border-[#2A4A43] bg-[#112925] text-[#A3B1AC] hover:border-[#D4AF37]'
                 }`}
               >
-                👨 {t('profile.genderMale')}
+                {t('profile.genderMale')}
               </button>
               <button
                 onClick={() => setGender('female')}
-                className={`flex-1 rounded-xl border-2 px-3 py-2 text-sm transition ${
+                className={`flex-1 rounded-xl border px-3 py-2 text-sm transition ${
                   gender === 'female'
-                    ? 'border-pink-500/60 bg-pink-500/15 text-pink-300'
-                    : 'border-emerald-900/40 text-stone-400 hover:border-emerald-700'
+                    ? 'border-[#D4AF37] bg-[#D4AF37] font-bold text-black'
+                    : 'border-[#2A4A43] bg-[#112925] text-[#A3B1AC] hover:border-[#D4AF37]'
                 }`}
               >
-                👩 {t('profile.genderFemale')}
+                {t('profile.genderFemale')}
               </button>
             </div>
             <p className="mt-1 text-[10px] text-stone-500">{t('profile.genderHint')}</p>
           </div>
 
           <div>
-            <label className="mb-2 block text-xs text-stone-500">{t('profile.goals')}</label>
+            <label className="font-display mb-2 block text-sm font-bold text-[#D4AF37]">{t('profile.goals')}</label>
             <div className="flex flex-wrap gap-2">
               {GOALS.map((g) => (
                 <button key={g.id} onClick={() => toggleGoal(g.id)}
-                  className={`rounded-full border px-3 py-1.5 text-xs transition ${goals.includes(g.id) ? '' : 'border-emerald-900/40 text-stone-400 hover:border-emerald-700'}`}
-                  style={goals.includes(g.id) ? { borderColor: ac.h + '99', backgroundColor: ac.b, color: ac.h } : {}}
+                  className={`inline-flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs transition ${
+                    goals.includes(g.id)
+                      ? 'border-[#D4AF37] bg-[#D4AF37] font-bold text-black'
+                      : 'border-[#D4AF37]/70 bg-[#112925] text-[#F4D03F] hover:border-[#D4AF37]'
+                  }`}
                 >
+                  {goals.includes(g.id) && <span className="text-[10px] font-bold">✓</span>}
                   {g.icon} {t(g.label)}
                 </button>
               ))}
@@ -302,14 +312,13 @@ export function ProfileView() {
           </div>
 
           <div>
-            <label className="mb-1 block text-xs text-stone-500">{t('profile.tags')}</label>
+            <label className="font-display mb-2 block text-sm font-bold text-[#D4AF37]">{t('profile.tags')}</label>
             <div className="flex flex-wrap gap-1.5 mb-2">
               {tags.map(tag => (
                 <button
                   key={tag}
                   onClick={() => setTags(tags.filter(t => t !== tag))}
-                  className="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs transition hover:border-red-500/40 hover:bg-red-500/10"
-                  style={{ borderColor: ac.h + '60', color: ac.h }}
+                  className="inline-flex items-center gap-1 rounded-full border border-emerald-300/40 bg-[#1F6E5C] px-2.5 py-1 text-xs text-white transition hover:border-red-500/40 hover:bg-red-500/20"
                   title="Cliquez pour retirer"
                 >
                   #{tag}
@@ -350,7 +359,7 @@ export function ProfileView() {
                 <button
                   key={tag}
                   onClick={() => setTags([...tags, tag])}
-                  className="rounded-full border border-stone-700/40 bg-stone-800/40 px-2 py-0.5 text-[10px] text-stone-400 hover:border-emerald-700/60 hover:text-emerald-300 transition"
+                  className="rounded-full border border-[#D4AF37]/40 bg-transparent px-2 py-0.5 text-[10px] text-[#A3B1AC] transition hover:border-[#D4AF37] hover:text-[#F4D03F]"
                 >
                   #{tag}
                 </button>
