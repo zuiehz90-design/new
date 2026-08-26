@@ -103,6 +103,7 @@ function Shell() {
 
   const topNav = [
     { to: '/', label: 'Accueil', icon: 'home' },
+    { to: '/chat', label: 'Chat', icon: 'chat' },
     { to: '/prayer', label: 'Prières', icon: 'prayer' },
     { to: '/quran', label: 'Coran', icon: 'quran' },
     { to: '/profile', label: 'Profil', icon: 'profile' },
