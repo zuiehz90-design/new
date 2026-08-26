@@ -37,7 +37,7 @@ const RANKS: Rank[] = RANK_TIERS.flatMap((t, ti) =>
     tier: t.tier,
     division: div,
     name: t.tier + ' ' + div,
-    min: RANK_THRESHOLDS[ti * 3 + di] ?? RANK_THRESHOLDS[RANK_THRESHOLDS.length - 1],
+    min: RANK_THRESHOLDS[ti * 3 + di],
     icon: t.icon,
     color: t.color,
   }))
@@ -57,7 +57,7 @@ interface RankProgress {
   maxed: boolean;
 }
 
-function computeRankProgress(points: number, rank: Rank): RankProgress {
+export function computeRankProgress(points: number, rank: Rank): RankProgress {
   const idx = RANKS.findIndex((r) => r.id === rank.id);
   const next = RANKS[idx + 1] ?? null;
   if (!next) {

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import { computeNewBadges, BADGE_FAMILIES, badgeId } from './badges.js';
 
 const base = { existing: new Set<string>(), points: 0, totalPrayers: 0, fullDays: 0, streakBest: 0, questsDone: 0, storiesDone: 0 };
+type Stat = 'totalPrayers' | 'fullDays' | 'streakBest' | 'questsDone' | 'points' | 'storiesDone';
 
 test('aucun badge au départ', () => {
   assert.deepEqual(computeNewBadges(base), []);
@@ -16,39 +17,30 @@ test('6 familles × 3 niveaux définies', () => {
   }
 });
 
-test('prières : bronze à 1, argent à 50, or à 200', () => {
-  assert.ok(computeNewBadges({ ...base, totalPrayers: 1 }).includes('salat_bronze'));
-  const r = computeNewBadges({ ...base, totalPrayers: 50 });
-  assert.ok(r.includes('salat_bronze') && r.includes('salat_silver'));
-  assert.ok(!r.includes('salat_gold'));
-  assert.ok(computeNewBadges({ ...base, totalPrayers: 200 }).includes('salat_gold'));
-});
-
-test('jours 5/5 : bronze 1, argent 7, or 30', () => {
-  assert.ok(computeNewBadges({ ...base, fullDays: 1 }).includes('five_bronze'));
-  assert.ok(computeNewBadges({ ...base, fullDays: 7 }).includes('five_silver'));
-  assert.ok(!computeNewBadges({ ...base, fullDays: 6 }).includes('five_silver'));
-  assert.ok(computeNewBadges({ ...base, fullDays: 30 }).includes('five_gold'));
-});
-
-test('meilleure série : bronze 7, argent 30, or 100', () => {
-  assert.ok(computeNewBadges({ ...base, streakBest: 7 }).includes('streak_bronze'));
-  assert.ok(computeNewBadges({ ...base, streakBest: 30 }).includes('streak_silver'));
-  assert.ok(computeNewBadges({ ...base, streakBest: 100 }).includes('streak_gold'));
-  assert.ok(!computeNewBadges({ ...base, streakBest: 6 }).includes('streak_bronze'));
-});
-
-test('quêtes : bronze 1, argent 10, or 50', () => {
-  assert.ok(computeNewBadges({ ...base, questsDone: 1 }).includes('quests_bronze'));
-  assert.ok(computeNewBadges({ ...base, questsDone: 10 }).includes('quests_silver'));
-  assert.ok(computeNewBadges({ ...base, questsDone: 50 }).includes('quests_gold'));
-});
-
-test('points/rang : bronze 180 (Argent 3), argent 450 (Or 3), or 950 (Platine 3)', () => {
-  assert.ok(computeNewBadges({ ...base, points: 180 }).includes('rank_bronze'));
-  assert.ok(computeNewBadges({ ...base, points: 450 }).includes('rank_silver'));
-  assert.ok(computeNewBadges({ ...base, points: 950 }).includes('rank_gold'));
-  assert.ok(!computeNewBadges({ ...base, points: 179 }).includes('rank_bronze'));
+// Contrat des paliers : chaque famille débloque bronze/argent/or à ses seuils
+// (et rien en dessous du bronze — les autres familles restent à 0 dans chaque ligne).
+const FAMILY_THRESHOLDS: Array<[string, Stat, [number, number, number]]> = [
+  ['salat', 'totalPrayers', [1, 50, 200]],
+  ['five', 'fullDays', [1, 7, 30]],
+  ['streak', 'streakBest', [7, 30, 100]],
+  ['quests', 'questsDone', [1, 10, 50]],
+  ['rank', 'points', [180, 450, 950]],
+  ['stories', 'storiesDone', [3, 6, 12]],
+];
+test('seuils bronze/argent/or par famille (table)', () => {
+  for (const [id, stat, [b, s, g]] of FAMILY_THRESHOLDS) {
+    assert.deepEqual(computeNewBadges({ ...base, [stat]: b - 1 }), [], `${id} sous le bronze`);
+    assert.deepEqual(
+      computeNewBadges({ ...base, [stat]: s }).filter(x => x.startsWith(id + '_')).sort(),
+      [badgeId(id, 'bronze'), badgeId(id, 'silver')].sort(),
+      `${id} à argent`
+    );
+    assert.deepEqual(
+      computeNewBadges({ ...base, [stat]: g }).filter(x => x.startsWith(id + '_')).sort(),
+      [badgeId(id, 'bronze'), badgeId(id, 'silver'), badgeId(id, 'gold')].sort(),
+      `${id} à or`
+    );
+  }
 });
 
 test('badges déjà obtenus ne sont pas re-débloqués', () => {
@@ -57,21 +49,4 @@ test('badges déjà obtenus ne sont pas re-débloqués', () => {
     computeNewBadges({ ...base, existing, points: 5000, totalPrayers: 500, fullDays: 100, streakBest: 500, questsDone: 200 }),
     []
   );
-});
-
-test('histoires : bronze 3, argent 6, or 12 (Connaisseur historique)', () => {
-  assert.ok(computeNewBadges({ ...base, storiesDone: 3 }).includes('stories_bronze'));
-  assert.ok(computeNewBadges({ ...base, storiesDone: 6 }).includes('stories_silver'));
-  assert.ok(computeNewBadges({ ...base, storiesDone: 12 }).includes('stories_gold'));
-  assert.ok(!computeNewBadges({ ...base, storiesDone: 2 }).includes('stories_bronze'));
-});
-
-test('chaque famille ne débloque que ses propres niveaux', () => {
-  const r = computeNewBadges({ ...base, points: 200, totalPrayers: 60, fullDays: 8, streakBest: 31, questsDone: 11 });
-  assert.deepEqual(
-    r.filter(id => id.startsWith('streak_')).sort(),
-    ['streak_bronze', 'streak_silver']
-  );
-  assert.ok(!r.includes('rank_gold'));
-  assert.ok(!r.includes('salat_gold'));
 });
