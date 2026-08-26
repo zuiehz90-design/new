@@ -79,18 +79,21 @@ export function QuranView() {
     <div className="mx-auto max-w-4xl px-4 pb-8 pt-4">
       <div className="mb-4 text-center">
         <h2 className="font-quran text-3xl font-bold text-gold-400">القرآن الكريم</h2>
-        <p className="mt-1 text-sm text-stone-400">{t('quran.title')}</p>
+        <p className="font-display mt-1 text-lg font-semibold text-gold-300">{t('quran.title')}</p>
         {/* Mode concentration : toggle rapide, surtout utile en lecture */}
         <button
           onClick={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
-          className={`mt-2 inline-flex items-center gap-1 rounded-full border px-3 py-1 text-xs font-semibold transition ${
+          className={`mt-3 inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-bold tracking-wide transition ${
             settings.focusMode
-              ? 'border-gold-500/70 bg-gold-500/15 text-gold-300'
-              : 'border-stone-600/60 bg-stone-800/40 text-stone-400 hover:border-gold-500/50 hover:text-gold-300'
+              ? 'border-gold-400 bg-gold-500/10 text-gold-300'
+              : 'border-gold-500/50 bg-transparent text-gold-300 hover:border-gold-400 hover:bg-gold-500/10'
           }`}
           title={t('quran.focusMode')}
         >
-          🧘 {settings.focusMode ? t('quran.focusOn') : t('quran.focusOff')}
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="currentColor" aria-hidden="true">
+            <path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z" />
+          </svg>
+          {settings.focusMode ? t('quran.focusOn') : t('quran.focusOff')}
         </button>
         {pinCount > 0 && (
           <button
@@ -103,15 +106,15 @@ export function QuranView() {
       </div>
 
       {/* Recherche */}
-      <div className="mb-5 flex gap-2">
+      <div className="mb-4 flex flex-col gap-2 sm:flex-row">
         <input
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && doSearch()}
           placeholder={t('quran.searchPlaceholder')}
-          className="input"
+          className="input quran-search w-full"
         />
-        <button onClick={doSearch} className="btn-primary shrink-0">
+        <button onClick={doSearch} className="btn-gold w-full shrink-0 sm:w-auto">
           {t('quran.search')}
         </button>
       </div>
@@ -266,12 +269,12 @@ function SurahList({
           onClick={() => onOpen(s.number)}
           className="card card-clickable flex items-center gap-3 p-3 text-left transition"
         >
-          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-emerald-800/60 text-xs font-bold text-gold-300">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#1F6E5C] text-xs font-bold text-white">
             {s.number}
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block truncate font-semibold">{s.name}</span>
-            <span className="block text-xs text-stone-500">
+            <span className="block truncate font-bold text-white">{s.name}</span>
+            <span className="block text-xs text-[#A3B1AC]">
               {t(s.revelation === 'Meccan' ? 'quran.meccan' : 'quran.medinan')} · {s.ayahs} {t('quran.verses')}
             </span>
             {getPosition(s.number) != null && (
@@ -287,7 +290,7 @@ function SurahList({
               </span>
             )}
           </span>
-          <span className="font-quran text-lg text-gold-400" dir="rtl">
+          <span className="font-quran text-[22px] text-gold-400" dir="rtl" style={{ textShadow: '0 0 8px rgba(212, 175, 55, 0.3)' }}>
             {s.arabic}
           </span>
         </button>

@@ -90,6 +90,10 @@ html.focus-mode .animate-fade-in { animation-duration: 0.4s; }
   .input::placeholder { color: var(--text-tertiary); }
   .input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
   html.light .input:focus { box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.10); }
+  /* Champ de recherche du Coran : fond #112925, bordure #2A4A43, or au focus */
+  .quran-search { background: #112925; border: 1px solid #2A4A43; }
+  .quran-search:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15); }
+  html.light .quran-search { background: #fbfaf7; }
   .nav-header { border-bottom: 1px solid var(--nav-border); background: var(--nav-bg); backdrop-filter: blur(12px); }
   .nav-sidebar { border-right: 1px solid var(--nav-border); background: var(--nav-bg); backdrop-filter: blur(12px); }
   .nav-item { @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition; color: var(--text-secondary); }
