@@ -6,7 +6,6 @@ import { useCallback, useEffect, useRef, useState } from 'react';
  * - `play(url)` : lance la lecture, coupe le nom précédent.
  * - `toggleLoop()` : active/désactive la répétition en boucle (utile pour
  *   mémoriser la prononciation d'un nom).
- * - `stop()` : coupe la lecture.
  * - `playing` / `looping` : état exposé à l'interface.
  *
  * Un seul objet Audio est partagé : changer de nom coupe la lecture en cours.
@@ -51,14 +50,6 @@ export function useNameAudio() {
     });
   }, []);
 
-  const stop = useCallback(() => {
-    const audio = audioRef.current;
-    if (!audio) return;
-    audio.pause();
-    audio.currentTime = 0;
-    setPlaying(false);
-  }, []);
-
   // Nettoyage au démontage.
   useEffect(() => {
     return () => {
@@ -68,5 +59,5 @@ export function useNameAudio() {
     };
   }, []);
 
-  return { playing, looping, play, stop, toggleLoop };
+  return { playing, looping, play, toggleLoop };
 }
