@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getMosqueTimes, type PrayerTimes } from '../lib/mawaqit';
+import type { PrayerKey } from '../lib/prayer';
 import { useSettings } from '../context/SettingsContext';
 
 export interface MawaqitTimesResult {
@@ -7,7 +8,7 @@ export interface MawaqitTimesResult {
   /** Objets Date pour chaque prière (même jour). */
   dates: Record<string, Date> | null;
   /** Prochaine prière à venir. */
-  next: { key: string; date: Date; time: string } | null;
+  next: { key: PrayerKey; date: Date; time: string } | null;
   loading: boolean;
   error: string | null;
   refresh: () => void;
@@ -61,7 +62,7 @@ export function useMawaqitTimes(): MawaqitTimesResult {
     return out;
   }, [times]);
 
-  const next = useMemo(() => {
+  const next = useMemo<MawaqitTimesResult['next']>(() => {
     if (!times || !dates) return null;
     const now = new Date();
     for (const key of ORDER) {

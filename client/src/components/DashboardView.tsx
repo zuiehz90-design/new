@@ -140,7 +140,7 @@ export function DashboardView() {
         {pt?.next ? (
           <>
             <p className="text-xs uppercase tracking-widest text-gold-400">{t('prayer.next')}</p>
-            <p className="mt-1 text-2xl font-bold text-gold-300">{t(prayerLabel(pt.next.key as any))}</p>
+            <p className="mt-1 text-2xl font-bold text-gold-300">{t(prayerLabel(pt.next.key))}</p>
             {countdown && (
               <p className="mt-3 text-2xl font-bold tracking-tight" style={{color:"var(--text-primary)"}}>
                 <CountdownText p={countdown} />

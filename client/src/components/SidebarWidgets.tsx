@@ -45,11 +45,10 @@ function SidebarNextPrayer() {
     );
   }
 
-  const key = pt.next.key as Parameters<typeof prayerLabel>[0];
   return (
     <Link to="/prayer" className="card block p-4 text-center border-gold-500/40 bg-gold-500/5 shadow-glow hover:border-gold-500/70 transition">
       <p className="text-[10px] uppercase tracking-widest text-gold-400">{t('prayer.next')}</p>
-      <p className="mt-1 text-lg font-bold text-gold-300">{t(prayerLabel(key))}</p>
+      <p className="mt-1 text-lg font-bold text-gold-300">{t(prayerLabel(pt.next.key))}</p>
       {countdown && (
         <p className="mt-2 text-3xl font-bold tabular-nums leading-none" style={{ color: 'var(--text-primary)' }}>
           <CountdownText p={countdown} />
