@@ -7,16 +7,16 @@
   --bg-base: #04120f;
   --bg-surface: #06201a;
   --bg-elevated: #0a2f26;
-  --bg-card: rgba(6, 32, 26, 0.70);
-  --border-subtle: rgba(6, 78, 60, 0.35);
-  --border-default: rgba(6, 78, 60, 0.50);
+  --bg-card: rgba(7, 30, 26, 0.82);
+  --border-subtle: #2A4A43;
+  --border-default: #2A4A43;
   --text-primary: #f0ede6;
   --text-secondary: #a8b5a0;
   --text-tertiary: #7a8a72;
-  --accent-primary: #10b981;
-  --accent-gold: #cfa14a;
-  --accent-gold-dim: rgba(207, 161, 74, 0.15);
-  --shadow-card: 0 4px 24px -4px rgba(0, 0, 0, 0.45);
+  --accent-primary: #1F6E5C;
+  --accent-gold: #D4AF37;
+  --accent-gold-dim: rgba(212, 175, 55, 0.15);
+  --shadow-card: 0 8px 30px rgba(0, 0, 0, 0.30), 0 2px 8px rgba(0, 0, 0, 0.20);
   --nav-bg: rgba(6, 32, 26, 0.85);
   --nav-border: rgba(6, 78, 60, 0.35);
   --nav-hover: rgba(6, 78, 60, 0.30);
@@ -30,14 +30,14 @@ html.light {
   --bg-surface: #ffffff;
   --bg-elevated: #faf9f6;
   --bg-card: rgba(255, 255, 255, 0.88);
-  --border-subtle: rgba(180, 185, 170, 0.40);
-  --border-default: rgba(160, 168, 150, 0.55);
+  --border-subtle: rgba(42, 74, 67, 0.25);
+  --border-default: rgba(42, 74, 67, 0.40);
   --text-primary: #1a2a1f;
   --text-secondary: #5a6b5a;
   --text-tertiary: #8a9a88;
-  --accent-primary: #047857;
-  --accent-gold: #92742b;
-  --accent-gold-dim: rgba(146, 116, 43, 0.10);
+  --accent-primary: #1F6E5C;
+  --accent-gold: #b8963a;
+  --accent-gold-dim: rgba(184, 150, 58, 0.12);
   --shadow-card: 0 2px 12px -2px rgba(0, 0, 0, 0.08), 0 0 0 1px rgba(0, 0, 0, 0.04);
   --nav-bg: rgba(255, 255, 255, 0.92);
   --nav-border: rgba(180, 185, 170, 0.40);
@@ -69,10 +69,11 @@ html.focus-mode .card { box-shadow: 0 0 0 1px rgba(207, 161, 74, 0.18), 0 8px 30
 html.focus-mode .animate-fade-in { animation-duration: 0.4s; }
 
 .font-quran { font-family: Amiri, serif; line-height: 2.1; }
+.font-display { font-family: 'Playfair Display', 'Georgia', serif; }
 .font-quran-alt { font-family: Amiri, serif; line-height: 2.2; }
 
 @layer components {
-  .card { @apply rounded-2xl shadow-xl backdrop-blur; border: 1px solid var(--border-subtle); background: var(--bg-card); }
+  .card { @apply rounded-2xl backdrop-blur; border: 1px solid var(--border-subtle); background: var(--bg-card); box-shadow: var(--shadow-card); }
   .card-clickable { @apply transition; }
   @media (hover: hover) { .card-clickable:hover { border-color: var(--accent-gold); box-shadow: 0 4px 24px -8px rgba(207, 161, 74, 0.25); } }
   html.light .card-clickable:hover { box-shadow: var(--shadow-card), 0 0 0 1px rgba(146, 116, 43, 0.20); }

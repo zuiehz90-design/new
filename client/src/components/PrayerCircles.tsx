@@ -29,7 +29,7 @@ export function PrayerCircles({
 
   return (
     <>
-    <div className="flex items-start justify-between gap-1 sm:gap-2">
+    <div className="mx-auto flex w-full max-w-md items-center justify-center gap-2 sm:gap-3">
       {SALAT_KEYS.map((key) => {
         const done = prayers?.checked.includes(key) ?? false;
         const isMissed = missed.includes(key);
@@ -39,10 +39,10 @@ export function PrayerCircles({
 
         const stateKey = done ? 'done' : isMissed ? 'missed' : blocked ? 'blocked' : 'pending';
 
-        let circle = 'border-2 border-dashed border-stone-500/70 text-stone-500';
+        let circle = 'border border-[#2A4A43] bg-[#081b16] text-stone-500 shadow-inner';
         if (done) {
           const isFresh = justToggled === key;
-          circle = 'border-2 border-emerald-400 bg-emerald-500 text-emerald-950 shadow-[0_0_22px_-8px_rgba(52,211,153,0.8)]';
+          circle = 'border border-emerald-300/60 text-white shadow-[0_0_22px_-8px_rgba(31,110,92,0.9)]';
           if (isFresh) circle += ' animate-pop prayer-pulse';
         }
         else if (isMissed) circle = 'border-2 border-red-400/70 bg-red-500/15 text-red-300';
@@ -80,6 +80,7 @@ export function PrayerCircles({
             <span
               key={stateKey}
               className={`flex h-12 w-12 items-center justify-center rounded-full transition-all duration-300 ${circle}`}
+              style={done ? { background: 'linear-gradient(135deg, #1F6E5C, #2e9d82)' } : undefined}
             >
               {done ? (
                 <svg className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">

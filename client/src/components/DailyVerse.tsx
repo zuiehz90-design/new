@@ -3,6 +3,7 @@ import { useI18n } from '../i18n';
 import { EDITIONS, fetchEdition, getSurahMeta } from '../lib/quran';
 import type { Verse } from '../lib/types';
 import { VerseShareButton } from './VerseShareCard';
+import { VerseModal } from './VerseModal';
 
 /** Hash déterministe d'une chaîne. */
 function hashStr(s: string): number {
@@ -39,6 +40,7 @@ export function DailyVerse() {
   const [trEdition, setTrEdition] = useState<Verse[] | null>(null);
   const [error, setError] = useState(false);
   const [shuffle, setShuffle] = useState(0);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -78,6 +80,7 @@ export function DailyVerse() {
   const meta = pick.verse ? getSurahMeta(pick.verse.chapter) : undefined;
 
   return (
+    <>
     <section className="card mb-4 border-gold-500/40 bg-gradient-to-br from-gold-900/15 via-transparent to-emerald-900/15 p-4 shadow-glow">
       <div className="mb-2 flex items-center justify-between gap-2">
         <h2 className="flex items-center gap-2 text-sm font-bold text-gold-400">
@@ -124,11 +127,26 @@ export function DailyVerse() {
               {pick.translated}
             </p>
           )}
-          <p className="mt-2 text-xs text-emerald-400">
-            {meta?.name} · {pick.verse.chapter}:{pick.verse.verse}
-          </p>
+          <button
+            onClick={() => setOpen(true)}
+            className="mt-2 rounded-lg border border-gold-500/40 px-2.5 py-1 text-[11px] font-semibold text-gold-300 transition hover:bg-gold-500/10"
+          >
+            📖 {t('names99.quranRead')}
+          </button>
         </>
       ) : null}
     </section>
+
+      {open && pick.verse && meta && (
+        <VerseModal
+          chapter={pick.verse.chapter}
+          verse={pick.verse.verse}
+          surahName={meta.name}
+          arabic={pick.verse.text}
+          translated={pick.translated}
+          onClose={() => setOpen(false)}
+        />
+      )}
+    </>
   );
 }

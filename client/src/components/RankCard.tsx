@@ -40,7 +40,7 @@ export function RankCard({ achievements }: { achievements: Achievements }) {
       <div className="card mb-4" style={{ borderColor: color + '40' }}>
         {/* Top section: icon + rank name + pips */}
         <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-          <span className="text-3xl flex-shrink-0">{r.icon}</span>
+          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-gold-500/40 text-2xl" style={{ background: 'radial-gradient(circle at 50% 30%, rgba(212,175,55,0.20), rgba(212,175,55,0.05))' }}>🏆</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-bold truncate" style={{ color }}>{r.name}</span>
@@ -68,10 +68,10 @@ export function RankCard({ achievements }: { achievements: Achievements }) {
         {/* Progress bar */}
         <div className="px-4 pb-3">
           <div className="flex items-center gap-2">
-            <div className="h-2 flex-1 overflow-hidden rounded-full bg-white/5">
+            <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-white/5">
               <div
                 className="h-full rounded-full transition-all duration-700"
-                style={{ width: Math.min(100, Math.max(0, rp.maxed ? 100 : pct)) + '%', background: color }}
+                style={{ width: Math.min(100, Math.max(0, rp.maxed ? 100 : pct)) + '%', background: 'linear-gradient(90deg, #D4AF37, #F4D03F)' }}
               />
             </div>
             {!rp.maxed && (

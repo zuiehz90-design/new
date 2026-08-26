@@ -14,7 +14,6 @@ import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
 import { DailyVerse } from './DailyVerse';
 import { DashboardSuggestions } from './DashboardSuggestions';
-import { MoonIcon } from './icons';
 import { NameOfTheDay } from './NameOfTheDay';
 import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
@@ -75,8 +74,8 @@ export function DashboardView() {
     <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 animate-fade-in">
       <div className="mb-6 text-center">
         <div className="font-quran hidden text-4xl text-gold-400 sm:block">﷽</div>
-        <h1 className="mt-2 text-2xl font-bold">
-          {t('dashboard.title')} <MoonIcon className="inline h-5 w-5 text-gold-400" />
+        <h1 className="font-display mt-2 text-3xl font-bold text-gold-400">
+          {t('dashboard.title')}
         </h1>
         {/* Indicateur synchro desktop */}
         {isDesktop && desktopOnline !== null && (
@@ -135,14 +134,17 @@ export function DashboardView() {
         </section>
       )}
 
-      {/* Prochaine prière */}
-      <section className="card mb-4 border-gold-500/40 bg-gold-500/5 p-5 text-center shadow-glow">
+      {/* ZONE 1 — HERO : prochaine prière */}
+      <section
+        className="card relative mb-16 overflow-hidden border-gold-500/40 p-8 text-center"
+        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,175,55,0.12), transparent 70%), var(--bg-card)' }}
+      >
         {pt?.next ? (
           <>
-            <p className="text-xs uppercase tracking-widest text-gold-400">{t('prayer.next')}</p>
-            <p className="mt-1 text-2xl font-bold text-gold-300">{t(prayerLabel(pt.next.key))}</p>
+            <p className="text-[10px] uppercase tracking-[0.25em] text-gold-400">{t('prayer.next')}</p>
+            <p className="font-display mt-2 text-3xl font-bold text-gold-300">{t(prayerLabel(pt.next.key))}</p>
             {countdown && (
-              <p className="mt-3 text-2xl font-bold tracking-tight" style={{color:"var(--text-primary)"}}>
+              <p className="mt-4 text-4xl font-bold tracking-tight sm:text-5xl" style={{color:"var(--text-primary)"}}>
                 <CountdownText p={countdown} />
               </p>
             )}
@@ -160,26 +162,69 @@ export function DashboardView() {
         )}
       </section>
 
+      {/* Grille de raccourcis */}
+      <section className="mb-16 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { emoji: '📿', label: t('dashboard.suggest.learnNames'), to: '/names' },
+          { emoji: '📖', label: t('dashboard.suggest.readQuran'), to: '/quran' },
+          { emoji: '🧠', label: t('dashboard.suggest.quiz'), to: '/quiz' },
+          { emoji: '📿', label: t('dashboard.suggest.dhikr'), to: '/dhikr' },
+        ].map((c) => (
+          <Link key={c.to} to={c.to} className="card card-clickable flex flex-col items-center gap-2 p-4 text-center">
+            <span className="text-2xl">{c.emoji}</span>
+            <span className="text-xs font-semibold text-gold-300">{c.label}</span>
+          </Link>
+        ))}
+      </section>
+
       {/* Suggestions contextuelles (basées sur lheure et les prières) */}
       <DashboardSuggestions />
 
-      {/* Nom du jour */}
-      <NameOfTheDay />
+      {/* ZONE 2 — Citation du jour + Nom du jour côte à côte */}
+      <div className="mb-16 grid gap-4 md:grid-cols-2">
+        <DailyVerse />
+        <NameOfTheDay />
+      </div>
 
-      {/* Citation du jour */}
-      <DailyVerse />
-
-      {/* Horaires du jour */}
+      {/* ZONE 2 — Horaires : rangée horizontale compacte (scrollable sur mobile) */}
       {pt && (
-        <section className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-6">
-          {PRAYER_KEYS.map((key) => (
-            <div key={key} className={`card p-2 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
-              <p className="text-[10px] text-stone-400">{t(prayerLabel(key))}</p>
-              <p className="text-sm font-semibold">{pt.times?.[key]}</p>
-            </div>
-          ))}
+        <section className="mb-4">
+          <h2 className="font-display mb-2 text-lg font-bold text-gold-400">{t('prayer.schedule')}</h2>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {PRAYER_KEYS.map((key) => (
+              <div key={key} className={`card min-w-[76px] shrink-0 p-2.5 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
+                <p className="text-[10px] text-stone-400">{t(prayerLabel(key))}</p>
+                <p className="text-sm font-semibold">{pt.times?.[key]}</p>
+              </div>
+            ))}
+          </div>
         </section>
       )}
+
+      {/* ZONE 3 — Découvrir : grandes cartes cliquables */}
+      <section className="mb-16">
+        <h2 className="font-display mb-4 text-2xl font-bold text-gold-400">✨ {t('dashboard.discover')}</h2>
+        <div className="grid gap-4 sm:grid-cols-2">
+          {[
+            { emoji: 'الرّحمن', title: t('names99.title'), desc: t('names99.daily'), to: '/names', big: true },
+            { emoji: '📖', title: t('dashboard.suggest.readQuran'), desc: t('discover.quranDesc'), to: '/quran' },
+            { emoji: '📚', title: t('glossary.title'), desc: t('discover.glossaryDesc'), to: '/glossary' },
+            { emoji: '🕊️', title: t('discover.prophets'), desc: t('discover.prophetsDesc'), to: '/prophets' },
+          ].map((c) => (
+            <Link
+              key={c.to}
+              to={c.to}
+              className={`card card-clickable flex flex-col items-start gap-2 p-5 ${c.big ? 'sm:col-span-2 sm:flex-row sm:items-center sm:gap-5' : ''}`}
+            >
+              <span className={`font-quran shrink-0 ${c.big ? 'text-4xl text-gold-300' : 'text-3xl'}`}>{c.emoji}</span>
+              <span>
+                <span className="font-display block text-base font-bold text-gold-300">{c.title}</span>
+                <span className="mt-0.5 block text-xs text-stone-400">{c.desc}</span>
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Compte non connecté → CTA */}
       {!user && (
@@ -217,7 +262,12 @@ export function DashboardView() {
 
             {/* Check-in salat */}
           <section className="card mb-4 p-4">
-            <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-400">🕌 {t('dashboard.salatCheckin')}</h2>
+            <h2 className="font-display mb-3 flex items-center gap-2 text-lg font-bold text-gold-400">
+              🕌 {t('dashboard.salatCheckin')}
+              <span className="ml-auto text-xl tabular-nums" style={{ color: 'var(--accent-gold)' }}>
+                {prayers?.total ?? 0}/{prayers?.of ?? 5}
+              </span>
+            </h2>
 
             {/* Bannière de pause */}
             {isPaused && (

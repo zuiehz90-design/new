@@ -28,7 +28,7 @@ import { QuizView } from './components/QuizView';
 import { MiniPlayer } from './components/MiniPlayer';
 import { NotificationCenter } from './components/NotificationCenter';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AiSetupProvider } from './hooks/useAiSetup';
+import { AiSetupProvider, useAiSetup } from './hooks/useAiSetup';
 import { AudioPlayerProvider } from './context/AudioPlayerContext';
 import { ToastProvider } from './context/ToastContext';
 import { MoonIcon, PlusIcon, HomeIcon, ChatIcon, BookIcon, MosqueIcon, SwordsIcon, UserIcon, ProphetsIcon, NamesIcon, CalendarIcon, BookOpenIcon, BeadsIcon, QuizIcon, TrophyIcon, type IconProps } from './components/icons';
@@ -55,6 +55,7 @@ function ChatProvider({ children }: { children: React.ReactNode }) {
 function Shell() {
   const { user } = useAuth();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const aiSetup = useAiSetup();
   const navigate = useNavigate();
   const location = useLocation();
   const reading = useReadingPosition();
@@ -100,6 +101,13 @@ function Shell() {
   useQuestNotifications();
   useDailyNotifications();
 
+  // Topbar desktop : 4 onglets principaux
+  const topNav = [
+    { to: '/', label: 'Accueil', icon: 'home' },
+    { to: '/prayer', label: 'Prières', icon: 'prayer' },
+    { to: '/quran', label: 'Coran', icon: 'quran' },
+    { to: '/profile', label: 'Profil', icon: 'profile' },
+  ];
   // Navigation mobile : 5 principaux + bouton Plus
   const primaryNav = [
     { to: '/', label: 'Accueil', icon: 'home' },
@@ -118,7 +126,6 @@ function Shell() {
     { to: '/badges', label: 'Badges', icon: 'badges' },
     { to: '/profile', label: 'Profil', icon: 'profile' },
   ];
-  const navItems = [...primaryNav, ...secondaryNav];
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (path: string) => (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path));
@@ -147,13 +154,37 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
 
   return (
     <div className="flex h-dvh flex-col overflow-hidden" style={{ paddingBottom: kb, transition: 'padding-bottom 200ms ease' }}>
-      {/* ====== HEADER MOBILE ====== */}
-      <header className="nav-header sticky top-0 flex items-center justify-between px-4 py-2.5 lg:hidden shrink-0 z-20">
+      {/* ====== TOPBAR STICKY (toutes tailles) ====== */}
+      <header className="nav-header sticky top-0 z-20 flex items-center justify-between gap-3 px-4 py-2.5 shrink-0">
         <div className="flex items-center gap-2">
           <MoonIcon className="h-6 w-6" style={{ color: "var(--accent-gold)" }} />
           <span className="font-quran text-lg font-bold" style={{ color: "var(--accent-gold)" }}>Nour</span>
         </div>
+        {/* Onglets topbar (desktop) */}
+        <nav className="hidden items-center gap-1 md:flex">
+          {topNav.map((item) => (
+            <Link
+              key={item.to}
+              to={navTo(item.to)}
+              className={`nav-item px-3 py-2 ${isActive(item.to) ? "nav-item-active" : ""}`}
+            >
+              <NavIcon name={item.icon} className="h-4 w-4" />
+              {item.label}
+            </Link>
+          ))}
+        </nav>
         <div className="flex items-center gap-1">
+          <button
+            onClick={aiSetup.open}
+            aria-label="Configurer l'IA"
+            title="Configurer l'IA"
+            className="rounded-xl p-2 transition active:scale-90 hover:bg-white/5"
+            style={{ color: 'var(--accent-gold)' }}
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
+              <path d="M12 2l1.9 5.7L19.6 9l-5.7 1.9L12 16.6l-1.9-5.7L4.4 9l5.7-1.3L12 2zM19 15l.9 2.6L22.5 18.5l-2.6.9L19 22l-.9-2.6-2.6-.9 2.6-.9L19 15zM5 17l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7.7-2z" />
+            </svg>
+          </button>
           <NotificationCenter />
           <button
             onClick={() => setSettingsOpen(true)}
@@ -170,38 +201,6 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
       </header>
 
       <div className="flex flex-1 overflow-hidden">
-        {/* ====== SIDEBAR DESKTOP ====== */}
-        <aside className="nav-sidebar hidden w-72 shrink-0 flex-col p-4 lg:flex">
-          <div className="mb-6 flex items-center gap-3">
-            <MoonIcon className="h-9 w-9" style={{ color: "var(--accent-gold)" }} />
-            <div className="flex-1 min-w-0">
-              <h1 className="font-quran text-xl font-bold" style={{ color: "var(--accent-gold)" }}>Nour</h1>
-              <p className="text-xs" style={{ color: "var(--text-tertiary)" }}>Chat islamique</p>
-            </div>
-            <NotificationCenter />
-          </div>
-          <nav className="flex flex-col gap-1 text-sm">
-            {navItems.map((item) => (
-              <Link
-                key={item.to}
-                to={navTo(item.to)}
-                className={`nav-item ${isActive(item.to) ? "nav-item-active" : ""}`}
-              >
-                <NavIcon name={item.icon} className="h-5 w-5" />
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-          <div className="mt-auto space-y-1">
-            <button
-              onClick={() => setSettingsOpen(true)}
-              className="btn-ghost w-full justify-start text-xs"
-            >
-              ⚙️ Réglages
-            </button>
-          </div>
-        </aside>
-
         {/* ====== CONTENU PRINCIPAL ====== */}
         <main className="flex flex-1 flex-col overflow-hidden">
           <div ref={scrollRef} className="flex-1 overflow-y-auto overflow-x-hidden">

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
-import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
+import { VerseModal } from './VerseModal';
 import { findNameVerses, type NameVerseHit } from '../lib/nameQuran';
 
 interface Props {
@@ -17,6 +17,7 @@ interface Props {
 export function NameQuranLinks({ nameIndex, arabicName }: Props) {
   const { t } = useI18n();
   const [hits, setHits] = useState<NameVerseHit[] | null>(null);
+  const [open, setOpen] = useState<NameVerseHit | null>(null);
 
   useEffect(() => {
     let alive = true;
@@ -50,16 +51,27 @@ export function NameQuranLinks({ nameIndex, arabicName }: Props) {
               <span className="text-[10px] text-emerald-400">
                 {h.surahName} · {h.chapter}:{h.verse}
               </span>
-              <Link
-                to={`/quran?surah=${h.chapter}&verse=${h.verse}`}
+              <button
+                onClick={() => setOpen(h)}
                 className="btn-ghost px-2 py-1 text-[10px] border-gold-500/40 text-gold-300"
               >
                 📖 {t('names99.quranRead')}
-              </Link>
+              </button>
             </div>
           </div>
         ))}
       </div>
+
+      {open && (
+        <VerseModal
+          chapter={open.chapter}
+          verse={open.verse}
+          surahName={open.surahName}
+          arabic={open.arabic}
+          translated={open.translated}
+          onClose={() => setOpen(null)}
+        />
+      )}
     </div>
   );
 }
