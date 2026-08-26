@@ -106,36 +106,39 @@ export function DhikrCounterView() {
   const dashOffset = circumference - (progress / 100) * circumference;
 
   return (
-    <div className="mx-auto max-w-lg px-4 pb-8 pt-6 animate-fade-in">
+    <div className="mx-auto max-w-lg px-4 pb-8 pt-20 animate-fade-in">
       {/* Header */}
       <div className="mb-4 text-center">
-        <h2 className="text-2xl font-bold text-gold-400">{t('dhikr.title')}</h2>
-        <p className="mt-1 text-xs text-stone-400">{t('dhikr.subtitle')}</p>
+        <h2 className="font-display text-2xl font-bold text-[#D4AF37]">{t('dhikr.title')}</h2>
+        <p className="mt-1 text-xs text-[#A3B1AC]">{t('dhikr.subtitle')}</p>
       </div>
 
       {/* Stats */}
-      <div className="mb-4 flex justify-center gap-4 text-center">
-        <div className="card px-4 py-2">
-          <p className="text-lg font-bold text-gold-300">{stats.today}</p>
-          <p className="text-[10px] text-stone-400">{t('dhikr.todayCount')}</p>
+      <div className="mb-6 flex justify-center gap-5 text-center">
+        <div className="rounded-xl px-6 py-3" style={{ background: '#112925', border: '1px solid #2A4A43' }}>
+          <p className="text-xl font-bold text-[#D4AF37]">{stats.today}</p>
+          <p className="text-[11px] text-[#A3B1AC]">{t('dhikr.todayCount')}</p>
         </div>
-        <div className="card px-4 py-2">
-          <p className="text-lg font-bold text-emerald-300">{stats.total}</p>
-          <p className="text-[10px] text-stone-400">{t('dhikr.totalCount')}</p>
+        <div className="rounded-xl px-6 py-3" style={{ background: '#112925', border: '1px solid #2A4A43' }}>
+          <p className="text-xl font-bold text-[#D4AF37]">{stats.total}</p>
+          <p className="text-[11px] text-[#A3B1AC]">{t('dhikr.totalCount')}</p>
         </div>
       </div>
 
       {/* Dhikr selector */}
       <button
         onClick={() => setShowList(!showList)}
-        className="card w-full p-3 mb-4 text-left transition hover:border-gold-500/40 flex items-center gap-3"
+        className="mb-4 flex w-full items-center gap-3 rounded-xl p-4 text-left transition hover:shadow-[0_0_16px_rgba(212,175,55,0.25)]"
+        style={{ background: '#112925', border: '1px solid #D4AF37' }}
       >
         <div className="flex-1 min-w-0">
-          <p className="font-quran text-xl text-gold-300 truncate" dir="rtl">{selected.arabic}</p>
-          <p className="text-sm font-semibold text-stone-200">{selected.transliteration}</p>
-          <p className="text-[11px] text-stone-400">{selected.translation}</p>
+          <p className="font-quran text-2xl text-[#D4AF37] truncate" dir="rtl">{selected.arabic}</p>
+          <p className="text-sm font-bold text-white">{selected.transliteration}</p>
+          <p className="text-[11px] text-[#A3B1AC]">{selected.translation}</p>
         </div>
-        <span className="text-xs text-stone-500 shrink-0">▼</span>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0" style={{ color: '#D4AF37' }}>
+          <polyline points="6 9 12 15 18 9" />
+        </svg>
       </button>
 
       {/* List when open */}
@@ -143,19 +146,19 @@ export function DhikrCounterView() {
         <div className="card mb-4 max-h-60 overflow-y-auto p-2 space-y-1">
           {Object.entries(grouped).map(([cat, items]) => (
             <div key={cat}>
-              <p className="text-[10px] font-semibold text-stone-500 px-2 py-1">{cat}</p>
+              <p className="px-2 py-1 text-[10px] font-semibold text-[#A3B1AC]">{cat}</p>
               {items.map((d) => (
                 <button
                   key={d.id}
                   onClick={() => { setSelected(d); setShowList(false); }}
-                  className={`w-full rounded-lg p-2 text-left transition ${d.id === selected.id ? 'bg-gold-500/15 border border-gold-500/30' : 'hover:bg-stone-800/50'}`}
+                  className={`w-full rounded-lg p-2 text-left transition ${d.id === selected.id ? 'border border-[#D4AF37]/40 bg-[#D4AF37]/10' : 'hover:bg-stone-800/50'}`}
                 >
                   <div className="flex items-center gap-2">
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-stone-200">{d.transliteration}</p>
-                      <p className="font-quran text-base text-gold-300" dir="rtl">{d.arabic}</p>
+                      <p className="text-sm font-medium text-white">{d.transliteration}</p>
+                      <p className="font-quran text-base text-[#D4AF37]" dir="rtl">{d.arabic}</p>
                     </div>
-                    <span className="chip !text-[10px] shrink-0">{d.count}×</span>
+                    <span className="shrink-0 rounded-full border border-[#2A4A43] bg-[#112925] px-2 py-0.5 text-[10px] text-[#F4D03F]">{d.count}×</span>
                   </div>
                 </button>
               ))}
@@ -165,9 +168,14 @@ export function DhikrCounterView() {
       )}
 
       {/* Merit */}
-      <div className="card mb-4 p-3 border-emerald-500/20">
-        <p className="text-[11px] text-stone-300">⭐ {selected.merit}</p>
-        <p className="text-[10px] text-stone-500 mt-0.5">📖 {selected.source}</p>
+      <div className="card mb-4 p-3" style={{ borderColor: 'rgba(212,175,55,0.35)' }}>
+        <p className="text-[11px] text-white">⭐ {selected.merit}</p>
+        <p className="mt-0.5 flex items-center gap-1 text-[10px] text-[#A3B1AC]">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3 w-3" style={{ color: '#D4AF37' }}>
+            <path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" /><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" />
+          </svg>
+          {selected.source}
+        </p>
       </div>
 
       {/* Counter circle */}
@@ -175,22 +183,28 @@ export function DhikrCounterView() {
         <div
           ref={tapRef}
           onClick={handleTap}
-          className="relative cursor-pointer select-none"
-          style={{ width: 280, height: 280, touchAction: 'manipulation' }}
+          className={`relative cursor-pointer select-none ${pulse ? 'scale-[1.02]' : 'scale-100'}`}
+          style={{ width: 280, height: 280, touchAction: 'manipulation', transition: 'transform 0.12s ease' }}
         >
           <svg className="absolute inset-0 -rotate-90" width="280" height="280">
             {/* Background circle */}
             <circle
               cx="140" cy="140" r={radius}
               fill="none"
-              stroke="rgba(120, 113, 108, 0.2)"
+              stroke="#2A4A43"
               strokeWidth="12"
             />
             {/* Progress circle */}
+            <defs>
+              <linearGradient id="dhikrGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#D4AF37" />
+                <stop offset="100%" stopColor="#F4D03F" />
+              </linearGradient>
+            </defs>
             <circle
               cx="140" cy="140" r={radius}
               fill="none"
-              stroke={isComplete ? '#10b981' : '#cfa14a'}
+              stroke={isComplete ? 'url(#dhikrGrad)' : 'url(#dhikrGrad)'}
               strokeWidth="12"
               strokeLinecap="round"
               strokeDasharray={circumference}
@@ -199,19 +213,17 @@ export function DhikrCounterView() {
             />
           </svg>
           {/* Center content */}
-          <div className={`absolute inset-0 flex flex-col items-center justify-center ${pulse ? 'scale-95' : 'scale-100'}`}
-            style={{ transition: 'transform 0.1s ease' }}>
+          <div className="absolute inset-0 flex flex-col items-center justify-center">
             {isComplete ? (
               <>
-                <span className="text-4xl mb-1">✅</span>
-                <p className="text-sm font-bold text-emerald-400">{t('dhikr.complete')}</p>
-                <p className="text-[11px] text-stone-400">{selected.transliteration} ×{count}</p>
+                <span className="mb-1 text-4xl">✅</span>
+                <p className="font-display text-sm font-bold text-[#D4AF37]">{t('dhikr.complete')}</p>
+                <p className="text-[11px] text-[#A3B1AC]">{selected.transliteration} ×{count}</p>
               </>
             ) : (
               <>
-                <span className="text-5xl font-bold text-gold-300">{count}</span>
-                <span className="text-sm text-stone-500">/ {target}</span>
-                <span className="mt-1 text-[10px] text-stone-600">{t('dhikr.tapHint')}</span>
+                <span className="font-display text-7xl font-bold text-[#F4D03F]">{count}</span>
+                <span className="mt-1 font-display text-sm font-semibold text-[#D4AF37]">/ {target}</span>
               </>
             )}
           </div>
@@ -224,12 +236,12 @@ export function DhikrCounterView() {
           <>
             <button
               onClick={() => setCount(0)}
-              className="chip text-xs"
+              className="flex items-center gap-1 rounded-full border border-[#2A4A43] bg-[#112925] px-3 py-1.5 text-xs text-[#A3B1AC] transition hover:border-[#D4AF37]"
             >
               ↺ {t('dhikr.reset')}
             </button>
-            <div className="flex items-center gap-1 chip text-xs">
-              <span className="text-stone-400">Objectif :</span>
+            <div className="flex items-center gap-1 rounded-full border border-[#2A4A43] bg-[#112925] px-3 py-1.5 text-xs text-[#A3B1AC]">
+              <span>Objectif :</span>
               {editingTarget ? (
                 <input
                   type="number"
@@ -237,7 +249,7 @@ export function DhikrCounterView() {
                   min={1}
                   max={10000}
                   autoFocus
-                  className="w-16 bg-transparent border-b border-gold-500 text-gold-300 text-xs text-center outline-none"
+                  className="w-16 bg-transparent border-b border-[#D4AF37] text-center text-xs text-[#F4D03F] outline-none"
                   onChange={(e) => {
                     const v = parseInt(e.target.value, 10);
                     if (v > 0) setTarget(v);
@@ -250,7 +262,7 @@ export function DhikrCounterView() {
               ) : (
                 <button
                   onClick={() => setEditingTarget(true)}
-                  className="font-bold text-gold-300 underline underline-offset-2 decoration-gold-500/40"
+                  className="font-bold text-[#F4D03F] underline underline-offset-2 decoration-[#D4AF37]/40"
                 >
                   {target}
                 </button>
@@ -258,7 +270,7 @@ export function DhikrCounterView() {
             </div>
             <button
               onClick={() => setTarget((tg) => tg + selected.count)}
-              className="chip text-xs"
+              className="rounded-full border border-[#2A4A43] bg-[#112925] px-3 py-1.5 text-xs text-[#F4D03F] transition hover:border-[#D4AF37]"
             >
               +{selected.count}
             </button>
@@ -267,7 +279,8 @@ export function DhikrCounterView() {
         {isComplete && (
           <button
             onClick={() => { setCount(0); setTarget(selected.count); }}
-            className="btn-gold text-xs"
+            className="flex items-center gap-1 rounded-xl px-4 py-2 text-xs font-bold transition hover:shadow-[0_0_16px_rgba(212,175,55,0.3)]"
+            style={{ background: '#D4AF37', color: '#1a1a1a' }}
           >
             🔄 {t('dhikr.again')}  <span className="text-[9px] opacity-60 ml-1">ou ␣</span>
           </button>
@@ -275,7 +288,7 @@ export function DhikrCounterView() {
       </div>
 
       {/* Keyboard hint */}
-      <p className="mt-3 text-center text-[10px] text-stone-600">
+      <p className="mt-3 text-center text-[10px] text-[#A3B1AC]">
         ␣ Espace = compter · {isComplete ? 'Espace = recommencer' : 'Maintiens pour rapide'}
       </p>
     </div>
