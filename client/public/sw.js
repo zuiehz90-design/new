@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'nour-shell-v6';
+const CACHE_VERSION = 'nour-shell-v7';
 const QURAN_CACHE = 'nour-quran-v1';
 const QURAN_PREFIX = 'https://cdn.jsdelivr.net/gh/fawazahmed0/quran-api';
 
