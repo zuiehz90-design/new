@@ -95,6 +95,8 @@ html.focus-mode .animate-fade-in { animation-duration: 0.4s; }
   .nav-item { @apply flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition; color: var(--text-secondary); }
   .nav-item:hover { background: var(--nav-hover); color: var(--accent-gold); }
   .nav-item-active { background: var(--nav-active); color: var(--accent-gold); font-weight: 600; }
+  .nav-header .nav-item:not(.nav-item-active) { color: #c6d2ca; }
+  html.light .nav-header .nav-item:not(.nav-item-active) { color: #46564e; }
 }
 button:not(:disabled):active, a:active, .card-clickable:active { opacity: 0.7; transform: scale(0.98); }
 

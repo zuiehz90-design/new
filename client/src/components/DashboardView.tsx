@@ -68,7 +68,9 @@ export function DashboardView() {
   }, [pt, prayers, now]);
 
   return (
-    <div className="mx-auto max-w-3xl px-4 pb-10 pt-6 animate-fade-in">
+    <>
+    <div className="px-4 pt-6 animate-fade-in">
+      <div className="mx-auto w-full max-w-7xl">
       <div className="mb-6 text-center">
         <div className="font-quran hidden text-4xl text-gold-400 sm:block">﷽</div>
         <h1 className="font-display mt-2 text-3xl font-bold text-gold-400">
@@ -113,8 +115,8 @@ export function DashboardView() {
 
       {/* ZONE 1 — HERO : prochaine prière */}
       <section
-        className="card relative mb-16 overflow-hidden border-gold-500/40 p-8 text-center"
-        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(212,175,55,0.12), transparent 70%), var(--bg-card)' }}
+        className="card relative mb-10 w-full overflow-hidden border-gold-500/40 p-8 text-center"
+        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(212,175,55,0.16), transparent 70%), var(--bg-card)' }}
       >
         {pt?.next ? (
           <>
@@ -138,7 +140,10 @@ export function DashboardView() {
           </div>
         )}
       </section>
+      </div>
+    </div>
 
+    <div className="mx-auto max-w-3xl px-4 pb-10">
       {/* Suivi spirituel (connecté) */}
       {!authLoading && user && (
         <>
@@ -207,11 +212,11 @@ export function DashboardView() {
       {pt && (
         <section className="mb-4">
           <h2 className="font-display mb-2 text-lg font-bold text-gold-400">{t('prayer.schedule')}</h2>
-          <div className="flex gap-2 overflow-x-auto pb-1">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
             {PRAYER_KEYS.map((key) => (
-              <div key={key} className={`card min-w-[76px] shrink-0 p-2.5 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
+              <div key={key} className={`card p-3 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
                 <p className="text-[10px] text-stone-400">{t(prayerLabel(key))}</p>
-                <p className="text-sm font-semibold">{pt.times?.[key]}</p>
+                <p className="text-sm font-bold tabular-nums">{pt.times?.[key]}</p>
               </div>
             ))}
           </div>
@@ -251,6 +256,7 @@ export function DashboardView() {
         </section>
       )}
 
-          </div>
+      </div>
+    </>
   );
 }

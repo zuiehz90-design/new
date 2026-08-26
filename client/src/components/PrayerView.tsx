@@ -161,11 +161,11 @@ export function PrayerView() {
               </p>
             </div>
           )}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-2 lg:grid-cols-3">
             {(['fajr', 'sunrise', 'dhuhr', 'asr', 'maghrib', 'isha'] as const).map((k) => (
               <div key={k} className="card p-3 text-center">
                 <p className="text-xs text-stone-400">{t(PRAYER_LABELS[k])}</p>
-                <p className="text-lg font-semibold">{(times as Record<string, string>)[k]}</p>
+                <p className="text-lg font-bold tabular-nums">{(times as Record<string, string>)[k]}</p>
               </div>
             ))}
           </div>
@@ -189,7 +189,7 @@ export function PrayerView() {
               </div>
               <button
                 onClick={() => setShowSearch(true)}
-                className="shrink-0 rounded-lg border border-stone-700/50 px-2.5 py-1.5 text-[10px] text-stone-400 transition hover:border-gold-500/40 hover:text-gold-300"
+                className="shrink-0 rounded-lg border border-gold-500/50 px-2.5 py-1.5 text-[10px] text-stone-300 transition hover:border-gold-400 hover:text-gold-300"
               >
                 {t('prayer.changeMosque')}
               </button>

@@ -39,14 +39,14 @@ export function PrayerCircles({
 
         const stateKey = done ? 'done' : isMissed ? 'missed' : blocked ? 'blocked' : 'pending';
 
-        let circle = 'border border-[#2A4A43] bg-[#081b16] text-stone-500 shadow-inner';
+        let circle = 'border border-[#2A4A43] bg-[#112925] text-stone-500';
         if (done) {
           const isFresh = justToggled === key;
-          circle = 'border border-emerald-300/60 text-white shadow-[0_0_22px_-8px_rgba(31,110,92,0.9)]';
+          circle = 'border border-emerald-300/60 text-white shadow-[0_0_14px_-2px_rgba(46,157,130,0.7),0_0_38px_-6px_rgba(31,110,92,0.6)]';
           if (isFresh) circle += ' animate-pop prayer-pulse';
         }
         else if (isMissed) circle = 'border-2 border-red-400/70 bg-red-500/15 text-red-300';
-        else if (blocked) circle = 'border-2 border-dashed border-stone-700/60 text-stone-600 opacity-60';
+        else if (blocked) circle = 'border border-[#2A4A43] bg-[#112925] text-stone-500';
 
         let label = 'text-stone-400';
         if (done) label = 'text-emerald-300 font-semibold';
