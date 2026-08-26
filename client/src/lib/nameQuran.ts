@@ -54,8 +54,6 @@ export interface NameVerseHit {
   arabic: string;
   translated: string;
   surahName: string;
-  /** Comment le verset a été trouvé : nom complet, tige, racine ou repli. */
-  matchedBy: 'name' | 'stem' | 'root' | 'fallback';
 }
 
 /**
@@ -87,24 +85,20 @@ export async function findNameVerses(
 
   // 1-2. Nom complet puis tige (sans ال).
   let pattern: string | null = null;
-  let matchedBy: NameVerseHit['matchedBy'] = 'name';
   if (arNorm.some((x) => x.text.includes(full))) {
     pattern = full;
   } else if (stem !== full && arNorm.some((x) => x.text.includes(stem))) {
     pattern = stem;
-    matchedBy = 'stem';
   }
   // 3. Racine trilitère.
   if (!pattern && root.length >= 2 && arNorm.some((x) => x.text.includes(root))) {
     pattern = root;
-    matchedBy = 'root';
   }
   // 4. Repli manuel.
   if (!pattern) {
     for (const f of fallbacks) {
       if (arNorm.some((x) => x.text.includes(f))) {
         pattern = f;
-        matchedBy = 'fallback';
         break;
       }
     }
@@ -121,7 +115,6 @@ export async function findNameVerses(
       arabic: v.text,
       translated: tr?.text ?? '',
       surahName: getSurahMeta(v.chapter)?.name ?? String(v.chapter),
-      matchedBy,
     });
     if (hits.length >= limit) break;
   }
