@@ -1,5 +1,4 @@
-import { EDITIONS, fetchEdition, getSurahMeta, normalizeArabic } from './quran';
-import type { Verse } from './types';
+import { EDITIONS, fetchEdition, getSurahMeta } from './quran';
 
 /**
  * Normalisation du texte coranique (édition ara-quranacademy).
@@ -129,6 +128,3 @@ export async function findNameVerses(
   return hits;
 }
 
-/** Réexporte la normalisation de base (pour compatibilité). */
-export { normalizeArabic };
-export type { Verse };

@@ -29,7 +29,6 @@ export interface NameSrsState {
 /** État complet, indexé par position dans NAMES_99. */
 export type NamesSrsStore = Record<number, NameSrsState>;
 
-export const SRS_VERSION = 1;
 export const MASTERED_LEVEL = 6;
 
 const INTERVAL_DAYS: Record<number, number> = {
@@ -53,10 +52,6 @@ export function isDue(state: NameSrsState | undefined, now: number = Date.now())
   if (!state) return true;
   if (isMastered(state)) return false;
   return state.dueAt <= now;
-}
-
-export function emptyStore(): NamesSrsStore {
-  return {};
 }
 
 /**

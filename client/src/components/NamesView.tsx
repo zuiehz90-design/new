@@ -9,6 +9,8 @@ import { NameQuranLinks } from './NameQuranLinks';
 import {
   applyRating,
   dueNameIndexes,
+  isDue as isDueSrs,
+  isMastered as isMasteredSrs,
   masteredCount,
   nextReviewLabel,
   seenCount,
@@ -240,8 +242,8 @@ export function NamesView() {
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
           {NAMES_99.map((n, i) => {
             const s = store[i];
-            const isMastered = s && s.level >= 6;
-            const isDue = !isMastered && (s === undefined || s.dueAt <= Date.now());
+            const isMastered = isMasteredSrs(s);
+            const isDue = isDueSrs(s);
             const isLearning = s && s.reviews > 0 && !isMastered;
             return (
               <div key={i} className={`card p-3 text-center transition-all relative ${isMastered ? 'border-emerald-500/40 bg-emerald-500/5' : isDue ? 'border-amber-500/40' : 'hover:border-gold-500/50'}`}>
