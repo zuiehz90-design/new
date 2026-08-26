@@ -28,7 +28,7 @@ function createWindow() {
     minWidth: 420,
     minHeight: 600,
     title: 'Nour — Chat islamique avec IA',
-    icon: path.join(__dirname, '..', 'client', 'public', 'icon.svg'),
+    icon: path.join(__dirname, '..', 'client', 'dist', 'icon.svg'),
     webPreferences: {
       preload: path.join(__dirname, 'preload.cjs'),
       contextIsolation: true,
@@ -205,7 +205,7 @@ ipcMain.handle('show-notification', (_, opts) => {
   const notif = new Notification({
     title: opts.title || 'Nour',
     body: opts.body || '',
-    icon: path.join(__dirname, '..', 'client', 'public', 'icon.svg'),
+    icon: path.join(__dirname, '..', 'client', 'dist', 'icon.svg'),
     silent: false,
   });
   if (opts.clickUrl && mainWindow) {
