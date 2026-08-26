@@ -161,7 +161,6 @@ export const fr: Record<string, string> = {
   'settings.reciter': 'Récitateur audio',
   'settings.translation': 'Langue de traduction du Coran',
   'settings.close': 'Fermer',
-  'settings.configureAi': 'Configurer l\'IA',
   'settings.popupTitle': 'Ce que fait ce réglage',
   'settings.popupCancel': 'Annuler',
   'settings.popupEnable': 'Activer',

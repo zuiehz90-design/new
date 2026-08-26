@@ -128,7 +128,6 @@ export const ar: Record<string, string> = {
   'settings.title': 'الإعدادات',
   'settings.focusMode': 'وضع التركيز',
   'settings.focusModeHint': 'يُخفي الإشعارات ويُهدّئ الخلفية أثناء القراءة.',
-  'settings.configureAi': 'إعداد الذكاء الاصطناعي',
   'settings.popupTitle': 'ماذا يفعل هذا الإعداد',
   'settings.popupCancel': 'إلغاء',
   'settings.popupEnable': 'تفعيل',
