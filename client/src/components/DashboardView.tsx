@@ -70,7 +70,7 @@ export function DashboardView() {
   return (
     <>
     <div className="px-4 pt-6 animate-fade-in">
-      <div className="mx-auto w-full max-w-7xl">
+      <div className="mx-auto w-full max-w-3xl">
       <div className="mb-6 text-center">
         <div className="font-quran hidden text-4xl text-gold-400 sm:block">﷽</div>
         <h1 className="font-display mt-2 text-3xl font-bold text-gold-400">
@@ -115,7 +115,7 @@ export function DashboardView() {
 
       {/* ZONE 1 — HERO : prochaine prière */}
       <section
-        className="card relative mb-10 w-full overflow-hidden border-gold-500/40 p-8 text-center"
+        className="card relative mb-10 mx-auto w-full max-w-md overflow-hidden border-gold-500/40 p-6 text-center"
         style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 50%, rgba(212,175,55,0.16), transparent 70%), var(--bg-card)' }}
       >
         {pt?.next ? (
