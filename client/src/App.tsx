@@ -101,7 +101,6 @@ function Shell() {
   useQuestNotifications();
   useDailyNotifications();
 
-  // Topbar desktop : 4 onglets principaux
   const topNav = [
     { to: '/', label: 'Accueil', icon: 'home' },
     { to: '/prayer', label: 'Prières', icon: 'prayer' },
@@ -160,7 +159,6 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
           <MoonIcon className="h-6 w-6" style={{ color: "var(--accent-gold)" }} />
           <span className="font-quran text-lg font-bold" style={{ color: "var(--accent-gold)" }}>Nour</span>
         </div>
-        {/* Onglets topbar (desktop) */}
         <nav className="hidden items-center gap-1 md:flex">
           {topNav.map((item) => (
             <Link

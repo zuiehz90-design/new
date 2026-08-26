@@ -165,7 +165,7 @@ export function DashboardView() {
       {/* Grille de raccourcis */}
       <section className="mb-16 grid grid-cols-2 gap-3 sm:grid-cols-4">
         {[
-          { emoji: '📿', label: t('dashboard.suggest.learnNames'), to: '/names' },
+          { emoji: '✨', label: t('dashboard.suggest.learnNames'), to: '/names' },
           { emoji: '📖', label: t('dashboard.suggest.readQuran'), to: '/quran' },
           { emoji: '🧠', label: t('dashboard.suggest.quiz'), to: '/quiz' },
           { emoji: '📿', label: t('dashboard.suggest.dhikr'), to: '/dhikr' },

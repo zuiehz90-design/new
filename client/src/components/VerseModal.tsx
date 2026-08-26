@@ -10,10 +10,6 @@ interface VerseModalProps {
   onClose: () => void;
 }
 
-/**
- * Modale superposée affichant un verset sans quitter la page courante.
- * « Lire dans le Coran » ouvre le lecteur en plein écran seulement si demandé.
- */
 export function VerseModal({ chapter, verse, surahName, arabic, translated, onClose }: VerseModalProps) {
   const { t } = useI18n();
   return (
