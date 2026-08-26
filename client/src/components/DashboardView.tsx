@@ -15,6 +15,8 @@ import { DailyVerse } from './DailyVerse';
 import { DashboardSuggestions } from './DashboardSuggestions';
 import { NameOfTheDay } from './NameOfTheDay';
 import { ExpandableTile } from './ExpandableTile';
+import { EventCountdown } from './EventCountdown';
+import { DhulHijjahCard } from './DhulHijjahCard';
 import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
 const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
@@ -236,6 +238,10 @@ export function DashboardView() {
           </Link>
         ))}
       </section>
+      {/* Compte à rebours + 10 jours de Dhoul-Hijja (saisonniers) */}
+      <DhulHijjahCard />
+      <EventCountdown />
+
       {/* Citation du jour + Nom du jour : tuiles compactes dépliables */}
       <div className="mb-16 grid gap-3 md:grid-cols-2">
         <ExpandableTile emoji="✨" title={t('dailyVerse.title')}>

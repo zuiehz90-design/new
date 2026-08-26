@@ -1,4 +1,7 @@
 import { useState, useMemo } from 'react';
+import { EventQuizModal } from './EventQuizModal';
+import { getEventExplanation } from '../lib/eventExplanations';
+import { getEventQuiz, type EventQuizQuestion } from '../lib/eventQuizzes';
 import { useI18n } from '../i18n';
 import {
   gregorianToHijri,
@@ -19,6 +22,45 @@ const EVENT_COLORS: Record<IslamicEvent['type'], string> = {
   recommended: '!border-emerald-500/50 !bg-emerald-500/10',
   historical: '!border-sky-500/40 !bg-sky-500/10',
 };
+
+/** Bloc explicatif (histoire/signification/pratiques) + bouton quiz, style charte or. */
+function EventActions({ e }: { e: IslamicEvent }) {
+  const { t, lang } = useI18n();
+  const [open, setOpen] = useState(false);
+  const [quiz, setQuiz] = useState<EventQuizQuestion[] | null>(null);
+  const details = getEventExplanation(e.month, e.day);
+  const q = getEventQuiz(e.month, e.day);
+  if (!details && !q) return null;
+  return (
+    <>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        {details && (
+          <button onClick={() => setOpen(!open)} className="chip !border-gold-500/40 !text-gold-300 text-[10px] transition hover:!border-gold-400 hover:!bg-gold-500/10">
+            {open ? '▴ ' : '▾ '}{t('hijri.details')}
+          </button>
+        )}
+        {q && (
+          <button onClick={() => setQuiz(q)} className="chip !border-gold-500/40 !text-gold-300 text-[10px] transition hover:!border-gold-400 hover:!bg-gold-500/10">
+            🧠 {t('hijri.quiz.button')}
+          </button>
+        )}
+      </div>
+      {open && details && (
+        <div className="mt-2 space-y-1.5 rounded-lg border border-gold-500/30 bg-[#112925] p-2.5">
+          <p className="text-[11px] font-bold text-gold-400">{t('hijri.sectionHistory')}</p>
+          <p className="text-[11px] leading-relaxed text-[#A3B1AC]">{details.history}</p>
+          <p className="text-[11px] font-bold text-gold-400">{t('hijri.sectionMeaning')}</p>
+          <p className="text-[11px] leading-relaxed text-[#A3B1AC]">{details.meaning}</p>
+          <p className="text-[11px] font-bold text-gold-400">{t('hijri.sectionPractices')}</p>
+          <ul className="list-disc pl-4 text-[11px] leading-relaxed text-[#A3B1AC]">
+            {details.practices.map((pr, i) => <li key={i}>{pr}</li>)}
+          </ul>
+        </div>
+      )}
+      {quiz && <EventQuizModal eventName={lang === 'ar' ? e.nameAr : e.name} questions={quiz} onClose={() => setQuiz(null)} />}
+    </>
+  );
+}
 
 export function HijriCalendarView() {
   const { t, lang } = useI18n();
@@ -122,6 +164,7 @@ export function HijriCalendarView() {
                       <p className="text-xs text-stone-300 mt-0.5" dir="rtl">{e.nameAr}</p>
                     )}
                     <p className="mt-1 text-xs text-stone-400">{e.description}</p>
+                    <EventActions e={e} />
                     <p className="mt-1 text-[11px] text-stone-500">
                       {e.hijriDate.day} {lang === 'ar' ? e.hijriDate.monthNameAr : e.hijriDate.monthName} {e.hijriDate.year} {lang === 'ar' ? 'هـ' : 'AH'}
                       {' · '}
@@ -214,6 +257,7 @@ export function HijriCalendarView() {
                           {lang === 'ar' ? e.nameAr : e.name}
                         </p>
                         <p className="text-[11px] text-stone-400">{e.description}</p>
+                        <EventActions e={e} />
                         <p className="text-[10px] text-stone-500 mt-0.5">
                           {day.hijriDay} {lang === 'ar' ? HIJRI_MONTHS[viewMonth - 1].ar : HIJRI_MONTHS[viewMonth - 1].fr}
                           {' · '}

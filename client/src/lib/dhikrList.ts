@@ -156,6 +156,16 @@ export const DHIKR_LIST: DhikrItem[] = [
     category: 'morning',
   },
   {
+    id: 'takbir-dhulhijja',
+    arabic: 'اللَّهُ أَكْبَرُ، اللَّهُ أَكْبَرُ، لَا إِلَهَ إِلَّا اللَّهُ، وَاللَّهُ أَكْبَرُ، اللَّهُ أَكْبَرُ، وَلِلَّهِ الْحَمْدُ',
+    transliteration: 'Takbir de Dhoul-Hijja',
+    translation: 'Allah est le plus Grand, Allah est le plus Grand, il n\'y a de divinité qu\'Allah, et à Allah la louange',
+    count: 33,
+    merit: 'À multiplier abondamment pendant les 10 jours de Dhoul-Hijja et les jours de Tashriq.',
+    source: 'Bukhari & Muslim',
+    category: 'general',
+  },
+  {
     id: 'last-three-surahs',
     arabic: 'سُورَةُ الْإِخْلَاصِ، الْفَلَقِ، النَّاسِ',
     transliteration: 'Al-Ikhlas, Al-Falaq, An-Nas',
