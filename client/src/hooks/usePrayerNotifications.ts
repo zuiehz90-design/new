@@ -6,8 +6,8 @@ import { PRAYER_KEYS } from '../lib/prayer';
 
 function parseTime(timeStr: string | undefined): Date | null {
   if (!timeStr) return null;
-  const clean = timeStr.replace(/s*([^)]*)/, '').trim();
-  const match = clean.match(/(d{1,2}):(d{2})/);
+  const clean = timeStr.replace(/\s*\([^)]\)/, '').trim();
+  const match = clean.match(/(\d{1,2}):(\d{2})/);
   if (!match) return null;
   const d = new Date();
   d.setHours(Number(match[1]), Number(match[2]), 0, 0);
