@@ -21,7 +21,7 @@
   --nav-border: rgba(6, 78, 60, 0.35);
   --nav-hover: rgba(6, 78, 60, 0.30);
   --nav-active: rgba(6, 78, 60, 0.35);
-  --input-bg: rgba(6, 32, 26, 0.80);
+  --input-bg: #112925;
   --scrollbar-thumb: rgba(6, 78, 60, 0.70);
 }
 html.light {
@@ -87,9 +87,10 @@ html.focus-mode .animate-fade-in { animation-duration: 0.4s; }
   .chip { @apply rounded-full px-3 py-1.5 text-xs transition; border: 1px solid var(--border-default); background: var(--bg-elevated); color: var(--text-secondary); }
   .chip:hover { border-color: var(--accent-gold); color: var(--accent-gold); }
   .input { @apply w-full rounded-xl px-4 py-2.5 text-sm outline-none transition; border: 1px solid var(--border-default); background: var(--input-bg); color: var(--text-primary); }
-  .input::placeholder { color: var(--text-tertiary); }
-  .input:focus { border-color: var(--accent-primary); box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15); }
-  html.light .input:focus { box-shadow: 0 0 0 3px rgba(4, 120, 87, 0.10); }
+  .input::placeholder { color: #A3B1AC; }
+html.light .input::placeholder { color: var(--text-tertiary); }
+  .input:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15); }
+  html.light .input:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(146, 116, 43, 0.15); }
   /* Champ de recherche du Coran : fond #112925, bordure #2A4A43, or au focus */
   .quran-search { background: #112925; border: 1px solid #2A4A43; }
   .quran-search:focus { border-color: var(--accent-gold); box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.15); }
@@ -126,12 +127,17 @@ button:not(:disabled):active, a:active, .card-clickable:active { opacity: 0.7; t
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 9999px; }
 
-.md { @apply text-[15px] leading-relaxed; color: var(--text-primary); }
+.md { @apply text-[15px] leading-relaxed; color: #f0ede6; }
 .md h3 { @apply mt-4 mb-1.5 text-base font-bold; color: var(--accent-gold); }
+.md strong { font-family: 'Playfair Display', 'Georgia', serif; color: var(--accent-gold); font-weight: 700; }
+.md em { color: #A3B1AC; }
+html.light .md strong { color: #b8963a; }
+html.light .md em { color: #5a6b5a; }
 .md p { @apply my-2; }
 .md ul { @apply my-2 list-disc space-y-1 pl-5; }
 .md ol { @apply my-2 list-decimal space-y-1 pl-5; }
-.md blockquote { @apply my-2 border-l-2 pl-3 italic; border-color: var(--accent-primary); color: var(--text-secondary); }
+.md blockquote { @apply my-2 border-l-2 pl-3 italic; border-color: rgba(212, 175, 55, 0.5); color: #A3B1AC; }
+html.light .md blockquote { color: #5a6b5a; }
 .md hr { @apply my-3; border-color: var(--border-subtle); }
 .md a.quran-ref { @apply font-semibold underline underline-offset-2; color: var(--accent-gold); text-decoration-color: rgba(207, 161, 74, 0.40); }
 .md a:not(.quran-ref) { @apply font-medium underline underline-offset-2; color: var(--accent-gold); text-decoration-color: rgba(207, 161, 74, 0.40); }

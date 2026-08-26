@@ -121,10 +121,12 @@ export function ChatView() {
           </button>
           <button
             onClick={() => { chat.newChat(); setListOpen(false); }}
-            className="chip hover:!border-emerald-500/50 hover:!text-emerald-300 hidden sm:inline-flex"
+            className="hidden items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:shadow-[0_0_12px_rgba(212,175,55,0.25)] sm:inline-flex"
+            style={{ background: '#112925', borderColor: '#D4AF37', color: '#F4D03F' }}
             title={t('chat.newChat')}
           >
-            ➕ {t('chat.newChat')}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14" /></svg>
+            {t('chat.newChat')}
           </button>
         </div>
         {messages.length > 0 && (
@@ -134,10 +136,12 @@ export function ChatView() {
                 chat.deleteChat(chat.activeId!);
               }
             }}
-            className="chip hover:!border-red-500/50 hover:!text-red-300"
+            className="rounded-full border bg-transparent px-3 py-1.5 text-xs font-semibold transition hover:bg-red-900/20"
+            style={{ borderColor: '#8B0000', color: '#FF6B6B' }}
             title={t('chat.deleteChat')}
           >
-            🗑️ {t('chat.deleteChat')}
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="mr-1 inline h-3.5 w-3.5"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+            {t('chat.deleteChat')}
           </button>
         )}
       </div>
@@ -150,26 +154,29 @@ export function ChatView() {
               <p className="text-xs text-stone-500">{t('chat.noConversations')}</p>
               <button
                 onClick={() => { chat.newChat(); setListOpen(false); }}
-                className="chip !border-emerald-500/50 !text-emerald-300"
+                className="flex items-center gap-1 rounded-full border px-3 py-1.5 text-xs font-semibold transition hover:shadow-[0_0_12px_rgba(212,175,55,0.25)]"
+                style={{ background: '#112925', borderColor: '#D4AF37', color: '#F4D03F' }}
               >
-                ➕ {t('chat.newChat')}
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14" /></svg>
+                {t('chat.newChat')}
               </button>
             </div>
           ) : (
             <>
               <button
                 onClick={() => { chat.newChat(); setListOpen(false); }}
-                className="mb-2 w-full rounded-lg py-2 text-xs font-bold transition active:scale-95"
-                style={{ background: 'rgba(4,120,87,0.15)', color: 'var(--accent-primary)' }}
+                className="mb-2 flex w-full items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-bold transition hover:shadow-[0_0_12px_rgba(212,175,55,0.2)] active:scale-95"
+                style={{ background: '#112925', border: '1px solid #D4AF37', color: '#F4D03F' }}
               >
-                ➕ Nouvelle conversation
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" className="h-3.5 w-3.5"><path d="M12 5v14M5 12h14" /></svg>
+                Nouvelle conversation
               </button>
               {/* Barre d'actions */}
               <div className="mb-2 flex items-center gap-1 px-1">
                 <button
                   onClick={() => { setSelectMode(!selectMode); setSelected(new Set()); }}
                   className="rounded-lg px-2 py-1 text-[10px] font-bold transition"
-                  style={{ background: selectMode ? 'rgba(4,120,87,0.2)' : 'rgba(255,255,255,0.05)', color: selectMode ? 'var(--accent-primary)' : 'var(--text-secondary)' }}
+                  style={{ background: selectMode ? 'rgba(212,175,55,0.18)' : 'rgba(255,255,255,0.05)', color: selectMode ? '#F4D03F' : 'var(--text-secondary)' }}
                 >
                   {selectMode ? '✕ Annuler' : '☑️ Sélectionner'}
                 </button>
@@ -185,17 +192,21 @@ export function ChatView() {
                 {selectMode && selected.size > 0 && (
                   <button
                     onClick={deleteSelected}
-                    className="ml-auto rounded-lg px-2 py-1 text-[10px] font-bold text-red-400 transition hover:bg-red-500/20"
+                    className="ml-auto rounded-full border bg-transparent px-2.5 py-1 text-[10px] font-bold transition hover:bg-red-900/20"
+                    style={{ borderColor: '#8B0000', color: '#FF6B6B' }}
                   >
-                    🗑️ Supprimer ({selected.size})
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="mr-1 inline h-3 w-3"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                    Supprimer ({selected.size})
                   </button>
                 )}
                 {!selectMode && chat.conversations.length > 0 && (
                   <button
                     onClick={deleteAll}
-                    className="ml-auto rounded-lg px-2 py-1 text-[10px] font-bold text-red-400/60 transition hover:text-red-400"
+                    className="ml-auto rounded-full border bg-transparent px-2.5 py-1 text-[10px] font-bold transition hover:bg-red-900/20"
+                    style={{ borderColor: '#8B0000', color: '#FF6B6B' }}
                   >
-                    🗑️ Tout supprimer
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="mr-1 inline h-3 w-3"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
+                    Tout supprimer
                   </button>
                 )}
               </div>
@@ -205,10 +216,11 @@ export function ChatView() {
                     {selectMode && (
                       <button
                         onClick={() => toggleSelect(c.id)}
-                        className="shrink-0 flex h-5 w-5 items-center justify-center rounded-md text-xs transition"
+                        className="shrink-0 flex h-5 w-5 items-center justify-center rounded-md text-xs font-bold transition"
                         style={{
-                          background: selected.has(c.id) ? 'rgba(4,120,87,0.4)' : 'rgba(255,255,255,0.08)',
-                          border: '1px solid ' + (selected.has(c.id) ? 'rgba(4,120,87,0.8)' : 'rgba(255,255,255,0.15)'),
+                          background: selected.has(c.id) ? '#1F6E5C' : 'rgba(255,255,255,0.08)',
+                          border: '1px solid ' + (selected.has(c.id) ? '#D4AF37' : 'rgba(255,255,255,0.15)'),
+                          color: selected.has(c.id) ? '#fff' : undefined,
                         }}
                       >
                         {selected.has(c.id) ? '✓' : ''}
@@ -217,7 +229,7 @@ export function ChatView() {
                     <button
                       onClick={() => { chat.openConversation(c.id); setListOpen(false); }}
                       className="min-w-0 flex-1 truncate rounded-lg px-3 py-2 text-left text-sm transition"
-                      style={chat.activeId === c.id ? { background: 'rgba(4,120,87,0.12)', color: 'var(--accent-primary)', fontWeight: 600 } : { color: 'var(--text-secondary)' }}
+                      style={chat.activeId === c.id ? { background: 'rgba(212,175,55,0.12)', color: '#F4D03F', fontWeight: 600 } : { color: 'var(--text-secondary)' }}
                     >
                       {c.title}
                     </button>
@@ -229,10 +241,11 @@ export function ChatView() {
                             chat.deleteChat(c.id);
                           }
                         }}
-                        className="shrink-0 rounded-lg px-2 py-2 text-xs text-stone-500 hover:text-red-400"
+                        className="shrink-0 rounded-lg px-2 py-2 transition hover:bg-red-900/20"
+                        style={{ color: '#FF6B6B' }}
                         title={t('chat.deleteChat')}
                       >
-                        🗑️
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="inline h-3.5 w-3.5"><path d="M3 6h18" /><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6" /><path d="M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2" /></svg>
                       </button>
                     )}
                   </li>
@@ -300,7 +313,10 @@ export function ChatView() {
         disabled={false}
       />
 
-      <p className="mt-2 hidden text-center text-[11px] leading-snug text-stone-500 sm:block">{t('chat.disclaimer')}</p>
+      <p className="mt-2 hidden items-center justify-center gap-1 text-center text-xs leading-snug text-[#7A8C87] sm:flex">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="h-3.5 w-3.5 shrink-0"><circle cx="12" cy="12" r="10" /><path d="M12 16v-4M12 8h.01" /></svg>
+          {t('chat.disclaimer')}
+        </p>
     </div>
   );
 }
@@ -354,11 +370,12 @@ function MessageBubble({ message }: { message: ChatMessage }) {
   if (isUser) {
     return (
       <div className="flex flex-col items-end animate-fade-in">
-        <div className="max-w-[85%] rounded-2xl rounded-br-sm bg-emerald-700 px-4 py-2.5 text-[15px] leading-relaxed text-white shadow">
+        <div className="max-w-[85%] rounded-2xl rounded-br-sm px-4 py-2.5 text-[15px] leading-relaxed text-white shadow"
+          style={{ background: '#1F6E5C', borderRadius: '16px 16px 4px 16px' }}>
           {message.content}
         </div>
         <span
-          className="mt-0.5 flex items-center gap-1 pr-1 text-[10px] text-emerald-400/80"
+          className="mt-0.5 flex items-center gap-1 pr-1 text-[10px] text-[#A3B1AC]"
           title={t('chat.sent')}
         >
           <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -382,7 +399,7 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             </span>
           )}
         </div>
-        <div className="card px-4 py-3">
+        <div className="card px-4 py-3" style={{ borderColor: 'rgba(212,175,55,0.5)' }}>
           {message.content ? (
             <div className="md">
               <Markdown text={message.content} />
@@ -473,7 +490,7 @@ function ChatInput({
           <StopIcon className="h-4 w-4" /> {t('chat.stop')}
         </button>
       ) : (
-        <button type="submit" disabled={!text.trim()} className="btn-primary h-11 shrink-0 px-5 text-[15px]">
+        <button type="submit" disabled={!text.trim()} className="h-11 shrink-0 rounded-xl px-5 text-[15px] font-bold text-[#1a1a1a] transition hover:shadow-[0_0_16px_rgba(212,175,55,0.35)] disabled:cursor-not-allowed disabled:opacity-50" style={{ background: '#D4AF37' }}>
           {t('chat.send')} <SendIcon className="h-4 w-4" />
         </button>
       )}
