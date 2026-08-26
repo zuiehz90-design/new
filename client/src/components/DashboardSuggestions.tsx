@@ -84,7 +84,7 @@ function getSuggestionsForPeriod(
   return suggestions.slice(0, 4);
 }
 
-export function DashboardSuggestions() {
+export function DashboardSuggestions({ compact = false }: { compact?: boolean } = {}) {
   const { t, lang } = useI18n();
   const pt = useMawaqitTimes();
   const { prayers } = useDevotion();
@@ -113,15 +113,17 @@ export function DashboardSuggestions() {
   return (
     <section className="mb-4">
       {/* Greeting */}
+      {!compact && (
       <div className="mb-3 flex items-center gap-2">
         <span className="text-xl">{greeting.emoji}</span>
         <p className="text-sm font-semibold" style={{ color: 'var(--accent-gold)' }}>
           {greeting.text}
         </p>
       </div>
+      )}
 
       {/* Suggestions */}
-      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
+      <div className={`grid grid-cols-2 gap-2 ${compact ? "" : "sm:grid-cols-4"}`}>
         {suggestions.map((s, i) => (
           <Link
             key={i}

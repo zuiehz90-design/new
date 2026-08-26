@@ -28,7 +28,8 @@ import { QuizView } from './components/QuizView';
 import { MiniPlayer } from './components/MiniPlayer';
 import { NotificationCenter } from './components/NotificationCenter';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import { AiSetupProvider } from './hooks/useAiSetup';
+import { AiSetupProvider, useAiSetup } from './hooks/useAiSetup';
+import { SidebarWidgets } from './components/SidebarWidgets';
 import { AudioPlayerProvider } from './context/AudioPlayerContext';
 import { ToastProvider } from './context/ToastContext';
 import { MoonIcon, PlusIcon, HomeIcon, ChatIcon, BookIcon, MosqueIcon, SwordsIcon, UserIcon, ProphetsIcon, NamesIcon, CalendarIcon, BookOpenIcon, BeadsIcon, QuizIcon, TrophyIcon, type IconProps } from './components/icons';
@@ -54,6 +55,8 @@ function ChatProvider({ children }: { children: React.ReactNode }) {
 /* ---- Shell ---- */
 function Shell() {
   const { user } = useAuth();
+  const { t } = useI18n();
+  const aiSetup = useAiSetup();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -180,6 +183,9 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
             </div>
             <NotificationCenter />
           </div>
+          <div className="mb-4">
+            <SidebarWidgets />
+          </div>
           <nav className="flex flex-col gap-1 text-sm">
             {navItems.map((item) => (
               <Link
@@ -194,10 +200,16 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
           </nav>
           <div className="mt-auto space-y-1">
             <button
+              onClick={aiSetup.open}
+              className="btn-ghost w-full justify-start text-xs"
+            >
+              🤖 {t('settings.configureAi')}
+            </button>
+            <button
               onClick={() => setSettingsOpen(true)}
               className="btn-ghost w-full justify-start text-xs"
             >
-              ⚙️ Réglages
+              ⚙️ {t('settings.title')}
             </button>
           </div>
         </aside>

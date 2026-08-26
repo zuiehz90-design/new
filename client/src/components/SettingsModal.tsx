@@ -17,6 +17,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
   const [models, setModels] = useState<ModelOption[]>([]);
   const [aiConfigured, setAiConfigured] = useState<boolean | null>(null);
   const [notifPrefs, setNotifPrefs] = useState<NotificationPrefs>(() => getPrefs());
+  const [togglePopup, setTogglePopup] = useState<null | { kind: 'prayerNotifications' | 'focusMode' }>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -93,13 +94,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           <div>
             <label className="mb-1 block text-xs text-stone-500">{t('prayer.notifications')}</label>
             <button
-              onClick={async () => {
-                const enabled = !settings.prayerNotifications;
-                if (enabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
-                  await Notification.requestPermission();
-                }
-                setSettings((s) => ({ ...s, prayerNotifications: enabled }));
-              }}
+              onClick={() => setTogglePopup({ kind: 'prayerNotifications' })}
               className={`chip ${settings.prayerNotifications ? '!border-gold-500/70 !text-gold-300' : ''}`}
             >
               {settings.prayerNotifications ? '🔔 Activées' : '🔕 Désactivées'}
@@ -181,7 +176,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           <div>
             <label className="mb-1 block text-xs text-stone-500">{t('settings.focusMode')}</label>
             <button
-              onClick={() => setSettings((s) => ({ ...s, focusMode: !s.focusMode }))}
+              onClick={() => setTogglePopup({ kind: 'focusMode' })}
               className={`chip ${settings.focusMode ? '!border-gold-500/70 !text-gold-300' : ''}`}
             >
               {settings.focusMode ? '🧘 Activé' : '🧘 Désactivé'}
@@ -213,6 +208,49 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
           </div>
         </div>
       </div>
+
+      {/* Popup explicative des toggles */}
+      {togglePopup && (
+        <div
+          className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
+          onClick={() => setTogglePopup(null)}
+        >
+          <div className="card w-full max-w-sm p-5 text-center" onClick={(e) => e.stopPropagation()}>
+            <p className="text-3xl">{togglePopup.kind === 'focusMode' ? '🧘' : '🔔'}</p>
+            <h3 className="mt-2 text-base font-bold text-gold-400">{t('settings.popupTitle')}</h3>
+            <p className="mt-2 text-xs leading-relaxed text-stone-300">
+              {togglePopup.kind === 'focusMode' ? t('settings.focusExplain') : t('settings.notifExplain')}
+            </p>
+            <div className="mt-4 flex gap-2">
+              <button
+                onClick={() => setTogglePopup(null)}
+                className="btn-ghost flex-1 text-xs"
+              >
+                {t('settings.popupCancel')}
+              </button>
+              <button
+                onClick={async () => {
+                  if (togglePopup.kind === 'prayerNotifications') {
+                    const enabled = !settings.prayerNotifications;
+                    if (enabled && typeof Notification !== 'undefined' && Notification.permission === 'default') {
+                      await Notification.requestPermission();
+                    }
+                    setSettings((s) => ({ ...s, prayerNotifications: enabled }));
+                  } else {
+                    setSettings((s) => ({ ...s, focusMode: !s.focusMode }));
+                  }
+                  setTogglePopup(null);
+                }}
+                className="btn-gold flex-1 text-xs"
+              >
+                {togglePopup.kind === 'focusMode'
+                  ? (settings.focusMode ? t('settings.popupDisable') : t('settings.popupEnable'))
+                  : (settings.prayerNotifications ? t('settings.popupDisable') : t('settings.popupEnable'))}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
