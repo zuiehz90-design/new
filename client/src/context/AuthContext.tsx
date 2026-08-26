@@ -6,7 +6,9 @@ import {
   apiMe,
   apiRegister,
   apiUpdateProfile,
+  getCachedUid,
   getToken,
+  setCachedUid,
   isRetryableApiError,
   setToken,
   type User,
@@ -77,6 +79,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     userRef.current = user;
   }, [user]);
 
+  useEffect(() => {
+    if (user?.id) setCachedUid(user.id);
+  }, [user]);
+
   const registerProfileHandler = useCallback(() => {
     if (!user) return () => {};
     return registerActionHandlers(scope, {
@@ -107,6 +113,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     const hadTokenAtStart = Boolean(getToken());
+    // Réveil lent de Render : on rend l'app immédiatement au scope mémorisé
+    // (le cache local est keyé par token, déjà en place) pendant que apiMe
+    // rafraîchit le profil en arrière-plan.
+    const cachedUid = hadTokenAtStart ? getCachedUid() : null;
+    if (hadTokenAtStart && cachedUid != null) {
+      setUser({ id: cachedUid } as User);
+      setLoading(false);
+    }
     let retry = 0;
 
     const hydrate = async (): Promise<void> => {
@@ -128,6 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         window.setTimeout(() => { void hydrate(); }, 2_000);
         return;
       }
+      setUser(null);
       setLoading(false);
     };
 

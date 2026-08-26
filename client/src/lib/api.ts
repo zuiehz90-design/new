@@ -157,6 +157,21 @@ export interface QuestsData {
 }
 
 const TOKEN_KEY = 'nour:token';
+const UID_KEY = 'nour:uid';
+
+/** Identifiant utilisateur mémorisé : permet de rendre l'app immédiatement
+ *  au bon scope pendant le réveil de Render (sans attendre le réseau). */
+export function getCachedUid(): number | null {
+  if (typeof localStorage === 'undefined') return null;
+  const raw = localStorage.getItem(UID_KEY);
+  const n = Number(raw);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
+export function setCachedUid(uid: number): void {
+  if (typeof localStorage === 'undefined') return;
+  localStorage.setItem(UID_KEY, String(uid));
+}
 
 // Mobile cache: dynamic import (tree-shaken on web)
 let _mobileCache: typeof import('./mobileCache') | null = null;
