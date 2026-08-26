@@ -3,6 +3,15 @@ import { type Achievements, type RankInfo } from '../hooks/useDevotion';
 import { useI18n } from '../i18n';
 import { RankModal } from './RankModal';
 
+const TIER_ICON: Record<string, string> = {
+  Bronze: '🥉',
+  Argent: '🥈',
+  Or: '🏆',
+  Platine: '💎',
+  Diamant: '💠',
+  Légende: '👑',
+};
+
 const TIER_COLOR: Record<string, string> = {
   Bronze: '#e8a24f',
   Argent: '#cbd5e1',
@@ -40,7 +49,7 @@ export function RankCard({ achievements }: { achievements: Achievements }) {
       <div className="card mb-4" style={{ borderColor: color + '40' }}>
         {/* Top section: icon + rank name + pips */}
         <div className="flex items-center gap-3 px-4 pt-4 pb-2">
-          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-gold-500/40 text-2xl" style={{ background: 'radial-gradient(circle at 50% 30%, rgba(212,175,55,0.20), rgba(212,175,55,0.05))' }}>🏆</span>
+          <span className="flex h-11 w-11 flex-shrink-0 items-center justify-center rounded-full border border-gold-500/40 text-2xl" style={{ background: 'radial-gradient(circle at 50% 30%, rgba(212,175,55,0.20), rgba(212,175,55,0.05))' }}>{TIER_ICON[tierName] ?? '🏆'}</span>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <span className="text-sm font-bold truncate" style={{ color }}>{r.name}</span>
