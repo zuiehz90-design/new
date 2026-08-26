@@ -1,0 +1,61 @@
+{
+  "name": "nour-islamic-chat",
+  "version": "1.0.0",
+  "private": true,
+  "main": "desktop/main.cjs",
+  "description": "Application web de chat islamique avec IA — gratuite et open source",
+  "type": "module",
+  "engines": {
+    "node": ">=22.5.0"
+  },
+  "scripts": {
+    "dev": "concurrently -n server,client -c green,cyan \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "tsx watch server/src/index.ts",
+    "dev:client": "cd client && vite",
+    "build": "npm run build:server && npm run build:client",
+    "build:server": "tsc -p server/tsconfig.json",
+    "build:client": "cd client && vite build",
+    "start": "node server/dist/index.js",
+    "typecheck": "tsc -p server/tsconfig.json --noEmit && tsc -p client/tsconfig.json --noEmit",
+    "test": "cd client && node --import tsx --test src/lib/markdown.test.tsx src/lib/geocode.test.ts src/lib/readingPosition.test.ts src/lib/storageScope.test.ts src/lib/chatSync.test.ts src/lib/spacedRepetition.test.ts src/lib/nameOfTheDay.test.ts src/lib/nameQuran.test.ts && cd .. && node --import tsx --test server/src/lib/pgSql.test.ts server/src/routes/streak.test.ts server/src/routes/badges.test.ts server/src/routes/conversations.test.ts server/src/routes/auth.test.ts server/src/routes/quests.test.ts server/src/routes/challenges.test.ts",
+    "preview": "cd client && vite preview",
+    "desktop:dev": "npm run build && electron .",
+    "desktop:build": "npm run build && electron-builder",
+    "desktop:copy-exe": "node scripts/copy-exe.cjs"
+  },
+  "dependencies": {
+    "@capacitor-community/sqlite": "^8.1.1",
+    "@capacitor/cli": "^8.5.0",
+    "@capacitor/core": "^8.5.0",
+    "@capacitor/ios": "^8.5.0",
+    "@capacitor/local-notifications": "^8.3.1",
+    "@capacitor/preferences": "^8.0.1",
+    "adhan": "^4.4.3",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "pg": "^8.23.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-markdown": "^10.1.0",
+    "react-router-dom": "^6.26.1",
+    "remark-gfm": "^4.0.1"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.15",
+    "@types/pg": "^8.23.1",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "autoprefixer": "^10.4.20",
+    "concurrently": "^9.0.0",
+    "electron": "^43.4.1",
+    "electron-builder": "^26.15.3",
+    "postcss": "^8.4.41",
+    "tailwindcss": "^3.4.7",
+    "tsx": "^4.17.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.0"
+  }
+}
