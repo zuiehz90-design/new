@@ -223,7 +223,8 @@ export interface ApiFetchOptions {
 
 function cacheDomains(path: string): string[] {
   const base = path.split('?')[0];
-  if (base.startsWith('/api/quests')) return ['/api/quests'];
+  if (base.startsWith('/api/quests')) return ['/api/quests', '/api/achievements'];
+  if (base.startsWith('/api/prayers/check') || base.startsWith('/api/prayers/uncheck')) return ['/api/prayers', '/api/quests', '/api/achievements'];
   if (base.startsWith('/api/prayers')) return ['/api/prayers'];
   if (base.startsWith('/api/achievements')) return ['/api/achievements'];
   if (base.startsWith('/api/profile')) return ['/api/profile', '/api/auth'];
@@ -336,12 +337,12 @@ export function apiPrayers(options: ApiFetchOptions = {}): Promise<PrayerStatus>
   return apiFetch<PrayerStatus>('/api/prayers', {}, DEFAULT_API_TIMEOUT_MS, options);
 }
 
-export function apiCheckPrayer(prayer: string, opts?: { late?: boolean; lateMinutes?: number; mutationId?: string }): Promise<{ ok: boolean; newBadges?: string[]; newRank?: any; penalty?: number }> {
+export function apiCheckPrayer(prayer: string, opts?: { late?: boolean; lateMinutes?: number }): Promise<{ ok: boolean; newBadges?: string[]; newRank?: any; penalty?: number }> {
   return apiFetch('/api/prayers/check', { method: 'POST', body: JSON.stringify({ prayer, ...(opts ?? {}) }) });
 }
 
-export function apiUncheckPrayer(prayer: string, mutationId?: string): Promise<{ ok: boolean }> {
-  return apiFetch('/api/prayers/uncheck', { method: 'POST', body: JSON.stringify({ prayer, ...(mutationId ? { mutationId } : {}) }) });
+export function apiUncheckPrayer(prayer: string): Promise<{ ok: boolean; newBadges?: string[]; newRank?: any; penalty?: number }> {
+  return apiFetch('/api/prayers/uncheck', { method: 'POST', body: JSON.stringify({ prayer }) });
 }
 
 export function apiQuests(options: ApiFetchOptions = {}): Promise<QuestsData> {
@@ -390,7 +391,7 @@ export interface CompleteQuestResult {
   code?: string;
 }
 
-export function apiCompleteQuest(questId: string, opts?: CompleteQuestOpts & { mutationId?: string }): Promise<CompleteQuestResult> {
+export function apiCompleteQuest(questId: string, opts?: CompleteQuestOpts): Promise<CompleteQuestResult> {
   return apiFetch(`/api/quests/${questId}/complete`, { method: 'POST', body: opts ? JSON.stringify(opts) : undefined });
 }
 
