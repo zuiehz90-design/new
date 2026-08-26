@@ -139,49 +139,6 @@ export function DashboardView() {
         )}
       </section>
 
-      {/* Grille de raccourcis */}
-      <section className="mb-16 grid grid-cols-2 gap-3 sm:grid-cols-4">
-        {[
-          { emoji: '✨', label: t('dashboard.suggest.learnNames'), to: '/names' },
-          { emoji: '📖', label: t('dashboard.suggest.readQuran'), to: '/quran' },
-          { emoji: '🧠', label: t('dashboard.suggest.quiz'), to: '/quiz' },
-          { emoji: '📿', label: t('dashboard.suggest.dhikr'), to: '/dhikr' },
-        ].map((c) => (
-          <Link key={c.to} to={c.to} className="card card-clickable flex flex-col items-center gap-2 p-4 text-center">
-            <span className="text-2xl">{c.emoji}</span>
-            <span className="text-xs font-semibold text-gold-300">{c.label}</span>
-          </Link>
-        ))}
-      </section>
-
-      {/* Citation du jour + Nom du jour : tuiles compactes dépliables */}
-      <div className="mb-16 grid gap-3 md:grid-cols-2">
-        <ExpandableTile emoji="✨" title={t('dailyVerse.title')}>
-          <DailyVerse />
-        </ExpandableTile>
-        <ExpandableTile emoji="✨" title={t('names99.daily')}>
-          <NameOfTheDay />
-        </ExpandableTile>
-      </div>
-
-      {/* Suggestions contextuelles (basées sur lheure et les prières) */}
-      <DashboardSuggestions />
-
-      {/* ZONE 2 — Horaires : rangée horizontale compacte (scrollable sur mobile) */}
-      {pt && (
-        <section className="mb-4">
-          <h2 className="font-display mb-2 text-lg font-bold text-gold-400">{t('prayer.schedule')}</h2>
-          <div className="flex gap-2 overflow-x-auto pb-1">
-            {PRAYER_KEYS.map((key) => (
-              <div key={key} className={`card min-w-[76px] shrink-0 p-2.5 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
-                <p className="text-[10px] text-stone-400">{t(prayerLabel(key))}</p>
-                <p className="text-sm font-semibold">{pt.times?.[key]}</p>
-              </div>
-            ))}
-          </div>
-        </section>
-      )}
-
       {/* Suivi spirituel (connecté) */}
       {!authLoading && user && (
         <>
@@ -246,6 +203,43 @@ export function DashboardView() {
           )}
         </>
       )}
+      {/* ZONE 2 — Horaires : rangée horizontale compacte (scrollable sur mobile) */}
+      {pt && (
+        <section className="mb-4">
+          <h2 className="font-display mb-2 text-lg font-bold text-gold-400">{t('prayer.schedule')}</h2>
+          <div className="flex gap-2 overflow-x-auto pb-1">
+            {PRAYER_KEYS.map((key) => (
+              <div key={key} className={`card min-w-[76px] shrink-0 p-2.5 text-center ${pt.next?.key === key ? 'border-gold-500/60' : ''}`}>
+                <p className="text-[10px] text-stone-400">{t(prayerLabel(key))}</p>
+                <p className="text-sm font-semibold">{pt.times?.[key]}</p>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+      {/* Grille de raccourcis */}
+      <section className="mb-16 grid grid-cols-2 gap-3 sm:grid-cols-4">
+        {[
+          { emoji: '✨', label: t('dashboard.suggest.learnNames'), to: '/names' },
+          { emoji: '📖', label: t('dashboard.suggest.readQuran'), to: '/quran' },
+          { emoji: '🧠', label: t('dashboard.suggest.quiz'), to: '/quiz' },
+          { emoji: '📿', label: t('dashboard.suggest.dhikr'), to: '/dhikr' },
+        ].map((c) => (
+          <Link key={c.to} to={c.to} className="card card-clickable flex flex-col items-center gap-2 p-4 text-center">
+            <span className="text-2xl">{c.emoji}</span>
+            <span className="text-xs font-semibold text-gold-300">{c.label}</span>
+          </Link>
+        ))}
+      </section>
+      {/* Citation du jour + Nom du jour : tuiles compactes dépliables */}
+      <div className="mb-16 grid gap-3 md:grid-cols-2">
+        <ExpandableTile emoji="✨" title={t('dailyVerse.title')}>
+          <DailyVerse />
+        </ExpandableTile>
+        <ExpandableTile emoji="✨" title={t('names99.daily')}>
+          <NameOfTheDay />
+        </ExpandableTile>
+      </div>
 
       {/* Compte non connecté → CTA */}
       {!user && (
