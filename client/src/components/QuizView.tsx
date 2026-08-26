@@ -12,6 +12,34 @@ import {
   type QuizQuestion,
 } from '../lib/quizData';
 
+import type { ReactNode } from 'react';
+
+/** Icônes vectorielles fines (lucide-style) — uniquement or / gris-vert. */
+const strokeIcon = (paths: ReactNode, size = 16) => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.6} strokeLinecap="round" strokeLinejoin="round" width={size} height={size}>
+    {paths}
+  </svg>
+);
+
+const CAT_ICONS: Record<QuizCategory | 'mixed', ReactNode> = {
+  mixed: strokeIcon(<><rect x="4" y="4" width="16" height="16" rx="4" /><circle cx="9" cy="9" r="1.2" /><circle cx="15" cy="15" r="1.2" /><circle cx="9" cy="15" r="1.2" /></>, 28),
+  quran: strokeIcon(<><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" /><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" /></>, 28),
+  prophets: strokeIcon(<path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z" />, 28),
+  prayer: strokeIcon(<><path d="M12 2l2.8 4.5M12 2 9.2 6.5M12 2v3" /><path d="M5 21h14M6 21v-7h12v7" /><path d="M8.5 14V10a3.5 3.5 0 0 1 7 0v4" /></>, 28),
+  fiqh: strokeIcon(<><path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z" /><path d="M7 21h10" /><path d="M12 3v18" /><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2" /></>, 28),
+  history: strokeIcon(<><path d="M5 3h14v18H5z" /><path d="M3 5v2a2 2 0 0 0 2 2M21 5v2a2 2 0 0 1-2 2" /><path d="M9 8h6M9 12h6M9 16h4" /></>, 28),
+  names: strokeIcon(<path d="M12 2l2.9 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21 8 14.14l-5-4.87 6.1-1.01z" />, 28),
+};
+
+const BADGE_ICONS: Record<string, ReactNode> = {
+  'quiz-1': strokeIcon(<><circle cx="12" cy="12" r="9" /><circle cx="12" cy="12" r="5" /><circle cx="12" cy="12" r="1.5" /></>, 15),
+  'quiz-3': strokeIcon(<><path d="M2 4h6a4 4 0 0 1 4 4v12a3 3 0 0 0-3-3H2z" /><path d="M22 4h-6a4 4 0 0 0-4 4v12a3 3 0 0 1 3-3h7z" /></>, 15),
+  'quiz-7': strokeIcon(<><path d="M17 3l4 4L8 20l-5 1 1-5L17 3Z" /></>, 15),
+  'quiz-14': strokeIcon(<><path d="M12 3 2 8l10 5 10-5-10-5Z" /><path d="M6 10.5V16c0 1.5 2.5 3 6 3s6-1.5 6-3v-5.5" /></>, 15),
+  'quiz-30': strokeIcon(<><path d="M9 18h6M10 22h4" /><path d="M15.09 14c.18-.98.65-1.74 1.41-2.5A4.65 4.65 0 0 0 18 8 6 6 0 0 0 6 8c0 1 .23 2.23 1.5 3.5.76.76 1.23 1.52 1.41 2.5" /></>, 15),
+  'quiz-perfect': strokeIcon(<><circle cx="12" cy="14" r="6" /><path d="m8.2 13.9-4.5-4.4 3.5-1 2-3.5M15.8 13.9l4.5-4.4-3.5-1-2-3.5" /></>, 15),
+};
+
 export function QuizView() {
   const { t, lang } = useI18n();
   const [phase, setPhase] = useState<'home' | 'playing' | 'result'>('home');
@@ -71,60 +99,69 @@ export function QuizView() {
     return (
       <div className="mx-auto max-w-lg px-4 pb-8 pt-6 animate-fade-in">
         <div className="mb-4 text-center">
-          <h2 className="text-2xl font-bold text-gold-400">{t('quiz.title')}</h2>
-          <p className="mt-1 text-xs text-stone-400">{t('quiz.subtitle')}</p>
+          <h2 className="font-display text-2xl font-bold text-[#D4AF37]">{t('quiz.title')}</h2>
+          <p className="mt-1 text-xs text-[#A3B1AC]">{t('quiz.subtitle')}</p>
+        </div>
+
+        {/* Score hebdomadaire — hero */}
+        <div className="card mb-6 overflow-hidden p-5 text-center" style={{ borderColor: '#D4AF37', background: 'radial-gradient(ellipse 70% 85% at 50% 15%, rgba(212,175,55,0.10), transparent 65%), var(--bg-card)' }}>
+          <p className="text-xs text-[#A3B1AC]">{t('quiz.weeklyScore')}</p>
+          <p className="font-display text-5xl font-bold text-[#F4D03F]">{stats.weeklyScore} <span className="text-2xl">{t('quiz.points')}</span></p>
         </div>
 
         {/* Stats */}
-        <div className="mb-4 grid grid-cols-3 gap-2 text-center">
-          <div className="card p-2">
-            <p className="text-lg font-bold text-gold-300">{stats.total}</p>
-            <p className="text-[10px] text-stone-400">{t('quiz.totalQuiz')}</p>
+        <div className="mb-4 grid grid-cols-3 gap-3 text-center">
+          <div className="flex flex-col items-center gap-1 rounded-xl px-2 py-3" style={{ background: '#112925', border: '1px solid #2A4A43' }}>
+            <span style={{ color: '#D4AF37' }}>{strokeIcon(<><path d="M8 21h8M12 17v4M7 4h10v4a5 5 0 0 1-10 0V4Z" /><path d="M7 5H4a1 1 0 0 0-1 1c0 2 1.5 3.5 4 4M17 5h3a1 1 0 0 1 1 1c0 2-1.5 3.5-4 4" /></>, 16)}</span>
+            <p className="text-lg font-bold text-[#D4AF37]">{stats.total}</p>
+            <p className="text-[10px] text-[#A3B1AC]">{t('quiz.totalQuiz')}</p>
           </div>
-          <div className="card p-2">
-            <p className="text-lg font-bold text-emerald-300">{stats.perfect}</p>
-            <p className="text-[10px] text-stone-400">{t('quiz.perfectQuiz')}</p>
+          <div className="flex flex-col items-center gap-1 rounded-xl px-2 py-3" style={{ background: '#112925', border: '1px solid #2A4A43' }}>
+            <span style={{ color: '#D4AF37' }}>{strokeIcon(<path d="M12 2l2.9 6.26L21 9.27l-5 4.87L17.18 21 12 17.77 6.82 21 8 14.14l-5-4.87 6.1-1.01z" />, 16)}</span>
+            <p className="text-lg font-bold text-[#1F6E5C]">{stats.perfect}</p>
+            <p className="text-[10px] text-[#A3B1AC]">{t('quiz.perfectQuiz')}</p>
           </div>
-          <div className="card p-2">
-            <p className="text-lg font-bold text-sky-300">{stats.bestStreak}🔥</p>
-            <p className="text-[10px] text-stone-400">{t('quiz.streak')}</p>
+          <div className="flex flex-col items-center gap-1 rounded-xl px-2 py-3" style={{ background: '#112925', border: '1px solid #2A4A43' }}>
+            <span style={{ color: '#D4AF37' }}>{strokeIcon(<path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z" />, 16)}</span>
+            <p className="text-lg font-bold text-[#D4AF37]">{stats.bestStreak}</p>
+            <p className="text-[10px] text-[#A3B1AC]">{t('quiz.streak')}</p>
           </div>
         </div>
 
         {/* Badges */}
         <div className="mb-4">
-          <p className="mb-2 text-xs font-semibold text-gold-400">{t('quiz.badges')}</p>
-          <div className="flex flex-wrap gap-1.5">
+          <p className="font-display mb-3 text-sm font-bold text-[#D4AF37]">{t('quiz.badges')}</p>
+          <div className="flex flex-wrap gap-2">
             {QUIZ_BADGES.map((b) => {
               const earned = stats.badges.includes(b.id);
               return (
                 <span
                   key={b.id}
-                  className={`chip text-xs ${earned ? '!border-gold-500/60 !text-gold-300' : 'opacity-40'}`}
+                  className="flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-semibold transition"
+                  style={earned
+                    ? { background: '#112925', border: '1px solid #D4AF37', color: '#F4D03F' }
+                    : { background: '#112925', border: '1px solid #2A4A43', color: '#7A8C87' }}
                   title={b.label}
                 >
-                  {b.icon} {b.label}
+                  <span style={{ display: 'inline-flex', color: earned ? '#F4D03F' : '#7A8C87' }}>{BADGE_ICONS[b.id]}</span>
+                  {b.label}
                 </span>
               );
             })}
           </div>
         </div>
 
-        {/* Weekly score */}
-        <div className="card mb-4 p-3 border-emerald-500/20 text-center">
-          <p className="text-xs text-stone-400">{t('quiz.weeklyScore')}</p>
-          <p className="text-xl font-bold text-emerald-300">{stats.weeklyScore} {t('quiz.points')}</p>
-        </div>
 
         {/* Category selection */}
-        <p className="mb-2 text-center text-xs text-stone-400">{t('quiz.chooseCategory')}</p>
-        <div className="grid grid-cols-2 gap-2">
+        <p className="font-display mb-10 mt-2 text-center text-base font-bold text-[#D4AF37]">{t('quiz.chooseCategory')}</p>
+        <div className="grid grid-cols-2 gap-3">
           <button
             onClick={() => startQuiz('mixed')}
-            className="card card-clickable p-4 text-center transition hover:border-gold-500/50"
+            className="card card-clickable p-5 text-center transition hover:border-[#D4AF37]"
+            style={{ background: 'linear-gradient(180deg, #112925, #0A1F1C)', border: '1px solid #2A4A43' }}
           >
-            <span className="text-3xl block mb-1">🎲</span>
-            <span className="text-sm font-semibold text-gold-300">{t('quiz.mixed')}</span>
+            <span className="mb-2 block text-[#D4AF37]">{CAT_ICONS.mixed}</span>
+            <span className="font-display text-sm font-bold text-[#D4AF37]">{t('quiz.mixed')}</span>
           </button>
           {(Object.keys(QUIZ_CATEGORIES) as QuizCategory[]).map((cat) => {
             const meta = QUIZ_CATEGORIES[cat];
@@ -133,13 +170,14 @@ export function QuizView() {
               <button
                 key={cat}
                 onClick={() => startQuiz(cat)}
-                className="card card-clickable p-4 text-center transition hover:border-gold-500/40"
+                className="card card-clickable p-5 text-center transition hover:border-[#D4AF37]"
+                style={{ background: 'linear-gradient(180deg, #112925, #0A1F1C)', border: '1px solid #2A4A43' }}
               >
-                <span className="text-3xl block mb-1">{meta.icon}</span>
-                <span className="text-sm font-semibold text-stone-200">
+                <span className="mb-2 block text-[#D4AF37]">{CAT_ICONS[cat]}</span>
+                <span className="font-display text-sm font-bold text-[#D4AF37]">
                   {lang === 'ar' ? meta.ar : lang === 'en' ? meta.en : meta.fr}
                 </span>
-                <span className="block text-[10px] text-stone-500">{count} {t('quiz.questions')}</span>
+                <span className="mt-1 block text-[10px] text-[#A3B1AC]">{count} {t('quiz.questions')}</span>
               </button>
             );
           })}
