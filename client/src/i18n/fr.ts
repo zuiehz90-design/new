@@ -358,7 +358,12 @@ export const fr: Record<string, string> = {
   'prophets.weeklyReview': 'Relire',
   'prophets.weeklyDone': 'Terminé cette semaine',
   'prophets.weeklyDaysLeft': 'Jours restants',
-  /* -- 99 Noms d'Allah -- */
+    'challenges.title': 'Défis hebdomadaires',
+  'challenges.weekOf': 'Semaine en cours — objectifs jusqu\'au {date}',
+  'challenges.claim': 'Réclamer',
+  'challenges.claimed': 'Réclamé',
+
+/* -- 99 Noms d'Allah -- */
   'names99.title': 'Les 99 Noms d\'Allah',
   'names99.subtitle': 'Apprenez et mémorisez les noms divins',
   'names99.allNames': 'Tous les noms',
@@ -370,6 +375,23 @@ export const fr: Record<string, string> = {
   'names99.meaning': 'Signification',
   'names99.description': 'Description',
   'names99.daily': 'Nom du jour',
+  'names99.review': 'Révision',
+  'names99.reviewDue': 'à réviser aujourd\'hui',
+  'names99.reviewDone': 'Révision du jour terminée',
+  'names99.reviewDoneHint': 'Tous les noms dus ont été revus. Revenez demain, ou entraînez-vous librement.',
+  'names99.rateAgain': 'Oublié',
+  'names99.rateGood': 'Je le connais',
+  'names99.rateEasy': 'Facile',
+  'names99.reviewIn': 'À revoir dans',
+  'names99.mastered': 'maîtrisés',
+  'names99.learning': 'en cours',
+  'names99.practice': 'Mode libre',
+  'names99.practiceHint': 'Entraînement libre : la notation met à jour votre programme de révision.',
+  'names99.reset': 'Réinitialiser la progression',
+  'names99.audioPlay': 'Écouter',
+  'names99.audioLoop': 'Boucle',
+  'names99.quranVerses': 'Dans le Coran',
+  'names99.quranRead': 'Lire dans le Coran',
 
   /* -- Calendrier hégirien -- */
   'hijri.title': 'Calendrier hégirien',

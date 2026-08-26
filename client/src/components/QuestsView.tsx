@@ -4,7 +4,7 @@ import { useI18n } from '../i18n';
 import { useAuth } from '../context/AuthContext';
 import { useDevotion } from '../hooks/useDevotion';
 import { storageKey } from '../lib/storageScope';
-import type { Quest } from '../lib/api';
+import type { Quest, WeeklyChallenge } from '../lib/api';
 import { SURAHS } from '../lib/surahs';
 import { RankCard } from './RankCard';
 
@@ -17,6 +17,23 @@ const QUEST_ICONS: Record<string, string> = {
   knowledge: '🎓',
   akhlaq: '💚',
 };
+
+const CHALLENGE_ICONS: Record<string, string> = {
+  prayers: '🕌',
+  quests: '⚔️',
+  quran: '📖',
+  dhikr: '📿',
+  quiz: '🧠',
+  streak: '🔥',
+  names: '📍',
+};
+
+/** Vendredi de la semaine (lundi + 4) : fin des défis. */
+function weekEndLabel(weekStart: string): string {
+  const d = new Date(weekStart + 'T00:00:00');
+  d.setDate(d.getDate() + 6);
+  return `${d.getDate()}/${d.getMonth() + 1}`;
+}
 
 /** Détecte automatiquement les liens Coran depuis le titre/description d'une quête. */
 const SURAH_NAME_MAP: Record<string, { num: number; verse?: number }> = {
@@ -176,13 +193,21 @@ function quranVisitedKey(scope: string): string {
 export function QuestsView() {
   const { t } = useI18n();
   const { user, scope } = useAuth();
-  const { quests, achievements, toggleQuest } = useDevotion();
+  const { quests, achievements, challenges, toggleQuest, claimChallenge } = useDevotion();
   const navigate = useNavigate();
 
   // Modal de verification (quiz ou lecture Coran) + avertissement priere
   const [verify, setVerify] = useState<{ quest: Quest; feedback?: string } | null>(null);
   const [prayerWarn, setPrayerWarn] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
+  const [claimingId, setClaimingId] = useState<string | null>(null);
+
+  const onClaim = async (challenge: WeeklyChallenge) => {
+    if (claimingId) return;
+    setClaimingId(challenge.challenge_id);
+    await claimChallenge(challenge.challenge_id);
+    setClaimingId(null);
+  };
 
   const doComplete = async (q: Quest, opts?: { answer?: number }) => {
     setBusyId(q.quest_id);
@@ -258,6 +283,53 @@ export function QuestsView() {
           <p className="text-[10px] text-stone-400">Badges</p>
         </div>
       </div>
+
+      {/* Défis hebdomadaires */}
+      {challenges && challenges.challenges.length > 0 && (
+        <section className="card mb-4 border-gold-500/30 p-4">
+          <h2 className="flex items-center gap-2 text-sm font-bold text-gold-400">🏆 {t('challenges.title')}</h2>
+          <p className="mt-0.5 text-[11px] text-stone-500">
+            {t('challenges.weekOf', { date: weekEndLabel(challenges.week_start) })}
+          </p>
+          <div className="mt-3 space-y-3">
+            {challenges.challenges.map((c) => {
+              const pct = c.target > 0 ? Math.min(100, Math.round((c.progress / c.target) * 100)) : 0;
+              return (
+                <div key={c.challenge_id}>
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="flex items-center gap-1.5 text-xs font-semibold">
+                      <span>{CHALLENGE_ICONS[c.type] ?? '🏆'}</span>
+                      <span className={c.claimed ? 'text-gold-300' : c.completed ? 'text-gold-400' : ''}>{c.title}</span>
+                    </p>
+                    <span className="shrink-0 text-[10px] font-bold text-stone-400">{c.progress}/{c.target}</span>
+                  </div>
+                  <p className="text-[10px] text-stone-500">{c.description}</p>
+                  <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-emerald-950/60">
+                    <div
+                      className={'h-full rounded-full transition-all duration-500 ' + (c.claimed ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-gold-400')}
+                      style={{ width: pct + '%' }}
+                    />
+                  </div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <span className="text-[10px] text-stone-500">+{c.points} pts</span>
+                    {c.claimed ? (
+                      <span className="text-[10px] font-bold text-emerald-400">✓ {t('challenges.claimed')}</span>
+                    ) : c.completed ? (
+                      <button
+                        onClick={() => onClaim(c)}
+                        disabled={claimingId !== null}
+                        className="btn-gold px-3 py-1 text-[10px]"
+                      >
+                        {claimingId === c.challenge_id ? '…' : t('challenges.claim')}
+                      </button>
+                    ) : null}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+      )}
 
       {/* Quêtes */}
       <section className="card mb-4 p-4">

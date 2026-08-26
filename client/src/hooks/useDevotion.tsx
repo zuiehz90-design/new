@@ -1,13 +1,17 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import {
+  apiChallenges,
   apiCheckPrayer,
+  apiClaimChallenge,
   apiCompleteQuest,
   apiGetAchievements,
   apiPrayers,
   apiQuests,
+  apiReportChallengeProgress,
   apiUncheckPrayer,
+  type ChallengesData,
   type PrayerStatus,
   type QuestsData,
 } from '../lib/api';
@@ -69,6 +73,9 @@ export interface DevotionStore {
   prayers: PrayerStatus | null;
   quests: QuestsData | null;
   achievements: Achievements | null;
+  challenges: ChallengesData | null;
+  claimChallenge: (challengeId: string) => Promise<Record<string, unknown> | null>;
+  reportChallengeProgress: (challengeId: string) => Promise<void>;
   togglePrayer: (prayer: string, opts?: { late?: boolean; lateMinutes?: number }) => Promise<void>;
   toggleQuest: (questId: string, opts?: { answer?: number }) => Promise<Record<string, unknown> | null>;
 }
@@ -81,18 +88,26 @@ export function DevotionProvider({ children }: { children: ReactNode }) {
   const [prayers, setPrayers] = useState<PrayerStatus | null>(null);
   const [quests, setQuests] = useState<QuestsData | null>(null);
   const [achievements, setAchievements] = useState<Achievements | null>(null);
+  const [challenges, setChallenges] = useState<ChallengesData | null>(null);
+  const generationRef = useRef(0);
 
   const load = useCallback(async () => {
     if (!user) {
       setPrayers(null);
       setQuests(null);
       setAchievements(null);
+      setChallenges(null);
       return;
     }
-    const [p, q, a] = await Promise.allSettled([apiPrayers(), apiQuests(), apiGetAchievements<Achievements>()]);
+    const generation = ++generationRef.current;
+    const [p, q, a, c] = await Promise.allSettled([apiPrayers(), apiQuests(), apiGetAchievements<Achievements>(), apiChallenges()]);
+    // Une requête plus récente (ex. rechargement après une action) a pris le dessus :
+    // ignorer ce résultat périmé pour ne pas faire clignoter l'état (vert → rouge).
+    if (generation !== generationRef.current) return;
     if (p.status === 'fulfilled') setPrayers(p.value);
     if (q.status === 'fulfilled') setQuests(q.value);
     if (a.status === 'fulfilled' && a.value) setAchievements(a.value);
+    if (c.status === 'fulfilled') setChallenges(c.value);
   }, [user]);
 
   useEffect(() => { void load(); }, [load]);
@@ -132,7 +147,43 @@ export function DevotionProvider({ children }: { children: ReactNode }) {
     }
   }, [user, prayers, applyServerMeta, load, showToast]);
 
-  const toggleQuest = useCallback(async (questId: string, opts?: { answer?: number }) => {
+  const claimChallenge = useCallback(async (challengeId: string): Promise<Record<string, unknown> | null> => {
+    if (!user) return null;
+    try {
+      const result = await apiClaimChallenge(challengeId);
+      if (!result.ok) return result as unknown as Record<string, unknown>;
+      applyServerMeta(result);
+      showToast('⚔️', 'Défi relevé !', '+' + (result.points ?? 0) + ' pts', 'bg-gold-500');
+      await load();
+      return result as unknown as Record<string, unknown>;
+    } catch {
+      showToast('⚠️', 'Récompense indisponible', 'Vérifie ta connexion puis réessaie.', 'bg-red-500');
+      return null;
+    }
+  }, [user, applyServerMeta, load, showToast]);
+
+  const reportChallengeProgress = useCallback(async (challengeId: string) => {
+    if (!user) return;
+    // Mise à jour optimiste : la barre bouge immédiatement, le serveur confirme ensuite.
+    setChallenges((prev) => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        challenges: prev.challenges.map((c) =>
+          c.challenge_id === challengeId && !c.claimed
+            ? { ...c, progress: Math.min(c.progress + 1, c.target), completed: c.progress + 1 >= c.target }
+            : c
+        ),
+      };
+    });
+    try {
+      await apiReportChallengeProgress(challengeId);
+    } catch {
+      /* hors ligne ou défi absent : la barre sera resynchronisée au prochain load */
+    }
+  }, [user]);
+
+    const toggleQuest = useCallback(async (questId: string, opts?: { answer?: number }) => {
     if (!user || !quests) return null;
     const current = quests.quests.find((quest) => quest.quest_id === questId);
     if (!current || current.done === 1) return { ok: true, done: true };
@@ -158,9 +209,12 @@ export function DevotionProvider({ children }: { children: ReactNode }) {
     prayers,
     quests,
     achievements,
+    challenges,
     togglePrayer,
     toggleQuest,
-  }), [prayers, quests, achievements, togglePrayer, toggleQuest]);
+    claimChallenge,
+    reportChallengeProgress,
+  }), [prayers, quests, achievements, challenges, togglePrayer, toggleQuest, claimChallenge, reportChallengeProgress]);
 
   return <DevotionContext.Provider value={value}>{children}</DevotionContext.Provider>;
 }

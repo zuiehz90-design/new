@@ -224,6 +224,7 @@ export interface ApiFetchOptions {
 function cacheDomains(path: string): string[] {
   const base = path.split('?')[0];
   if (base.startsWith('/api/quests')) return ['/api/quests', '/api/achievements'];
+  if (base.startsWith('/api/challenges')) return ['/api/challenges'];
   if (base.startsWith('/api/prayers/check') || base.startsWith('/api/prayers/uncheck')) return ['/api/prayers', '/api/quests', '/api/achievements'];
   if (base.startsWith('/api/prayers')) return ['/api/prayers'];
   if (base.startsWith('/api/achievements')) return ['/api/achievements'];
@@ -347,6 +348,50 @@ export function apiUncheckPrayer(prayer: string): Promise<{ ok: boolean; newBadg
 
 export function apiQuests(options: ApiFetchOptions = {}): Promise<QuestsData> {
   return apiFetch<QuestsData>('/api/quests', {}, DEFAULT_API_TIMEOUT_MS, options);
+}
+
+export interface WeeklyChallenge {
+  challenge_id: string;
+  title: string;
+  description: string;
+  type: string;
+  target: number;
+  points: number;
+  progress: number;
+  claimed: boolean;
+  completed: boolean;
+}
+
+export interface ChallengesData {
+  week_start: string;
+  challenges: WeeklyChallenge[];
+}
+
+export function apiChallenges(options: ApiFetchOptions = {}): Promise<ChallengesData> {
+  return apiFetch<ChallengesData>('/api/challenges', {}, DEFAULT_API_TIMEOUT_MS, options);
+}
+
+export interface ClaimChallengeResult {
+  ok: boolean;
+  claimed: boolean;
+  points: number;
+  newBadges?: string[];
+  newRank?: any;
+  code?: string;
+}
+
+export function apiClaimChallenge(challengeId: string): Promise<ClaimChallengeResult> {
+  return apiFetch(`/api/challenges/${challengeId}/claim`, { method: 'POST' });
+}
+
+export function apiReportChallengeProgress(challengeId: string): Promise<{
+  ok: boolean;
+  progress: number;
+  target: number;
+  completed: boolean;
+  claimed: boolean;
+}> {
+  return apiFetch(`/api/challenges/${challengeId}/progress`, { method: 'POST' });
 }
 
 export interface SyncMessage {

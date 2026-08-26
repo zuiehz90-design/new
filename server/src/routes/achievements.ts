@@ -163,8 +163,9 @@ export function userPoints(userId: number): number {
             ELSE 0
           END), 0) FROM prayers WHERE user_id = ?)
       + (SELECT COALESCE(SUM(points), 0) FROM quests WHERE user_id = ? AND done = 1)
-      + (SELECT COALESCE(SUM(points_awarded), 0) FROM quiz_completions WHERE user_id = ?) AS n
-  `).get(userId, userId, userId, userId) as { n: number } | undefined;
+      + (SELECT COALESCE(SUM(points_awarded), 0) FROM quiz_completions WHERE user_id = ?)
+      + (SELECT COALESCE(SUM(points), 0) FROM weekly_challenges WHERE user_id = ? AND claimed = 1) AS n
+  `).get(userId, userId, userId, userId, userId) as { n: number } | undefined;
   return row?.n ?? 0;
 }
 

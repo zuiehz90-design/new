@@ -13,6 +13,7 @@ import { RankCard } from './RankCard';
 import { DailyVerse } from './DailyVerse';
 import { DashboardSuggestions } from './DashboardSuggestions';
 import { MoonIcon } from './icons';
+import { NameOfTheDay } from './NameOfTheDay';
 import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
 const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
@@ -165,6 +166,9 @@ export function DashboardView() {
 
       {/* Suggestions contextuelles (basées sur lheure et les prières) */}
       <DashboardSuggestions />
+
+      {/* Nom du jour */}
+      <NameOfTheDay />
 
       {/* Citation du jour */}
       <DailyVerse />

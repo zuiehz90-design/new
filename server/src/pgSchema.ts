@@ -77,6 +77,21 @@ CREATE TABLE IF NOT EXISTS quest_completions (
   quest_id TEXT NOT NULL,
   completed_at TEXT NOT NULL DEFAULT (to_char(now(), 'YYYY-MM-DD HH24:MI:SS'))
 );
+CREATE TABLE IF NOT EXISTS weekly_challenges (
+  id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  week_start TEXT NOT NULL,
+  challenge_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL,
+  target INTEGER NOT NULL DEFAULT 1,
+  points INTEGER NOT NULL DEFAULT 30,
+  progress INTEGER NOT NULL DEFAULT 0,
+  claimed INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(user_id, week_start, challenge_id)
+);
+CREATE INDEX IF NOT EXISTS idx_weekly_challenges_user ON weekly_challenges(user_id, week_start);
 CREATE TABLE IF NOT EXISTS achieved_badges (
   id INTEGER GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
   user_id INTEGER NOT NULL,

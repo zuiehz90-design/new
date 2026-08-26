@@ -224,13 +224,14 @@ questsRouter.get('/', auth, async (req: any, res) => {
   const todayPoints = rows.filter((r) => r.done).reduce((s, r) => s + r.points, 0);
   const prayerPoints = db.prepare('SELECT COUNT(*) as n FROM prayers WHERE user_id = ? AND date = ?').get(req.user.id, date) as { n: number };
   const lifetime = db.prepare('SELECT COALESCE(SUM(points), 0) as n FROM quests WHERE user_id = ? AND done = 1').get(req.user.id) as { n: number };
+  const lifetimeChallenges = db.prepare('SELECT COALESCE(SUM(points), 0) as n FROM weekly_challenges WHERE user_id = ? AND claimed = 1').get(req.user.id) as { n: number };
   const lifetimePrayers = db.prepare('SELECT COUNT(*) as n FROM prayers WHERE user_id = ?').get(req.user.id) as { n: number };
 
   res.json({
     date,
     quests: rows,
     score: todayPoints + prayerPoints.n * 10,
-    lifetime: lifetime.n + lifetimePrayers.n * 10,
+    lifetime: lifetime.n + lifetimePrayers.n * 10 + lifetimeChallenges.n,
     completed: rows.filter((r) => r.done).length,
   });
 });

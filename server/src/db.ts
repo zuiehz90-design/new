@@ -137,6 +137,21 @@ CREATE TABLE IF NOT EXISTS quiz_completions (
   completed_at TEXT NOT NULL DEFAULT (datetime('now')),
   UNIQUE(user_id, prophet)
 );
+CREATE TABLE IF NOT EXISTS weekly_challenges (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  week_start TEXT NOT NULL,
+  challenge_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  description TEXT NOT NULL DEFAULT '',
+  type TEXT NOT NULL,
+  target INTEGER NOT NULL DEFAULT 1,
+  points INTEGER NOT NULL DEFAULT 30,
+  progress INTEGER NOT NULL DEFAULT 0,
+  claimed INTEGER NOT NULL DEFAULT 0,
+  UNIQUE(user_id, week_start, challenge_id)
+);
+CREATE INDEX IF NOT EXISTS idx_weekly_challenges_user ON weekly_challenges(user_id, week_start);
 CREATE TABLE IF NOT EXISTS quest_completions (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,

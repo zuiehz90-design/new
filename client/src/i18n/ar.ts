@@ -292,7 +292,12 @@ export const ar: Record<string, string> = {
   'prophets.weeklyReview': 'أعد القراءة',
   'prophets.weeklyDone': 'أنجزت هذا الأسبوع',
   'prophets.weeklyDaysLeft': 'أيام متبقية',
-  /* -- أسماء الله الحسنى -- */
+    'challenges.title': 'تحديات الأسبوع',
+  'challenges.weekOf': 'هذا الأسبوع — الأهداف حتى {date}',
+  'challenges.claim': 'استلام',
+  'challenges.claimed': 'تم الاستلام',
+
+/* -- أسماء الله الحسنى -- */
   'names99.title': 'أسماء الله الحسنى',
   'names99.subtitle': 'تعلّم واحفظ الأسماء الإلهية',
   'names99.allNames': 'جميع الأسماء',
@@ -304,6 +309,23 @@ export const ar: Record<string, string> = {
   'names99.meaning': 'المعنى',
   'names99.description': 'الوصف',
   'names99.daily': 'اسم اليوم',
+  'names99.review': 'مراجعة',
+  'names99.reviewDue': 'للمراجعة اليوم',
+  'names99.reviewDone': 'اكتملت مراجعة اليوم',
+  'names99.reviewDoneHint': 'تمت مراجعة جميع الأسماء المستحقة. عد غدًا أو تدرب بحرية.',
+  'names99.rateAgain': 'نسيته',
+  'names99.rateGood': 'أعرفه',
+  'names99.rateEasy': 'سهل',
+  'names99.reviewIn': 'المراجعة بعد',
+  'names99.mastered': 'متقن',
+  'names99.learning': 'قيد التعلم',
+  'names99.practice': 'تدريب حر',
+  'names99.practiceHint': 'تدريب حر: تقييمك يحدّث جدول المراجعة.',
+  'names99.reset': 'إعادة تعيين التقدم',
+  'names99.audioPlay': 'استمع',
+  'names99.audioLoop': 'تكرار',
+  'names99.quranVerses': 'في القرآن',
+  'names99.quranRead': 'اقرأ في القرآن',
 
   /* -- التقويم الهجري -- */
   'hijri.title': 'التقويم الهجري',

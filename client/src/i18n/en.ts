@@ -338,7 +338,12 @@ export const en: Record<string, string> = {
   'prophets.weeklyReview': 'Re-read',
   'prophets.weeklyDone': 'Completed this week',
   'prophets.weeklyDaysLeft': 'Days left',
-  /* -- 99 Names of Allah -- */
+    'challenges.title': 'Weekly Challenges',
+  'challenges.weekOf': 'This week — goals until {date}',
+  'challenges.claim': 'Claim',
+  'challenges.claimed': 'Claimed',
+
+/* -- 99 Names of Allah -- */
   'names99.title': 'The 99 Names of Allah',
   'names99.subtitle': 'Learn and memorize the divine names',
   'names99.allNames': 'All names',
@@ -350,6 +355,23 @@ export const en: Record<string, string> = {
   'names99.meaning': 'Meaning',
   'names99.description': 'Description',
   'names99.daily': 'Name of the day',
+  'names99.review': 'Review',
+  'names99.reviewDue': 'due today',
+  'names99.reviewDone': "Today's review complete",
+  'names99.reviewDoneHint': 'All due names have been reviewed. Come back tomorrow, or practice freely.',
+  'names99.rateAgain': 'Forgot',
+  'names99.rateGood': 'I know it',
+  'names99.rateEasy': 'Easy',
+  'names99.reviewIn': 'Review in',
+  'names99.mastered': 'mastered',
+  'names99.learning': 'learning',
+  'names99.practice': 'Free practice',
+  'names99.practiceHint': 'Free practice: your rating updates your review schedule.',
+  'names99.reset': 'Reset progress',
+  'names99.audioPlay': 'Listen',
+  'names99.audioLoop': 'Loop',
+  'names99.quranVerses': 'In the Quran',
+  'names99.quranRead': 'Read in the Quran',
 
   /* -- Hijri Calendar -- */
   'hijri.title': 'Hijri Calendar',
