@@ -192,7 +192,7 @@ export function QuestsView() {
     if (res.ok === false) {
       if (res.code === 'prayer_required') { setPrayerWarn(q.quest_id); return; }
       if (res.code === 'quiz_wrong') {
-        setVerify((v) => (v ? { ...v, feedback: res.correct } : v));
+        setVerify((v) => (v ? { ...v, feedback: typeof res.correct === 'string' ? res.correct : undefined } : v));
         return;
       }
       if (res.code === 'quiz_required') { setVerify({ quest: q }); return; }

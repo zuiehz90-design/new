@@ -1,148 +1,206 @@
 /**
- * Mobile-first cache layer: localStorage on web/desktop, Capacitor SQLite on iOS.
- * Reads from cache first (instant), fetches from server in background if stale.
- * Writes go to server first, then update cache.
+ * Cache client partage : localStorage sur web/desktop, SQLite mobile en extension.
  *
- * TTL: 5 min for most data, 30 min for prayers (rarely changes intra-day after check-in).
+ * La page peut lire instantanément le dernier snapshot connu. Les GET frais sont
+ * revalidés en arrière-plan, tandis que les mutations invalident tout le domaine
+ * concerné. Les clés sont isolées par compte pour éviter toute fuite entre sessions.
  */
 
 import { isMobile } from './desktop';
 
-const PREFIX = 'nour:cache:';
+const PREFIX = 'nour:cache:v2:';
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
-const PRAYER_TTL_MS = 30 * 60 * 1000;
+export const PRAYER_TTL_MS = 30 * 60 * 1000;
+const CACHE_EVENT = 'nour:cache-updated';
 
-/** Cached entry with timestamp */
 interface CacheEntry {
   data: unknown;
   ts: number;
 }
 
-function key(url: string): string {
-  return PREFIX + url;
+export interface CacheUpdateEvent {
+  url: string;
+  scope: string;
+  background: boolean;
 }
 
-// ── Unified read/write (localStorage on all platforms, SQLite upgrade path ready) ──
+export interface CachedGetOptions {
+  scope?: string;
+  force?: boolean;
+  staleIfError?: boolean;
+  revalidate?: boolean;
+  onFresh?: (data: unknown) => void;
+}
 
-function readCache(url: string): CacheEntry | null {
+function browser(): boolean {
+  return typeof window !== 'undefined' && typeof localStorage !== 'undefined';
+}
+
+/** Hash déterministe : le token ne se retrouve jamais dans la clé localStorage. */
+export function cacheScope(scope: string | null | undefined): string {
+  const input = scope || 'public';
+  let hash = 2166136261;
+  for (let i = 0; i < input.length; i += 1) {
+    hash ^= input.charCodeAt(i);
+    hash = Math.imul(hash, 16777619);
+  }
+  return `${input === 'public' ? 'public' : 'account'}-${(hash >>> 0).toString(36)}`;
+}
+
+function key(url: string, scope: string): string {
+  return `${PREFIX}${cacheScope(scope)}:${url}`;
+}
+
+function readCache(url: string, scope: string): CacheEntry | null {
+  if (!browser()) return null;
   try {
-    const raw = localStorage.getItem(key(url));
+    const raw = localStorage.getItem(key(url, scope));
     if (!raw) return null;
-    return JSON.parse(raw) as CacheEntry;
+    const parsed = JSON.parse(raw) as CacheEntry;
+    return parsed && typeof parsed.ts === 'number' ? parsed : null;
   } catch {
     return null;
   }
 }
 
-function writeCache(url: string, data: unknown): void {
+function writeCache(url: string, scope: string, data: unknown, background: boolean): void {
+  if (!browser()) return;
   try {
-    const entry: CacheEntry = { data, ts: Date.now() };
-    localStorage.setItem(key(url), JSON.stringify(entry));
-  } catch { /* storage full */ }
+    localStorage.setItem(key(url, scope), JSON.stringify({ data, ts: Date.now() } satisfies CacheEntry));
+    window.dispatchEvent(new CustomEvent<CacheUpdateEvent>(CACHE_EVENT, {
+      detail: { url, scope: cacheScope(scope), background },
+    }));
+  } catch {
+    // Un stockage plein ne doit jamais bloquer l'interface.
+  }
 }
 
-function removeCache(url: string): void {
-  try {
-    localStorage.removeItem(key(url));
-  } catch { /* ignore */ }
+function removeCache(url: string, scope: string): void {
+  if (!browser()) return;
+  try { localStorage.removeItem(key(url, scope)); } catch { /* ignore */ }
 }
 
-/** Invalidate all cache entries matching a prefix (e.g., /api/prayers) */
-export function invalidatePrefix(prefix: string): void {
+export function invalidatePrefix(prefix: string, scope?: string): void {
+  if (!browser()) return;
   try {
-    const fullPrefix = key(prefix);
+    const prefixes = scope
+      ? [key(prefix, scope)]
+      : [`${PREFIX}${cacheScope('public')}:${prefix}`, `${PREFIX}account-`];
     const keys: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith(fullPrefix)) keys.push(k);
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const stored = localStorage.key(i);
+      if (stored && prefixes.some((candidate) => stored.startsWith(candidate))) keys.push(stored);
     }
-    keys.forEach(k => localStorage.removeItem(k));
-  } catch { /* ignore */ }
+    keys.forEach((stored) => localStorage.removeItem(stored));
+    window.dispatchEvent(new CustomEvent<CacheUpdateEvent>(CACHE_EVENT, {
+      detail: { url: prefix, scope: scope ? cacheScope(scope) : 'all', background: false },
+    }));
+  } catch {
+    // Ignore storage access errors (private browsing / quota).
+  }
 }
 
-/** Clear entire mobile cache */
+export function invalidatePrefixes(prefixes: string[], scope?: string): void {
+  prefixes.forEach((prefix) => invalidatePrefix(prefix, scope));
+}
+
 export function clearAllCache(): void {
+  if (!browser()) return;
   try {
     const keys: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k?.startsWith(PREFIX)) keys.push(k);
+    for (let i = 0; i < localStorage.length; i += 1) {
+      const stored = localStorage.key(i);
+      if (stored?.startsWith(PREFIX)) keys.push(stored);
     }
-    keys.forEach(k => localStorage.removeItem(k));
+    keys.forEach((stored) => localStorage.removeItem(stored));
   } catch { /* ignore */ }
 }
 
-// ── Smart fetch: cache first, then refresh ──
+export function subscribeCacheUpdates(listener: (event: CacheUpdateEvent) => void): () => void {
+  if (!browser()) return () => {};
+  const onUpdate = (event: Event) => listener((event as CustomEvent<CacheUpdateEvent>).detail);
+  window.addEventListener(CACHE_EVENT, onUpdate);
+  return () => window.removeEventListener(CACHE_EVENT, onUpdate);
+}
+
+async function fetchAndStore<T>(
+  url: string,
+  fetchFn: () => Promise<Response>,
+  scope: string,
+  stale: CacheEntry | null,
+  staleIfError: boolean,
+  background: boolean,
+  onFresh?: (data: T) => void,
+): Promise<T> {
+  try {
+    const response = await fetchFn();
+    if (!response.ok) {
+      const error = new Error(`Erreur ${response.status}`) as Error & { status?: number; retryable?: boolean };
+      error.status = response.status;
+      error.retryable = response.status === 408 || response.status === 429 || response.status >= 500;
+      throw error;
+    }
+    const data = (await response.json()) as T;
+    writeCache(url, scope, data, background);
+    onFresh?.(data);
+    return data;
+  } catch (error) {
+    if (staleIfError && stale) return stale.data as T;
+    throw error;
+  }
+}
 
 /**
- * GET with cache: returns cached value immediately if fresh,
- * fetches from server in background.
- * On non-mobile platforms, falls back to direct fetch.
+ * GET cache-first. Un snapshot frais est rendu immédiatement et revalidé en
+ * arrière-plan ; force=true attend la réponse réseau et ignore le cache.
  */
 export async function cachedGet<T>(
   url: string,
   fetchFn: () => Promise<Response>,
   ttlMs = DEFAULT_TTL_MS,
+  options: CachedGetOptions = {},
 ): Promise<T> {
-  // Check cache first
-  const cached = readCache(url);
-  if (cached) {
-    const age = Date.now() - cached.ts;
-    if (age < ttlMs) {
-      // Return cache immediately, refresh in background
-      void fetchFn().then(r => r.json()).then(d => writeCache(url, d)).catch(() => {});
-      return cached.data as T;
+  const scope = options.scope ?? 'public';
+  const stale = readCache(url, scope);
+  const fresh = stale && Date.now() - stale.ts < ttlMs;
+
+  if (!options.force && fresh) {
+    if (options.revalidate !== false) {
+      void fetchAndStore<T>(url, fetchFn, scope, stale, false, true, options.onFresh).catch(() => {});
     }
+    return stale!.data as T;
   }
 
-  // No fresh cache → fetch and cache
-  try {
-    const res = await fetchFn();
-    const json = (await res.json()) as T;
-    writeCache(url, json);
-    return json;
-  } catch {
-    // Return stale cache if available, even if expired
-    if (cached) return cached.data as T;
-    throw new Error('Hors ligne et pas de cache disponible.');
-  }
+  return fetchAndStore<T>(url, fetchFn, scope, stale, options.staleIfError !== false, false, options.onFresh);
 }
 
-/**
- * POST/PUT/DELETE with cache invalidation.
- * Sends to server first, then invalidates related cache keys.
- */
+/** Compatibilité pour les appels spécialisés mobiles. */
 export async function cachedMutate<T>(
   url: string,
   fetchFn: () => Promise<Response>,
   invalidateUrls: string[] = [],
+  scope = 'public',
 ): Promise<T> {
   const res = await fetchFn();
+  if (!res.ok) throw new Error(`Erreur ${res.status}`);
   const json = (await res.json()) as T;
-
-  // Invalidate the exact URL and any related patterns
-  removeCache(url);
-  invalidateUrls.forEach(u => invalidatePrefix(u));
-
+  removeCache(url, scope);
+  invalidatePrefixes(invalidateUrls, scope);
   return json;
 }
-
-// ── Initialize (Capacitor SQLite setup happens here) ──
 
 let initialized = false;
 
 export async function initMobileCache(): Promise<void> {
   if (initialized) return;
   initialized = true;
-
   if (isMobile) {
     try {
-      // Capacitor SQLite init (non-blocking, cache falls back to localStorage)
       const { initNativeSqlite } = await import('./capacitor');
       await initNativeSqlite();
       console.log('[mobileCache] Capacitor SQLite ready');
-    } catch (e) {
-      console.log('[mobileCache] Using localStorage fallback:', (e as Error).message);
+    } catch (error) {
+      console.log('[mobileCache] Using localStorage fallback:', (error as Error).message);
     }
   }
 }

@@ -7,6 +7,7 @@ import { useChat, type ChatStore } from './hooks/useChat';
 import { usePrayerNotifications } from './hooks/usePrayerNotifications';
 import { useDailyNotifications } from './hooks/useDailyNotifications';
 import { useQuestNotifications } from './hooks/useQuestNotifications';
+import { DevotionProvider } from './hooks/useDevotion';
 import { useKeyboardHeight } from './hooks/useKeyboard';
 import { initMobileCache } from './lib/mobileCache';
 import { DashboardView } from './components/DashboardView';
@@ -369,9 +370,11 @@ function AuthGate() {
         <ReadingPositionProvider>
         <ChatProvider>
           <ToastProvider>
-            <AudioPlayerProvider>
-              <Shell />
-            </AudioPlayerProvider>
+            <DevotionProvider>
+              <AudioPlayerProvider>
+                <Shell />
+              </AudioPlayerProvider>
+            </DevotionProvider>
           </ToastProvider>
         </ChatProvider>
         </ReadingPositionProvider>

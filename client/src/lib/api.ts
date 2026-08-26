@@ -100,15 +100,10 @@ export async function fetchHealth(): Promise<{ aiConfigured: boolean; hasUserKey
   }
 }
 
-export async function apiGetAchievements<T>(): Promise<T | null> {
+export async function apiGetAchievements<T>(options: ApiFetchOptions = {}): Promise<T | null> {
+  if (!getToken()) return null;
   try {
-    const token = getToken();
-    if (!token) return null;
-    const res = await fetchWithTimeout('/api/achievements', {
-      headers: { Authorization: `Bearer ${token}` },
-    });
-    if (!res.ok) return null;
-    return await res.json() as T;
+    return await apiFetch<T>('/api/achievements', {}, DEFAULT_API_TIMEOUT_MS, options);
   } catch {
     return null;
   }
@@ -178,6 +173,13 @@ class ApiRequestError extends Error {
   status?: number;
 }
 
+export function isRetryableApiError(error: unknown): boolean {
+  const value = error as { retryable?: boolean; status?: number } | null;
+  if (value?.retryable === false) return false;
+  const status = value?.status;
+  return !(typeof status === 'number' && status >= 400 && status < 500 && status !== 408 && status !== 409 && status !== 429);
+}
+
 async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit = {},
@@ -212,11 +214,25 @@ export function setToken(token: string | null): void {
   else localStorage.removeItem(TOKEN_KEY);
 }
 
-let _skipCache = false;
-/** Call before a GET to bypass the mobile cache (e.g. after a mutation). */
-export function skipNextCache(): void { _skipCache = true; }
+export interface ApiFetchOptions {
+  force?: boolean;
+  staleIfError?: boolean;
+  revalidate?: boolean;
+  onFresh?: (data: unknown) => void;
+}
 
-async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEFAULT_API_TIMEOUT_MS): Promise<T> {
+function cacheDomains(path: string): string[] {
+  const base = path.split('?')[0];
+  if (base.startsWith('/api/quests')) return ['/api/quests'];
+  if (base.startsWith('/api/prayers')) return ['/api/prayers'];
+  if (base.startsWith('/api/achievements')) return ['/api/achievements'];
+  if (base.startsWith('/api/profile')) return ['/api/profile', '/api/auth'];
+  if (base.startsWith('/api/quiz')) return ['/api/quiz', '/api/achievements'];
+  if (base.startsWith('/api/conversations')) return ['/api/conversations'];
+  return [base];
+}
+
+async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEFAULT_API_TIMEOUT_MS, cacheOptions: ApiFetchOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
     ...(opts.headers as Record<string, string> | undefined),
@@ -224,12 +240,20 @@ async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEF
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
 
-  // Mobile: use cache for GET, invalidate cache on POST/PUT/DELETE
+  // Cache partagé : le token sert seulement d'identité de cache et n'est jamais
+  // écrit en clair dans la clé localStorage (mobileCache le hache).
   const isGet = !opts.method || opts.method === 'GET';
   const mc = await mobileCache();
+  const scope = token ?? 'public';
 
   if (mc && isGet) {
-    return mc.cachedGet<T>(path, () => fetchWithTimeout(path, { ...opts, headers }, timeoutMs));
+    return mc.cachedGet<T>(path, () => fetchWithTimeout(path, { ...opts, headers }, timeoutMs), undefined, {
+      scope,
+      force: cacheOptions.force,
+      staleIfError: cacheOptions.staleIfError,
+      revalidate: cacheOptions.revalidate,
+      onFresh: cacheOptions.onFresh,
+    });
   }
 
   const res = await fetchWithTimeout(path, { ...opts, headers }, timeoutMs);
@@ -240,9 +264,9 @@ async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEF
     throw error;
   }
 
-  // Invalidate cache on mutations
+  // Invalidate all related GET domains after a successful mutation.
   if (mc && !isGet) {
-    mc.invalidatePrefix(path);
+    mc.invalidatePrefixes(cacheDomains(path), scope);
   }
 
   return data as T;
@@ -286,7 +310,7 @@ export async function apiLogout(): Promise<void> {
 export async function apiMe(): Promise<User | null> {
   if (!getToken()) return null;
   try {
-    const res = await apiFetch<{ user: User }>('/api/auth/me', {}, AUTH_API_TIMEOUT_MS);
+    const res = await apiFetch<{ user: User }>('/api/auth/me', {}, AUTH_API_TIMEOUT_MS, { force: true, staleIfError: false, revalidate: false });
     return res.user;
   } catch (error) {
     // Une panne ou un réveil lent ne doit pas déconnecter un compte valide.
@@ -300,28 +324,28 @@ export async function apiSaveApiKey(key: string): Promise<void> {
   await apiFetch('/api/setup/setup-key', { method: 'POST', body: JSON.stringify({ key: key.trim() }) });
 }
 
-export async function apiUpdateProfile(patch: { name?: string; profile?: UserProfile }): Promise<User> {
+export async function apiUpdateProfile(patch: { name?: string; profile?: UserProfile }, mutationId?: string): Promise<User> {
   const res = await apiFetch<{ user: User }>('/api/profile', {
     method: 'PUT',
-    body: JSON.stringify(patch),
+    body: JSON.stringify({ ...patch, ...(mutationId ? { mutationId } : {}) }),
   });
   return res.user;
 }
 
-export function apiPrayers(): Promise<PrayerStatus> {
-  return apiFetch<PrayerStatus>('/api/prayers');
+export function apiPrayers(options: ApiFetchOptions = {}): Promise<PrayerStatus> {
+  return apiFetch<PrayerStatus>('/api/prayers', {}, DEFAULT_API_TIMEOUT_MS, options);
 }
 
-export function apiCheckPrayer(prayer: string, opts?: { late?: boolean; lateMinutes?: number }): Promise<{ ok: boolean; newBadges?: string[]; penalty?: number }> {
+export function apiCheckPrayer(prayer: string, opts?: { late?: boolean; lateMinutes?: number; mutationId?: string }): Promise<{ ok: boolean; newBadges?: string[]; newRank?: any; penalty?: number }> {
   return apiFetch('/api/prayers/check', { method: 'POST', body: JSON.stringify({ prayer, ...(opts ?? {}) }) });
 }
 
-export function apiUncheckPrayer(prayer: string): Promise<{ ok: boolean }> {
-  return apiFetch('/api/prayers/uncheck', { method: 'POST', body: JSON.stringify({ prayer }) });
+export function apiUncheckPrayer(prayer: string, mutationId?: string): Promise<{ ok: boolean }> {
+  return apiFetch('/api/prayers/uncheck', { method: 'POST', body: JSON.stringify({ prayer, ...(mutationId ? { mutationId } : {}) }) });
 }
 
-export function apiQuests(): Promise<QuestsData> {
-  return apiFetch<QuestsData>('/api/quests');
+export function apiQuests(options: ApiFetchOptions = {}): Promise<QuestsData> {
+  return apiFetch<QuestsData>('/api/quests', {}, DEFAULT_API_TIMEOUT_MS, options);
 }
 
 export interface SyncMessage {
@@ -352,9 +376,21 @@ export async function apiSaveConversations(conversations: SyncConversation[]): P
 export interface CompleteQuestOpts {
   /** Reponse au quiz de verification (index de la bonne option). */
   answer?: number;
+  /** Valeur explicite : un retry ne doit jamais basculer une quête dans l'autre sens. */
+  done?: boolean;
 }
 
-export function apiCompleteQuest(questId: string, opts?: CompleteQuestOpts): Promise<{ ok: boolean; done: boolean; points?: number; newBadges?: string[]; newRank?: any; correct?: string; code?: string }> {
+export interface CompleteQuestResult {
+  ok: boolean;
+  done: boolean;
+  points?: number;
+  newBadges?: string[];
+  newRank?: any;
+  correct?: string;
+  code?: string;
+}
+
+export function apiCompleteQuest(questId: string, opts?: CompleteQuestOpts & { mutationId?: string }): Promise<CompleteQuestResult> {
   return apiFetch(`/api/quests/${questId}/complete`, { method: 'POST', body: opts ? JSON.stringify(opts) : undefined });
 }
 

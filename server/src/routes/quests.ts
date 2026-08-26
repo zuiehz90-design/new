@@ -235,12 +235,22 @@ questsRouter.get('/', auth, async (req: any, res) => {
   });
 });
 
-// POST /api/quests/:questId/complete — bascule terminé / non terminé
+// POST /api/quests/:questId/complete
+// `done` est explicite pour les retries : une requête répétée ne peut jamais
+// basculer une quête validée vers l'état inverse.
 questsRouter.post('/:questId/complete', auth, (req: any, res) => {
   const date = typeof req.query.date === 'string' ? req.query.date : toLocalDate();
   const row = db.prepare('SELECT done, points, type FROM quests WHERE user_id = ? AND date = ? AND quest_id = ?').get(req.user.id, date, req.params.questId) as { done: number; points: number; type: string } | undefined;
   if (!row) return res.status(404).json({ error: 'Quête introuvable.' });
-  const next = row.done ? 0 : 1;
+
+  const requestedDone = typeof req.body?.done === 'boolean' ? req.body.done : null;
+  const next = requestedDone === null ? (row.done ? 0 : 1) : (requestedDone ? 1 : 0);
+
+  // Idempotence : l'action a déjà été appliquée côté serveur. On renvoie un
+  // succès sans recalculer ni attribuer de nouveaux points.
+  if (requestedDone === true && row.done === 1) {
+    return res.json({ ok: true, quest_id: req.params.questId, done: true, points: 0, newBadges: [], newRank: null });
+  }
 
   // ---- Systeme de verification avant de valider une quete ----
   if (next === 1 && !row.done) {
@@ -248,7 +258,7 @@ questsRouter.post('/:questId/complete', auth, (req: any, res) => {
     if (row.type === 'prayer') {
       const n = db.prepare('SELECT COUNT(*) as n FROM prayers WHERE user_id = ? AND date = ?').get(req.user.id, date) as { n: number };
       if (n.n === 0) {
-        return res.status(200).json({ ok: false, code: 'prayer_required', quest_id: req.params.questId });
+        return res.status(200).json({ ok: false, code: 'prayer_required', quest_id: req.params.questId, done: false });
       }
     }
     // 2) Quete avec quiz : la bonne reponse est exigee (cote serveur)
@@ -256,17 +266,25 @@ questsRouter.post('/:questId/complete', auth, (req: any, res) => {
     if (quiz) {
       const answer = (req.body ?? {}).answer;
       if (typeof answer !== 'number' || answer < 0 || answer >= quiz.options.length) {
-        return res.status(200).json({ ok: false, code: 'quiz_required', quest_id: req.params.questId });
+        return res.status(200).json({ ok: false, code: 'quiz_required', quest_id: req.params.questId, done: false });
       }
       if (answer !== quiz.answer) {
-        return res.status(200).json({ ok: false, code: 'quiz_wrong', quest_id: req.params.questId, correct: quiz.options[quiz.answer] });
+        return res.status(200).json({ ok: false, code: 'quiz_wrong', quest_id: req.params.questId, done: false, correct: quiz.options[quiz.answer] });
       }
     }
   }
+
   const before = getRank(userPoints(req.user.id));
   db.prepare('UPDATE quests SET done = ? WHERE user_id = ? AND date = ? AND quest_id = ?').run(next, req.user.id, date, req.params.questId);
   const newBadges = checkAchievements(req.user.id);
   const after = getRank(userPoints(req.user.id));
   const newRank = after.id !== before.id ? after : null;
-  res.json({ ok: true, quest_id: req.params.questId, done: next === 1, points: next === 1 ? row.points : 0, newBadges, newRank });
+  res.json({
+    ok: true,
+    quest_id: req.params.questId,
+    done: next === 1,
+    points: next === 1 && row.done === 0 ? row.points : 0,
+    newBadges,
+    newRank,
+  });
 });

@@ -7,11 +7,13 @@ import {
   apiRegister,
   apiUpdateProfile,
   getToken,
+  isRetryableApiError,
   setToken,
   type User,
   type UserProfile,
 } from '../lib/api';
 import { claimPendingData } from '../lib/storageScope';
+import { enqueueAction, registerActionHandlers, subscribeActionResults } from '../lib/actionQueue';
 
 interface AuthCtx {
   user: User | null;
@@ -69,6 +71,38 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // automatiquement avant le premier affichage — plus de mode invite « vide ».
   const [loading, setLoading] = useState(true);
   const scope = user ? `u${user.id}` : 'guest';
+  const userRef = useRef(user);
+
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
+
+  const registerProfileHandler = useCallback(() => {
+    if (!user) return () => {};
+    return registerActionHandlers(scope, {
+      profile: async (payload: { patch: { name?: string; profile?: UserProfile }; mutationId: string }) => {
+        const updated = await apiUpdateProfile(payload.patch, payload.mutationId);
+        setUser(updated);
+        return updated;
+      },
+    });
+  }, [user, scope]);
+
+  useEffect(() => registerProfileHandler(), [registerProfileHandler]);
+
+  useEffect(() => {
+    if (!user) return;
+    return subscribeActionResults((event) => {
+      if (event.scope !== scope || event.action.kind !== 'profile' || event.ok || event.retrying) return;
+      const payload = event.action.payload as { previous?: User };
+      if (payload.previous) setUser(payload.previous);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('nour:toast', {
+          detail: { icon: '⚠️', title: 'Profil non synchronisé', subtitle: 'Les modifications ont été annulées.', color: 'bg-red-500' },
+        }));
+      }
+    });
+  }, [user, scope]);
 
   useEffect(() => {
     let cancelled = false;
@@ -138,9 +172,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const updateProfile = useCallback(async (patch: { name?: string; profile?: UserProfile }) => {
-    const updated = await apiUpdateProfile(patch);
-    setUser(updated);
-  }, []);
+    const current = userRef.current;
+    if (!current) return;
+    const previous = current;
+    const optimistic: User = {
+      ...current,
+      ...(typeof patch.name === 'string' && patch.name.trim().length >= 2 ? { name: patch.name.trim() } : {}),
+      ...(patch.profile ? { profile: { ...current.profile, ...patch.profile } } : {}),
+    };
+    setUser(optimistic);
+    const mutationId = `${scope}-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    try {
+      const updated = await apiUpdateProfile(patch, mutationId);
+      setUser(updated);
+    } catch (error) {
+      if (!isRetryableApiError(error)) {
+        setUser(previous);
+        throw error;
+      }
+      enqueueAction(scope, 'profile', { patch, mutationId, previous }, { dedupeKey: 'profile' });
+      // The local profile is intentionally kept visible while the retry waits.
+    }
+  }, [scope]);
 
   const value = useMemo(
     () => ({ user, loading, scope, register, login, logout, updateProfile }),
