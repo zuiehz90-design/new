@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
 import { prayerLabel } from '../lib/prayer';
+import { CountdownText } from './CountdownText';
+import { countdownParts } from '../lib/countdown';
 import { DashboardSuggestions } from './DashboardSuggestions';
 
 /**
@@ -19,7 +21,7 @@ export function SidebarWidgets() {
 }
 
 /** Prochaine prière en grand : nom, temps restant (gros) et heure (petit). */
-export function SidebarNextPrayer() {
+function SidebarNextPrayer() {
   const { t } = useI18n();
   const pt = useMawaqitTimes();
   const [now, setNow] = useState(Date.now());
@@ -31,11 +33,7 @@ export function SidebarNextPrayer() {
 
   const countdown = useMemo(() => {
     if (!pt?.next) return null;
-    const diff = Math.max(0, pt.next.date.getTime() - now);
-    const h = Math.floor(diff / 3_600_000);
-    const m = Math.floor((diff % 3_600_000) / 60_000);
-    const s = Math.floor((diff % 60_000) / 1000);
-    return { h, m, s };
+    return countdownParts(pt.next.date.getTime(), now);
   }, [pt, now]);
 
   if (!pt?.next) {
@@ -54,9 +52,7 @@ export function SidebarNextPrayer() {
       <p className="mt-1 text-lg font-bold text-gold-300">{t(prayerLabel(key))}</p>
       {countdown && (
         <p className="mt-2 text-3xl font-bold tabular-nums leading-none" style={{ color: 'var(--text-primary)' }}>
-          {countdown.h > 0 && <span>{countdown.h}h </span>}
-          <span>{countdown.m.toString().padStart(2, '0')}m</span>
-          <span className="ml-1 text-lg text-stone-400">{countdown.s.toString().padStart(2, '0')}s</span>
+          <CountdownText p={countdown} />
         </p>
       )}
       <p className="mt-1.5 text-xs text-stone-400">🕌 {pt.next.time}</p>

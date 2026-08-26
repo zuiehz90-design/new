@@ -4,6 +4,8 @@ import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
 import { useChatContext } from '../App';
 import { useAuth } from '../context/AuthContext';
+import { CountdownText } from './CountdownText';
+import { countdownParts } from '../lib/countdown';
 import { useDevotion } from '../hooks/useDevotion';
 import { PRAYER_KEYS, prayerLabel } from '../lib/prayer';
 import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
@@ -57,11 +59,7 @@ export function DashboardView() {
 
   const countdown = useMemo(() => {
     if (!pt?.next) return null;
-    const diff = Math.max(0, pt.next.date.getTime() - now);
-    const h = Math.floor(diff / 3_600_000);
-    const m = Math.floor((diff % 3_600_000) / 60_000);
-    const s = Math.floor((diff % 60_000) / 1000);
-    return { h, m, s, date: pt.next.date };
+    return countdownParts(pt.next.date.getTime(), now);
   }, [pt, now]);
 
   const missed = useMemo(() => {
@@ -145,9 +143,7 @@ export function DashboardView() {
             <p className="mt-1 text-2xl font-bold text-gold-300">{t(prayerLabel(pt.next.key as any))}</p>
             {countdown && (
               <p className="mt-3 text-2xl font-bold tracking-tight" style={{color:"var(--text-primary)"}}>
-                {countdown.h > 0 && <span>{countdown.h}h </span>}
-                <span>{countdown.m.toString().padStart(2, '0')}m</span>
-                <span className="text-lg text-stone-400 ml-1">{countdown.s.toString().padStart(2, '0')}s</span>
+                <CountdownText p={countdown} />
               </p>
             )}
           </>
