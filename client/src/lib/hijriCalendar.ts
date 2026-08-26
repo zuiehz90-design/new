@@ -152,6 +152,7 @@ export function buildHijriMonthCalendar(hijriYear: number, hijriMonth: number): 
   for (let i = 0; i < days; i++) {
     const d = new Date(searchDate);
     d.setDate(d.getDate() + i);
+    d.setHours(0, 0, 0, 0);
     const isToday = d.getTime() === today.getTime();
     result.push({
       hijriDay: i + 1,

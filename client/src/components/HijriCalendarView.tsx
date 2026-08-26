@@ -63,17 +63,17 @@ export function HijriCalendarView() {
     <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
       {/* En-tête */}
       <div className="mb-4 text-center">
-        <h2 className="text-2xl font-bold text-gold-400">{t('hijri.title')}</h2>
+        <h2 className="font-display text-2xl font-bold text-[#D4AF37]">{t('hijri.title')}</h2>
         <p className="mt-1 text-xs text-stone-400">{t('hijri.subtitle')}</p>
       </div>
 
       {/* Date hégirienne d'aujourd'hui */}
-      <div className="card mb-4 p-4 text-center border-gold-500/30">
-        <p className="text-xs text-stone-400">{t('hijri.today')}</p>
-        <p className="mt-1 text-xl font-bold text-gold-300">
+      <div className="card mb-4 p-4 text-center" style={{ borderColor: '#D4AF37', background: 'radial-gradient(ellipse 70% 90% at 50% 30%, rgba(212,175,55,0.12), transparent 65%), #112925' }}>
+        <p className="text-xs text-[#A3B1AC]">{t('hijri.today')}</p>
+        <p className="mt-1 text-xl font-bold text-[#F4D03F]">
           {today.day} {lang === 'ar' ? today.monthNameAr : today.monthName} {today.year} {lang === 'ar' ? 'هـ' : 'AH'}
         </p>
-        <p className="mt-1 text-[11px] text-stone-500">
+        <p className="mt-1 text-[11px] text-[#A3B1AC]">
           {new Date().toLocaleDateString(lang === 'ar' ? 'ar' : lang === 'en' ? 'en-US' : 'fr-FR', {
             weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
           })}
@@ -84,13 +84,19 @@ export function HijriCalendarView() {
       <div className="mb-4 flex justify-center gap-1.5">
         <button
           onClick={() => setShowUpcoming(false)}
-          className={`chip text-xs ${!showUpcoming ? '!border-gold-500/70 !text-gold-300' : ''}`}
+          className="text-xs rounded-lg px-4 py-2 transition"
+          style={!showUpcoming
+            ? { background: '#D4AF37', color: '#1a1a1a', border: '1px solid #D4AF37', fontWeight: 700 }
+            : { background: '#112925', color: '#F4D03F', border: '1px solid #D4AF37' }}
         >
           📅 {t('hijri.monthView')}
         </button>
         <button
           onClick={() => setShowUpcoming(true)}
-          className={`chip text-xs ${showUpcoming ? '!border-gold-500/70 !text-gold-300' : ''}`}
+          className="text-xs rounded-lg px-4 py-2 transition"
+          style={showUpcoming
+            ? { background: '#D4AF37', color: '#1a1a1a', border: '1px solid #D4AF37', fontWeight: 700 }
+            : { background: '#112925', color: '#F4D03F', border: '1px solid #D4AF37' }}
         >
           🔔 {t('hijri.upcoming')}
         </button>
@@ -132,18 +138,18 @@ export function HijriCalendarView() {
         <>
           {/* Navigation mois */}
           <div className="mb-3 flex items-center justify-between">
-            <button onClick={goPrevMonth} className="btn-ghost text-xs">‹</button>
+            <button onClick={goPrevMonth} aria-label="Mois précédent" className="flex h-10 w-10 items-center justify-center rounded-full text-lg transition hover:shadow-[0_0_16px_rgba(212,175,55,0.35)]" style={{ background: '#112925', border: '1px solid #D4AF37', color: '#D4AF37' }}>‹</button>
             <div className="text-center">
-              <p className="text-lg font-bold text-gold-300">{monthLabel}</p>
-              <p className="text-[11px] text-stone-500">{viewYear} {lang === 'ar' ? 'هـ' : 'AH'}</p>
+              <p className="font-display text-[32px] font-bold leading-tight text-[#D4AF37]">{monthLabel}</p>
+              <p className="text-[11px] text-[#A3B1AC]">{viewYear} {lang === 'ar' ? 'هـ' : 'AH'}</p>
             </div>
-            <button onClick={goNextMonth} className="btn-ghost text-xs">›</button>
+            <button onClick={goNextMonth} aria-label="Mois suivant" className="flex h-10 w-10 items-center justify-center rounded-full text-lg transition hover:shadow-[0_0_16px_rgba(212,175,55,0.35)]" style={{ background: '#112925', border: '1px solid #D4AF37', color: '#D4AF37' }}>›</button>
           </div>
 
           {/* Jours de la semaine */}
           <div className="grid grid-cols-7 gap-1 mb-1">
             {weekDays.map((d, i) => (
-              <div key={i} className="text-center text-[10px] font-semibold text-stone-500 py-1">{d}</div>
+              <div key={i} className="py-2 text-center text-[10px] font-bold text-[#A3B1AC]">{d}</div>
             ))}
           </div>
 
@@ -160,18 +166,15 @@ export function HijriCalendarView() {
               return (
                 <div
                   key={day.hijriDay}
-                  className={`aspect-square rounded-lg p-1 text-center transition-all ${
-                    isToday
-                      ? 'bg-gold-500/20 border border-gold-500/60'
-                      : hasEvent
-                      ? 'bg-emerald-500/5 border border-emerald-500/20'
-                      : 'hover:bg-stone-800/50'
-                  }`}
+                  className={`flex min-h-[64px] flex-col items-center justify-center rounded-lg p-3 text-center transition-all ${hasEvent ? '' : 'hover:bg-stone-800/50'}`}
+                  style={isToday
+                    ? { background: '#D4AF37', border: '1px solid #D4AF37' }
+                    : { background: '#112925', border: '1px solid #2A4A43' }}
                 >
-                  <p className={`text-xs font-medium ${isToday ? 'text-gold-300' : 'text-stone-300'}`}>
+                  <p className={`text-sm font-bold ${isToday ? 'text-black' : 'text-white'}`}>
                     {day.hijriDay}
                   </p>
-                  <p className="text-[9px] text-stone-500">
+                  <p className={`text-xs ${isToday ? 'text-black/70' : 'text-[#A3B1AC]'}`}>
                     {day.gregorian.getDate()}
                   </p>
                   {hasEvent && (
@@ -189,7 +192,7 @@ export function HijriCalendarView() {
           </div>
 
           {/* Légende */}
-          <div className="mt-3 flex flex-wrap justify-center gap-2 text-[10px] text-stone-400">
+          <div className="mt-3 flex flex-wrap justify-center gap-2 text-[10px] text-[#A3B1AC]">
             <span className="flex items-center gap-1">🕌 {t('hijri.holiday')}</span>
             <span className="flex items-center gap-1">🤲 {t('hijri.recommended')}</span>
             <span className="flex items-center gap-1">📜 {t('hijri.historical')}</span>
