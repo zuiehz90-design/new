@@ -9,12 +9,12 @@ import { countdownParts } from '../lib/countdown';
 import { useDevotion } from '../hooks/useDevotion';
 import { PRAYER_KEYS, prayerLabel } from '../lib/prayer';
 import { useMawaqitTimes } from '../hooks/useMawaqitTimes';
-import { useAiSetup } from '../hooks/useAiSetup';
 import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
 import { DailyVerse } from './DailyVerse';
 import { DashboardSuggestions } from './DashboardSuggestions';
 import { NameOfTheDay } from './NameOfTheDay';
+import { ExpandableTile } from './ExpandableTile';
 import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
 const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
@@ -30,9 +30,6 @@ export function DashboardView() {
     () => localStorage.getItem('nour-desktop-banner-dismissed') === '1'
   );
   const [desktopOnline, setDesktopOnline] = useState<boolean | null>(null);
-  const aiSetup = useAiSetup();
-  const aiConfigured = aiSetup.status !== 'missing';
-
   const dismissDesktopBanner = () => {
     localStorage.setItem('nour-desktop-banner-dismissed', '1');
     setDesktopBannerDismissed(true);
@@ -114,26 +111,6 @@ export function DashboardView() {
         </section>
       )}
 
-      {/* Bannière clé API (si IA non configurée) */}
-      {!aiConfigured && (
-        <section className="card mb-4 border-amber-500/40 bg-amber-900/15 p-4 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <span className="text-2xl shrink-0">🔑</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-semibold text-amber-300">L'IA n'est pas encore configurée</p>
-              <p className="text-xs text-stone-400 mt-1">
-                Ajoute une clé API <strong>gratuite</strong> depuis{' '}
-                <a href="https://openrouter.ai/keys" target="_blank" rel="noopener" className="text-gold-400 underline">openrouter.ai/keys</a>
-                {' '}(sans CB) pour activer le chat intelligent.
-              </p>
-              <button onClick={aiSetup.open} className="btn-gold mt-2 text-xs">
-                Configurer l'IA (gratuit)
-              </button>
-            </div>
-          </div>
-        </section>
-      )}
-
       {/* ZONE 1 — HERO : prochaine prière */}
       <section
         className="card relative mb-16 overflow-hidden border-gold-500/40 p-8 text-center"
@@ -177,14 +154,18 @@ export function DashboardView() {
         ))}
       </section>
 
+      {/* Citation du jour + Nom du jour : tuiles compactes dépliables */}
+      <div className="mb-16 grid gap-3 md:grid-cols-2">
+        <ExpandableTile emoji="✨" title={t('dailyVerse.title')}>
+          <DailyVerse />
+        </ExpandableTile>
+        <ExpandableTile emoji="✨" title={t('names99.daily')}>
+          <NameOfTheDay />
+        </ExpandableTile>
+      </div>
+
       {/* Suggestions contextuelles (basées sur lheure et les prières) */}
       <DashboardSuggestions />
-
-      {/* ZONE 2 — Citation du jour + Nom du jour côte à côte */}
-      <div className="mb-16 grid gap-4 md:grid-cols-2">
-        <DailyVerse />
-        <NameOfTheDay />
-      </div>
 
       {/* ZONE 2 — Horaires : rangée horizontale compacte (scrollable sur mobile) */}
       {pt && (
@@ -201,49 +182,9 @@ export function DashboardView() {
         </section>
       )}
 
-      {/* ZONE 3 — Découvrir : grandes cartes cliquables */}
-      <section className="mb-16">
-        <h2 className="font-display mb-4 text-2xl font-bold text-gold-400">✨ {t('dashboard.discover')}</h2>
-        <div className="grid gap-4 sm:grid-cols-2">
-          {[
-            { emoji: 'الرّحمن', title: t('names99.title'), desc: t('names99.daily'), to: '/names', big: true },
-            { emoji: '📖', title: t('dashboard.suggest.readQuran'), desc: t('discover.quranDesc'), to: '/quran' },
-            { emoji: '📚', title: t('glossary.title'), desc: t('discover.glossaryDesc'), to: '/glossary' },
-            { emoji: '🕊️', title: t('discover.prophets'), desc: t('discover.prophetsDesc'), to: '/prophets' },
-          ].map((c) => (
-            <Link
-              key={c.to}
-              to={c.to}
-              className={`card card-clickable flex flex-col items-start gap-2 p-5 ${c.big ? 'sm:col-span-2 sm:flex-row sm:items-center sm:gap-5' : ''}`}
-            >
-              <span className={`font-quran shrink-0 ${c.big ? 'text-4xl text-gold-300' : 'text-3xl'}`}>{c.emoji}</span>
-              <span>
-                <span className="font-display block text-base font-bold text-gold-300">{c.title}</span>
-                <span className="mt-0.5 block text-xs text-stone-400">{c.desc}</span>
-              </span>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Compte non connecté → CTA */}
-      {!user && (
-        <section className="card mb-4 border-emerald-700/40 bg-emerald-900/20 p-4 text-center">
-          <p className="text-sm text-stone-300">{t('dashboard.loginPrompt')}</p>
-          <Link to="/profile" className="btn-gold mt-3 inline-block text-sm">
-            {t('profile.login')} / {t('profile.register')}
-          </Link>
-        </section>
-      )}
-
       {/* Suivi spirituel (connecté) */}
       {!authLoading && user && (
         <>
-          {/* Rang façon jeu vidéo */}
-          {achievements && (
-            <RankCard achievements={achievements} />
-          )}
-
           {/* Stats rapides */}
           <div className="mb-4 grid grid-cols-3 gap-2">
             <div className="card p-3 text-center">
@@ -299,8 +240,21 @@ export function DashboardView() {
             />
           </section>
 
-
+          {/* Rang façon jeu vidéo */}
+          {achievements && (
+            <RankCard achievements={achievements} />
+          )}
         </>
+      )}
+
+      {/* Compte non connecté → CTA */}
+      {!user && (
+        <section className="card mb-4 border-emerald-700/40 bg-emerald-900/20 p-4 text-center">
+          <p className="text-sm text-stone-300">{t('dashboard.loginPrompt')}</p>
+          <Link to="/profile" className="btn-gold mt-3 inline-block text-sm">
+            {t('profile.login')} / {t('profile.register')}
+          </Link>
+        </section>
       )}
 
           </div>
