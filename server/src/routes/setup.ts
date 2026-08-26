@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db.js';
 import { authMiddleware } from './auth.js';
+import { config } from '../config.js';
 
 export const setupRouter = Router();
 
@@ -38,4 +39,12 @@ export function getUserApiKey(userId: number): string | null {
   } catch {
     return null;
   }
+}
+
+/** Clé OpenRouter effective pour un utilisateur : la sienne si présente,
+ *  sinon la clé serveur globale (fallback). */
+export function getResolvedApiKey(userId: number): string | null {
+  const userKey = getUserApiKey(userId);
+  if (userKey) return userKey;
+  return config.openRouterApiKey;
 }

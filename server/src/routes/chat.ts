@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { config } from '../config.js';
-import { getUserApiKey } from './setup.js';
+import { getResolvedApiKey } from './setup.js';
 import { authMiddleware } from './auth.js';
 import { SYSTEM_PROMPT } from '../prompt.js';
 import { moderateContent } from '../services/moderation.js';
@@ -11,7 +11,7 @@ export const chatRouter = Router();
 
 chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => {
   const userId = (req as any).user?.id;
-  const apiKey = userId ? getUserApiKey(userId) : null;
+  const apiKey = userId ? getResolvedApiKey(userId) : null;
   if (!apiKey) {
     res.status(503).json({
       error: "Configurez votre clé API OpenRouter dans les réglages pour utiliser le chat IA.",

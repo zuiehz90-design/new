@@ -3,7 +3,7 @@ import { db } from '../db.js';
 import { authMiddleware as auth } from './auth.js';
 import { checkAchievements, getRank, userPoints } from './achievements.js';
 import { config } from '../config.js';
-import { getUserApiKey } from './setup.js';
+import { getResolvedApiKey } from './setup.js';
 
 interface QuestTemplate {
   type: string;
@@ -131,7 +131,7 @@ function extractJson(text: string): unknown {
 }
 
 async function aiQuests(userId: number, profile: Record<string, unknown>): Promise<QuestTemplate[] | null> {
-  const apiKey = getUserApiKey(userId);
+  const apiKey = getResolvedApiKey(userId);
   if (!apiKey) return null;
   const controller = new AbortController();
   // L'IA personnalise les quêtes, mais ne doit jamais bloquer l'écran quotidien.

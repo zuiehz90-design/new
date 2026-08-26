@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { getUserApiKey } from './setup.js';
+import { getResolvedApiKey } from './setup.js';
 import { authMiddleware } from './auth.js';
 import { listModels } from '../services/openrouter.js';
 
@@ -9,7 +9,7 @@ const cache = new Map<number, { at: number; data: unknown }>();
 
 modelsRouter.get('/', authMiddleware, async (req: any, res) => {
   const userId = Number(req.user?.id);
-  const apiKey = getUserApiKey(userId);
+  const apiKey = getResolvedApiKey(userId);
   if (!apiKey) {
     res.json({
       configured: false,

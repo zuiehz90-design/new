@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { config } from '../config.js';
-import { getUserApiKey } from './setup.js';
+import { getResolvedApiKey } from './setup.js';
 import { getSessionUser } from '../auth.js';
 import { getSyncStatus } from '../sync.js';
 
@@ -22,11 +22,12 @@ healthRouter.get('/', (req, res) => {
   const header = req.headers.authorization ?? '';
   const token = header.startsWith('Bearer ') ? header.slice(7) : '';
   const user = token ? getSessionUser(token) : null;
-  const userKey = user ? getUserApiKey(user.id) : null;
+  const userKey = user ? getResolvedApiKey(user.id) : null;
+  const aiReady = Boolean(userKey) || Boolean(config.openRouterApiKey);
   res.json({
     ok: true,
-    aiConfigured: Boolean(userKey),
-    hasUserKey: Boolean(userKey),
+    aiConfigured: aiReady,
+    hasUserKey: aiReady,
     model: config.openRouterModel,
     time: new Date().toISOString(),
   });
