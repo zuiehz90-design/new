@@ -1,3 +1,4 @@
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { useI18n } from '../i18n';
 
@@ -12,7 +13,7 @@ interface VerseModalProps {
 
 export function VerseModal({ chapter, verse, surahName, arabic, translated, onClose }: VerseModalProps) {
   const { t } = useI18n();
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[60] flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"
       onClick={onClose}
@@ -44,6 +45,7 @@ export function VerseModal({ chapter, verse, surahName, arabic, translated, onCl
           📖 {t('names99.quranRead')}
         </Link>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

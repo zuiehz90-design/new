@@ -1,4 +1,5 @@
 import { useI18n } from '../i18n';
+import { createPortal } from 'react-dom';
 
 /**
  * Modal de confirmation quand on coche une prière qui est déjà passée.
@@ -32,7 +33,7 @@ export function LatePrayerModal({
 
   const prayerLabel = t(`prayer.${prayer}`).split(' ')[0];
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4 backdrop-blur-sm"  onClick={onClose}>
       <div
         className="card w-full max-w-sm p-5 animate-fade-in"
@@ -102,6 +103,7 @@ export function LatePrayerModal({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

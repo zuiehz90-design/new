@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useNavigate } from 'react-router-dom';
 import { useI18n } from '../i18n';
 import {
@@ -74,7 +75,7 @@ export function NotificationCenter() {
         )}
       </button>
 
-      {open && (
+      {open && createPortal(
         <>
           <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm" onClick={() => setOpen(false)} />
           <div
@@ -147,7 +148,8 @@ export function NotificationCenter() {
               </div>
             )}
           </div>
-        </>
+        </>,
+        document.body
       )}
     </>
   );
