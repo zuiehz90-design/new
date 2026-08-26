@@ -76,6 +76,8 @@ export interface DevotionStore {
   challenges: ChallengesData | null;
   claimChallenge: (challengeId: string) => Promise<Record<string, unknown> | null>;
   reportChallengeProgress: (challengeId: string) => Promise<void>;
+  /** Recharge toutes les données (prières, quêtes, rang, défis) depuis le serveur. */
+  refresh: () => Promise<void>;
   togglePrayer: (prayer: string, opts?: { late?: boolean; lateMinutes?: number }) => Promise<void>;
   toggleQuest: (questId: string, opts?: { answer?: number }) => Promise<Record<string, unknown> | null>;
 }
@@ -214,7 +216,8 @@ export function DevotionProvider({ children }: { children: ReactNode }) {
     toggleQuest,
     claimChallenge,
     reportChallengeProgress,
-  }), [prayers, quests, achievements, challenges, togglePrayer, toggleQuest, claimChallenge, reportChallengeProgress]);
+    refresh: load,
+  }), [prayers, quests, achievements, challenges, togglePrayer, toggleQuest, claimChallenge, reportChallengeProgress, load]);
 
   return <DevotionContext.Provider value={value}>{children}</DevotionContext.Provider>;
 }

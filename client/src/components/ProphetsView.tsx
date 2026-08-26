@@ -4,10 +4,12 @@ import { useI18n } from '../i18n';
 import { PROPHETS, getFeaturedProphet, type ProphetStory } from '../lib/prophets';
 import { getProphetAudio } from '../lib/prophetsAudio';
 import { PodcastPlayer } from './PodcastPlayer';
+import { useDevotion } from '../hooks/useDevotion';
 import { apiCompleteQuiz, apiQuizProgress, type ProphetProgressEntry, type QuizResult } from '../lib/api';
 
 export function ProphetsView() {
   const { t } = useI18n();
+  const { refresh } = useDevotion();
   const navigate = useNavigate();
   const [selected, setSelected] = useState<ProphetStory | null>(null);
   const [quizActive, setQuizActive] = useState(false);
@@ -48,7 +50,7 @@ export function ProphetsView() {
       // Envoi au serveur : attribue les points (anti-farm, meilleur score)
       setQuizSending(true);
       apiCompleteQuiz(selected!.name, quizScore, selected!.quiz.length)
-        .then((r) => { setQuizReward(r); refreshProgress(); })
+        .then((r) => { setQuizReward(r); refreshProgress(); void refresh(); })
         .catch(() => setQuizReward(null))
         .finally(() => setQuizSending(false));
     } else {

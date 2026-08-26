@@ -169,8 +169,9 @@ challengesRouter.post('/:id/claim', auth, (req: any, res) => {
     return res.status(200).json({ ok: false, code: 'not_reached', challenge_id: req.params.id, claimed: false });
   }
 
-  db.prepare('UPDATE weekly_challenges SET claimed = 1 WHERE id = ?').run(row.id);
+  // Comparaison AVANT l'attribution des points, sinon before === after et newRank est toujours null.
   const before = getRank(userPoints(req.user.id));
+  db.prepare('UPDATE weekly_challenges SET claimed = 1 WHERE id = ?').run(row.id);
   const newBadges = checkAchievements(req.user.id);
   const after = getRank(userPoints(req.user.id));
   const newRank = after.id !== before.id ? after : null;

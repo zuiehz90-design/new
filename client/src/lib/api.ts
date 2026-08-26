@@ -224,7 +224,10 @@ export interface ApiFetchOptions {
 function cacheDomains(path: string): string[] {
   const base = path.split('?')[0];
   if (base.startsWith('/api/quests')) return ['/api/quests', '/api/achievements'];
-  if (base.startsWith('/api/challenges')) return ['/api/challenges'];
+  if (base.startsWith('/api/challenges')) {
+    // Le claim attribue des points (rang) : la carte de rang doit se rafraîchir tout de suite.
+    return base.endsWith('/claim') ? ['/api/challenges', '/api/achievements'] : ['/api/challenges'];
+  }
   if (base.startsWith('/api/prayers/check') || base.startsWith('/api/prayers/uncheck')) return ['/api/prayers', '/api/quests', '/api/achievements'];
   if (base.startsWith('/api/prayers')) return ['/api/prayers'];
   if (base.startsWith('/api/achievements')) return ['/api/achievements'];
