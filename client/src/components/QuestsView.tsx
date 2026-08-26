@@ -261,7 +261,7 @@ export function QuestsView() {
   return (
     <div className="mx-auto max-w-xl px-4 pb-8 pt-4 animate-fade-in">
       <div className="mb-6 text-center">
-        <h1 className="mt-2 text-2xl font-bold">
+        <h1 className="font-display mt-2 text-2xl font-bold text-gold-400">
           ⚔️ {t('dashboard.quests')}
         </h1>
       </div>
@@ -272,23 +272,24 @@ export function QuestsView() {
       <div className="mb-4 grid grid-cols-3 gap-2">
         <div className="card p-3 text-center">
           <p className="text-lg font-bold text-gold-400">{quests?.completed ?? 0}</p>
-          <p className="text-[10px] text-stone-400">Complétées</p>
+          <p className="text-[10px] text-[#A3B1AC]">Complétées</p>
         </div>
         <div className="card p-3 text-center">
           <p className="text-lg font-bold text-gold-400">{quests?.quests?.filter(q => !q.done).length ?? 0}</p>
-          <p className="text-[10px] text-stone-400">Restantes</p>
+          <p className="text-[10px] text-[#A3B1AC]">Restantes</p>
         </div>
         <div className="card p-3 text-center">
           <p className="text-lg font-bold text-gold-400">{achievements?.badges?.length ?? 0}🏅</p>
-          <p className="text-[10px] text-stone-400">Badges</p>
+          <p className="text-[10px] text-[#A3B1AC]">Badges</p>
         </div>
       </div>
 
-      {/* Défis hebdomadaires */}
+      {/* Défis + Quêtes côte à côte */}
+      <div className="mb-4 grid gap-4 md:grid-cols-5 md:gap-6">
       {challenges && challenges.challenges.length > 0 && (
-        <section className="card mb-4 border-gold-500/30 p-4">
-          <h2 className="flex items-center gap-2 text-sm font-bold text-gold-400">🏆 {t('challenges.title')}</h2>
-          <p className="mt-0.5 text-[11px] text-stone-500">
+        <section className="card border-gold-500/40 p-3 md:col-span-2">
+          <h2 className="font-display flex items-center gap-2 text-sm font-bold text-gold-400">🏆 {t('challenges.title')}</h2>
+          <p className="mt-0.5 text-[11px] text-[#A3B1AC]">
             {t('challenges.weekOf', { date: weekEndLabel(challenges.week_start) })}
           </p>
           <div className="mt-3 space-y-3">
@@ -301,24 +302,24 @@ export function QuestsView() {
                       <span>{CHALLENGE_ICONS[c.type] ?? '🏆'}</span>
                       <span className={c.claimed ? 'text-gold-300' : c.completed ? 'text-gold-400' : ''}>{c.title}</span>
                     </p>
-                    <span className="shrink-0 text-[10px] font-bold text-stone-400">{c.progress}/{c.target}</span>
+                    <span className="shrink-0 text-[10px] font-bold text-[#A3B1AC]">{c.progress}/{c.target}</span>
                   </div>
-                  <p className="text-[10px] text-stone-500">{c.description}</p>
-                  <div className="mt-1.5 h-2 overflow-hidden rounded-full bg-emerald-950/60">
+                  <p className="text-[10px] text-[#A3B1AC]">{c.description}</p>
+                  <div className="mt-1.5 h-2.5 overflow-hidden rounded-full bg-[#2A4A43]">
                     <div
-                      className={'h-full rounded-full transition-all duration-500 ' + (c.claimed ? 'bg-emerald-500' : 'bg-gradient-to-r from-emerald-500 to-gold-400')}
+                      className={'h-full rounded-full transition-all duration-500 ' + (c.claimed ? 'bg-[#1F6E5C]' : 'bg-gradient-to-r from-[#D4AF37] to-[#F4D03F]')}
                       style={{ width: pct + '%' }}
                     />
                   </div>
                   <div className="mt-1 flex items-center justify-between">
-                    <span className="text-[10px] text-stone-500">+{c.points} pts</span>
+                    <span className="text-[10px] font-bold text-gold-400">+{c.points} pts</span>
                     {c.claimed ? (
                       <span className="text-[10px] font-bold text-emerald-400">✓ {t('challenges.claimed')}</span>
                     ) : c.completed ? (
                       <button
                         onClick={() => onClaim(c)}
                         disabled={claimingId !== null}
-                        className="btn-gold px-3 py-1 text-[10px]"
+                        className="btn-gold rounded-full px-2 py-1 text-xs"
                       >
                         {claimingId === c.challenge_id ? '…' : t('challenges.claim')}
                       </button>
@@ -332,8 +333,8 @@ export function QuestsView() {
       )}
 
       {/* Quêtes */}
-      <section className="card mb-4 p-4">
-        <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-400">⚔️ {t('dashboard.quests')}</h2>
+      <section className="card p-3 md:col-span-3">
+        <h2 className="font-display mb-3 flex items-center gap-2 text-sm font-bold text-[#1F6E5C]">⚔️ {t('dashboard.quests')}</h2>
         {!quests || quests.quests.length === 0 ? (
           <p className="text-xs text-stone-500">{t('common.loading')}</p>
         ) : (
@@ -348,7 +349,7 @@ export function QuestsView() {
                   <span className="text-2xl">{QUEST_ICONS[q.type] ?? '⭐'}</span>
                   <span className="flex-1">
                     <span className={'block text-sm font-semibold ' + (q.done ? 'text-stone-400 line-through' : '')}>{q.title}</span>
-                    {q.description && <span className="block text-[11px] text-stone-500">{q.description}</span>}
+                    {q.description && <span className="block text-[11px] text-[#A3B1AC]">{q.description}</span>}
                     {/* Liens de redirection automatiques */}
                     {!q.done && (() => {
                       const quranLinks = getQuestLinks(q.title, q.description ?? '');
@@ -361,8 +362,7 @@ export function QuestsView() {
                             <button
                               key={link.href}
                               onClick={(e) => { e.stopPropagation(); navigate(link.href); }}
-                              className="rounded-lg px-2 py-0.5 text-[10px] font-bold transition hover:bg-emerald-500/20"
-                              style={{ background: 'rgba(4,120,87,0.15)', color: 'var(--accent-primary)', border: '1px solid rgba(4,120,87,0.3)' }}
+                              className="rounded-full border border-gold-500/40 bg-[#112925] px-2 py-0.5 text-[10px] font-semibold text-[#F4D03F] transition hover:border-gold-400"
                             >
                               {link.label}
                             </button>
@@ -396,12 +396,13 @@ export function QuestsView() {
           </ul>
         )}
       </section>
+      </div>
 
       {/* Badges */}
       {achievements && (
         <section className="card p-4">
           <h2 className="mb-3 flex items-center gap-2 text-sm font-bold text-gold-400">🏅 Badges</h2>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
             {achievements.families.map((family) => {
               const earnedTiers = family.tiers.filter((tier) => tier.earned).length;
               const nextTier = family.tiers.find((tier) => !tier.earned);
@@ -425,7 +426,7 @@ export function QuestsView() {
                     ))}
                   </div>
                   {nextTier ? (
-                    <p className="mt-1 text-[9px] text-stone-500">
+                    <p className="mt-1 text-[9px] text-[#A3B1AC]">
                       {family.current}/{nextTier.threshold}
                     </p>
                   ) : (
