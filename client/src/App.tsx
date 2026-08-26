@@ -125,6 +125,17 @@ function Shell() {
     { to: '/badges', label: 'Badges', icon: 'badges' },
     { to: '/profile', label: 'Profil', icon: 'profile' },
   ];
+  const moreNav = [
+    { to: '/chat', label: 'Chat', icon: 'chat' },
+    { to: '/quests', label: 'Quêtes', icon: 'quests' },
+    { to: '/prophets', label: 'Prophètes', icon: 'prophets' },
+    { to: '/names', label: '99 Noms', icon: 'names' },
+    { to: '/hijri', label: 'Calendrier', icon: 'calendar' },
+    { to: '/glossary', label: 'Lexique', icon: 'glossary' },
+    { to: '/dhikr', label: 'Dhikr', icon: 'dhikr' },
+    { to: '/quiz', label: 'Quiz', icon: 'quiz' },
+    { to: '/badges', label: 'Badges', icon: 'badges' },
+  ];
   const [moreOpen, setMoreOpen] = useState(false);
 
   const isActive = (path: string) => (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path));
@@ -170,6 +181,14 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
               {item.label}
             </Link>
           ))}
+          <button
+            onClick={() => setMoreOpen(!moreOpen)}
+            aria-label="Toutes les pages"
+            title="Toutes les pages"
+            className={`nav-item px-3 py-2 ${moreOpen || moreNav.some((item) => isActive(item.to)) ? "nav-item-active" : ""}`}
+          >
+            <span className="text-lg leading-none font-bold">+</span>
+          </button>
         </nav>
         <div className="flex items-center gap-1">
           <button
@@ -197,6 +216,29 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
           </button>
         </div>
       </header>
+
+      {/* Menu « + » desktop : toutes les pages hors onglets de la topbar */}
+      {moreOpen && (
+        <>
+          <div className="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-sm md:block" onClick={() => setMoreOpen(false)} />
+          <div className="fixed left-1/2 top-14 z-50 hidden w-64 -translate-x-1/2 animate-fade-in md:block">
+            <div className="card overflow-hidden p-2" style={{ background: 'var(--bg-surface)' }}>
+              <p className="px-3 pb-1 pt-2 text-xs font-bold text-gold-400">Toutes les pages</p>
+              {moreNav.map((item) => (
+                <Link
+                  key={item.to}
+                  to={navTo(item.to)}
+                  onClick={() => setMoreOpen(false)}
+                  className={`flex items-center gap-3 rounded-xl px-3 py-2 text-sm transition hover:bg-white/5 ${isActive(item.to) ? 'text-gold-300' : 'text-stone-300'}`}
+                >
+                  <NavIcon name={item.icon} className="h-5 w-5" />
+                  {item.label}
+                </Link>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <div className="flex flex-1 overflow-hidden">
         {/* ====== CONTENU PRINCIPAL ====== */}
@@ -240,7 +282,7 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
       )}
 
 {/* ====== BARRE DU BAS (MOBILE) ====== */}
-      <nav className="relative z-30 flex items-center justify-around border-t border-emerald-900/30 bg-night-900/95 px-1 py-1 pb-safe backdrop-blur-lg lg:hidden shrink-0" style={{ minHeight: '56px' }}>
+      <nav className="relative z-30 flex items-center justify-around border-t border-emerald-900/30 bg-night-900/95 px-1 py-1 pb-safe backdrop-blur-lg md:hidden shrink-0" style={{ minHeight: '56px' }}>
         {primaryNav.map((item) => (
           <Link
             key={item.to}
@@ -271,8 +313,8 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
       {/* Grille Plus : sections secondaires */}
       {moreOpen && (
         <>
-          <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm lg:hidden" onClick={() => setMoreOpen(false)} />
-          <div className="fixed bottom-0 left-0 right-0 z-50 lg:hidden animate-fade-in">
+          <div className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm md:hidden" onClick={() => setMoreOpen(false)} />
+          <div className="fixed bottom-0 left-0 right-0 z-50 md:hidden animate-fade-in">
             <div className="card rounded-t-3xl border-t-2 border-gold-500/40 p-4 pb-safe" style={{ background: 'var(--bg-surface)' }}>
               <div className="mb-3 flex items-center justify-between">
                 <p className="text-sm font-bold text-gold-400">Explorer</p>
