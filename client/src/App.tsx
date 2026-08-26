@@ -221,7 +221,8 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
       {moreOpen && (
         <>
           <div className="fixed inset-0 z-40 hidden bg-black/50 backdrop-blur-sm md:block" onClick={() => setMoreOpen(false)} />
-          <div className="fixed left-1/2 top-14 z-50 hidden w-64 -translate-x-1/2 animate-fade-in md:block">
+          <div className="fixed left-1/2 top-14 z-50 hidden w-64 -translate-x-1/2 md:block">
+            <div className="animate-fade-in">
             <div className="card overflow-hidden p-2" style={{ background: 'var(--bg-surface)' }}>
               <p className="px-3 pb-1 pt-2 text-xs font-bold text-gold-400">Toutes les pages</p>
               {moreNav.map((item) => (
@@ -235,6 +236,7 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
                   {item.label}
                 </Link>
               ))}
+            </div>
             </div>
           </div>
         </>

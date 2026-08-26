@@ -9,7 +9,8 @@ export function MiniPlayer() {
   const reciterName = state.reciter.replace(/_128kbps|_192kbps|_64kbps/g, '').replace(/_/g, ' ');
 
   return (
-    <div className="fixed bottom-[72px] left-1/2 z-30 w-[92vw] max-w-md -translate-x-1/2 rounded-2xl border border-emerald-700/50 bg-night-900/95 px-4 py-3 shadow-2xl backdrop-blur-xl lg:bottom-6 animate-fade-in">
+    <div className="fixed bottom-[72px] left-1/2 z-30 w-[92vw] max-w-md -translate-x-1/2 lg:bottom-6">
+    <div className="animate-fade-in rounded-2xl border border-emerald-700/50 bg-night-900/95 px-4 py-3 shadow-2xl backdrop-blur-xl">
       <div className="flex items-center gap-3">
         {/* Cover art / icon */}
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-emerald-800/60 text-lg">
@@ -61,6 +62,7 @@ export function MiniPlayer() {
           className={`h-full rounded-full bg-gold-500 transition-all duration-300 ${state.playing ? 'animate-pulse' : ''}`}
           style={{ width: `${(state.verse / state.totalVerses) * 100}%` }}
         />
+      </div>
       </div>
     </div>
   );
