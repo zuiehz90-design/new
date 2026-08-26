@@ -205,6 +205,12 @@ export function useChat() {
       } catch (err) {
         const aborted = (err as Error)?.name === 'AbortError';
         if (!aborted) {
+          const status = (err as { status?: number })?.status;
+          // Erreur HTTP renvoyee par le serveur : afficher la vraie cause,
+          // pas le repli 'hors ligne' qui la masque.
+          if (status) {
+            setError((err as Error).message);
+          } else {
           const offlineAnswer = getOfflineAnswer(text);
           patch(targetId, (c) => ({
             ...c,
@@ -215,6 +221,7 @@ export function useChat() {
                 : m,
             ),
           }));
+          }
         }
       } finally {
         setStreaming(false);

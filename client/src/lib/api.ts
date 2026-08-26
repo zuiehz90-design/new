@@ -38,7 +38,9 @@ export async function chatStream(opts: {
     } catch {
       /* corps non JSON */
     }
-    throw new Error(msg);
+    const err = new Error(msg) as Error & { status?: number };
+    err.status = res.status;
+    throw err;
   }
 
   if (!res.body) throw new Error('Réponse vide du serveur.');
@@ -64,7 +66,10 @@ export async function chatStream(opts: {
           choices?: Array<{ delta?: { content?: string; reasoning?: string; reasoning_details?: Array<{ text?: string }> } }>;
         };
         const delta = json.choices?.[0]?.delta;
-        const chunk = delta?.content ?? delta?.reasoning ?? delta?.reasoning_details?.[0]?.text;
+        // Les modèles :free raisonnent d'abord (content vide) : on affiche le
+        // raisonnement en temps réel pour éviter un écran figé pendant la réflexion.
+        const content = delta?.content || '';
+        const chunk = content || delta?.reasoning || delta?.reasoning_details?.[0]?.text || '';
         if (typeof chunk === "string" && chunk) opts.onDelta(chunk);
       } catch {
         /* chunk partiel, on ignore */
