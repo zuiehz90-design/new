@@ -26,6 +26,7 @@ import { GlossaryView } from './components/GlossaryView';
 import { DhikrCounterView } from './components/DhikrCounterView';
 import { QuizView } from './components/QuizView';
 import { MiniPlayer } from './components/MiniPlayer';
+import { ProfileAvatar } from './components/ProfileAvatar';
 import { NotificationCenter } from './components/NotificationCenter';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { AiSetupProvider, useAiSetup } from './hooks/useAiSetup';
@@ -65,6 +66,14 @@ function Shell() {
   const restoringRef = useRef(false);
   _currentPath = location.pathname;
 
+  // Page précédente (bouton retour) : on mémorise le chemin avant chaque navigation.
+  const prevPathRef = useRef<string | null>(null);
+  const [prevPath, setPrevPath] = useState<string | null>(null);
+  useEffect(() => {
+    setPrevPath(prevPathRef.current);
+    prevPathRef.current = location.pathname;
+  }, [location.pathname]);
+
   // Sauvegarde a chaque scroll reel (pas pendant une restauration).
   useEffect(() => {
     const el = scrollRef.current;
@@ -103,18 +112,15 @@ function Shell() {
 
   const topNav = [
     { to: '/', label: 'Accueil', icon: 'home' },
-    { to: '/chat', label: 'Chat', icon: 'chat' },
     { to: '/prayer', label: 'Prières', icon: 'prayer' },
     { to: '/quran', label: 'Coran', icon: 'quran' },
-    { to: '/profile', label: 'Profil', icon: 'profile' },
+    { to: '/quests', label: 'Quêtes', icon: 'quests' },
   ];
-  // Navigation mobile : 5 principaux + bouton Plus
+  // Navigation mobile : principaux + bouton Plus
   const primaryNav = [
     { to: '/', label: 'Accueil', icon: 'home' },
-    { to: '/chat', label: 'Chat', icon: 'chat' },
     { to: '/quran', label: 'Coran', icon: 'quran' },
     { to: '/prayer', label: 'Prières', icon: 'prayer' },
-    { to: '/quests', label: 'Quêtes', icon: 'quests' },
   ];
   const secondaryNav = [
     { to: '/prophets', label: 'Prophètes', icon: 'prophets' },
@@ -127,8 +133,6 @@ function Shell() {
     { to: '/profile', label: 'Profil', icon: 'profile' },
   ];
   const moreNav = [
-    { to: '/chat', label: 'Chat', icon: 'chat' },
-    { to: '/quests', label: 'Quêtes', icon: 'quests' },
     { to: '/prophets', label: 'Prophètes', icon: 'prophets' },
     { to: '/names', label: '99 Noms', icon: 'names' },
     { to: '/hijri', label: 'Calendrier', icon: 'calendar' },
@@ -138,6 +142,12 @@ function Shell() {
     { to: '/badges', label: 'Badges', icon: 'badges' },
   ];
   const [moreOpen, setMoreOpen] = useState(false);
+
+  // Nom de chaque page (pour afficher le libellé de la page précédente dans le bouton retour).
+  const pathLabels: Record<string, string> = {};
+  for (const p of [...topNav, ...primaryNav, ...secondaryNav, ...moreNav]) {
+    if (!pathLabels[p.to]) pathLabels[p.to] = p.label;
+  }
 
   const isActive = (path: string) => (path === '/' ? location.pathname === '/' : location.pathname.startsWith(path));
 
@@ -167,8 +177,23 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
     <div className="flex h-dvh flex-col overflow-hidden" style={{ paddingBottom: kb, transition: 'padding-bottom 200ms ease' }}>
       {/* ====== TOPBAR STICKY (toutes tailles) ====== */}
       <header className="nav-header sticky top-0 z-20 flex items-center justify-between gap-3 px-4 py-2.5 shrink-0">
-        <div className="flex items-center gap-2">
-          <MoonIcon className="h-6 w-6" style={{ color: "var(--accent-gold)" }} />
+        <div className="flex min-w-0 items-center gap-2">
+          {prevPath && (
+            <button
+              onClick={() => navigate(prevPath)}
+              aria-label={`Retour à ${pathLabels[prevPath] ?? 'la page précédente'}`}
+              title={`Retour à ${pathLabels[prevPath] ?? 'la page précédente'}`}
+              className="flex items-center gap-1 rounded-xl px-1.5 py-1 text-sm transition active:scale-90 hover:bg-white/5"
+              style={{ color: 'var(--accent-gold)' }}
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.5} strokeLinecap="round" strokeLinejoin="round" className="h-4 w-4 shrink-0">
+                <path d="M19 12H5" />
+                <path d="m12 19-7-7 7-7" />
+              </svg>
+              <span className="max-w-28 truncate text-xs font-semibold">{pathLabels[prevPath] ?? 'Retour'}</span>
+            </button>
+          )}
+          <MoonIcon className="h-6 w-6 shrink-0" style={{ color: "var(--accent-gold)" }} />
           <span className="font-quran text-lg font-bold" style={{ color: "var(--accent-gold)" }}>Nour</span>
         </div>
         <nav className="hidden items-center gap-1 md:flex">
@@ -215,6 +240,7 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
               <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z" />
             </svg>
           </button>
+          <ProfileAvatar size={34} className="ml-1" />
         </div>
       </header>
 

@@ -284,10 +284,10 @@ export function QuestsView() {
         </div>
       </div>
 
-      {/* Défis + Quêtes côte à côte */}
-      <div className="mb-4 grid gap-4 md:grid-cols-5 md:gap-6">
+      {/* Défis + Quêtes empilés (un en dessous de l'autre, plus lisible) */}
+      <div className="mb-4 grid grid-cols-1 gap-4">
       {challenges && challenges.challenges.length > 0 && (
-        <section className="card border-gold-500/40 p-3 md:col-span-2">
+        <section className="card border-gold-500/40 p-3">
           <h2 className="font-display flex items-center gap-2 text-sm font-bold text-gold-400">🏆 {t('challenges.title')}</h2>
           <p className="mt-0.5 text-[11px] text-[#A3B1AC]">
             {t('challenges.weekOf', { date: weekEndLabel(challenges.week_start) })}
@@ -333,7 +333,7 @@ export function QuestsView() {
       )}
 
       {/* Quêtes */}
-      <section className="card p-3 md:col-span-3">
+      <section className="card p-3">
         <h2 className="font-display mb-3 flex items-center gap-2 text-sm font-bold text-[#1F6E5C]">⚔️ {t('dashboard.quests')}</h2>
         {!quests || quests.quests.length === 0 ? (
           <p className="text-xs text-stone-500">{t('common.loading')}</p>

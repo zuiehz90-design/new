@@ -10,6 +10,40 @@ export interface ModelOption {
 }
 
 /**
+ * Certains modèles de raisonnement écrivent leur réflexion interne en anglais
+ * (« Okay, the user just said... », « Let me recall... ») avant la vraie
+ * réponse, même avec reasoning.exclude. Ce filtre détecte ce préambule et le
+ * coupe : on ne garde que la réponse réelle.
+ */
+const THINKING_HINTS =
+  /\b(okay|alright|let me|i need to|i should|i will|i'll|i can|i think|i'm|the user|user just said|user asked|let's|to be|check if|remember|to be safe|so maybe|to answer|actually|hmm|first,|wait,|maybe|to avoid|to keep|to make|to cover|to structure|recall|guidelines|instruction)\b/i;
+
+function isThinkingSegment(text: string): boolean {
+  return THINKING_HINTS.test(text);
+}
+
+/**
+ * Coupe le préambule de raisonnement d'un début de réponse.
+ * Découpe en paragraphes : tant qu'un paragraphe ressemble à du raisonnement
+ * interne, on l'ignore ; dès qu'un paragraphe « réponse » apparaît, on renvoie
+ * le texte à partir de ce point.
+ * Retourne null si TOUT le texte ressemble à du raisonnement (cas où il faut
+ * continuer d'accumuler avant de trancher), et le texte intact s'il ne
+ * ressemble pas à du raisonnement.
+ */
+export function stripThinkingPreamble(text: string): string | null {
+  if (!text) return text;
+  const paragraphs = text.split(/\n{2,}/);
+  for (let i = 0; i < paragraphs.length; i++) {
+    if (!isThinkingSegment(paragraphs[i])) {
+      return paragraphs.slice(i).join('\n\n');
+    }
+  }
+  // Tout ressemble à du raisonnement : on ne peut pas encore trancher.
+  return null;
+}
+
+/**
  * Appelle POST /api/chat (proxy Express -> OpenRouter) et reconstitue
  * le flux SSE (Server-Sent Events) token par token.
  */
@@ -48,6 +82,26 @@ export async function chatStream(opts: {
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  // Préambule non encore affiché (avant détection du début de la vraie réponse).
+  let pending = '';
+  let started = false;
+
+  const flush = () => {
+    if (!pending) return;
+    if (!started) {
+      // Premier contenu : retire un éventuel préambule de raisonnement.
+      const cleaned = stripThinkingPreamble(pending);
+      if (cleaned !== null && cleaned.trim()) {
+        started = true;
+        opts.onDelta(cleaned);
+        pending = '';
+      }
+      // Si null : tout ressemble à du raisonnement → on continue d'accumuler.
+    } else {
+      opts.onDelta(pending);
+      pending = '';
+    }
+  };
 
   for (;;) {
     const { done, value } = await reader.read();
@@ -66,15 +120,28 @@ export async function chatStream(opts: {
           choices?: Array<{ delta?: { content?: string; reasoning?: string; reasoning_details?: Array<{ text?: string }> } }>;
         };
         const delta = json.choices?.[0]?.delta;
-        // Les modèles :free raisonnent d'abord (content vide) : on affiche le
-        // raisonnement en temps réel pour éviter un écran figé pendant la réflexion.
+        // On n'affiche que le contenu final : le raisonnement interne du modèle
+        // (delta.reasoning) ne doit jamais être montré à l'utilisateur.
         const content = delta?.content || '';
-        const chunk = content || delta?.reasoning || delta?.reasoning_details?.[0]?.text || '';
-        if (typeof chunk === "string" && chunk) opts.onDelta(chunk);
+        if (content) {
+          pending += content;
+          // On accumule un peu (ou jusqu'à un saut de paragraphe) avant de
+          // trancher sur l'éventuel préambule de raisonnement.
+          if (pending.length >= 200 || pending.includes('\n\n')) flush();
+        }
       } catch {
         /* chunk partiel, on ignore */
       }
     }
+  }
+
+  // Fin du flux : libère le contenu restant. Si le préambule n'a jamais pu
+  // être tranché (tout semblait être du raisonnement), on affiche quand même
+  // le contenu pour ne jamais rien perdre.
+  if (!started && pending.trim()) {
+    opts.onDelta(pending);
+  } else {
+    flush();
   }
 }
 
