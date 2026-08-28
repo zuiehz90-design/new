@@ -30,7 +30,9 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
   }
 
   const clean: ChatMessage[] = [];
-  for (const m of messages.slice(-12)) {
+  // Contexte lÃ©ger : 8 derniers messages seulement, 2500 caractÃ¨res max chacun.
+  // Moins de tokens envoyÃ©s = premier token reÃ§u plus vite (latence rÃ©duite).
+  for (const m of messages.slice(-8)) {
     if (!m || typeof m.content !== 'string') continue;
     if (m.role !== 'user' && m.role !== 'assistant') continue;
     const problem = moderateContent(m.content);
@@ -38,7 +40,7 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
       res.status(400).json({ error: problem });
       return;
     }
-    clean.push({ role: m.role, content: m.content.slice(0, 4000) });
+    clean.push({ role: m.role, content: m.content.slice(0, 2500) });
   }
 
   if (clean.length === 0) {
@@ -75,8 +77,10 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
           ? 'CrÃ©dit OpenRouter insuffisant. Les modÃ¨les :free restent disponibles.'
           : status === 429
             ? 'Limite de requÃªtes OpenRouter atteinte. RÃ©essayez dans un instant.'
-            : 'Erreur OpenRouter (' + status + ').';
-    res.status(502).json({ error: (message + ' ' + detail).trim() });
+            : status === 404
+              ? 'Le modèle IA sélectionné n’est plus disponible gratuitement. Rechargez l’application pour utiliser le nouveau modèle par défaut.'
+              : 'Erreur OpenRouter (' + status + ').';
+    res.status(502).json({ error: message });
     return;
   }
 

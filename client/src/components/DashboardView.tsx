@@ -13,11 +13,8 @@ import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
 import { DailyVerse } from './DailyVerse';
 import { DashboardSuggestions } from './DashboardSuggestions';
-import { NameOfTheDay } from './NameOfTheDay';
-import { ExpandableTile } from './ExpandableTile';
 import { EventCountdown } from './EventCountdown';
 import { DhulHijjahCard } from './DhulHijjahCard';
-import { isDesktop, isDesktopOnline } from '../lib/desktop';
 
 const SALAT_KEYS = ['fajr', 'dhuhr', 'asr', 'maghrib', 'isha'] as const;
 export function DashboardView() {
@@ -28,21 +25,8 @@ export function DashboardView() {
   const { user, loading: authLoading } = useAuth();
   const { prayers, quests, achievements, togglePrayer, toggleQuest } = useDevotion();
   const [now, setNow] = useState(Date.now());
-  const [desktopBannerDismissed, setDesktopBannerDismissed] = useState(
-    () => localStorage.getItem('nour-desktop-banner-dismissed') === '1'
-  );
-  const [desktopOnline, setDesktopOnline] = useState<boolean | null>(null);
-  const dismissDesktopBanner = () => {
-    localStorage.setItem('nour-desktop-banner-dismissed', '1');
-    setDesktopBannerDismissed(true);
-  };
 
-  // Vérifier si l'app desktop est connectée à la base en ligne
-  useEffect(() => {
-    if (isDesktop) {
-      isDesktopOnline().then(setDesktopOnline);
-    }
-  }, []);
+
 
   // Vérifier si la pause est active
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
@@ -78,42 +62,8 @@ export function DashboardView() {
         <h1 className="font-display mt-2 text-3xl font-bold text-gold-400">
           {t('dashboard.title')}
         </h1>
-        {/* Indicateur synchro desktop */}
-        {isDesktop && desktopOnline !== null && (
-          <p className="mt-1 text-[10px]">
-            {desktopOnline ? (
-              <span className="text-emerald-400">🟢 Synchronisé avec le compte en ligne</span>
-            ) : (
-              <span className="text-amber-400">🟠 Mode hors-ligne — données locales uniquement</span>
-            )}
-          </p>
-        )}
-      </div>
 
-      {/* Bannière app desktop (web uniquement) */}
-      {!isDesktop && !desktopBannerDismissed && typeof window !== "undefined" && window.innerWidth >= 768 && (
-        <section className="card mb-4 border-gold-500/50 bg-gradient-to-br from-emerald-900/40 to-gold-900/20 p-4 animate-fade-in shadow-glow">
-          <div className="flex items-start gap-3">
-            <span className="text-3xl shrink-0">🖥️</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gold-300">{t('dashboard.desktopTitle')}</p>
-              <p className="mt-1 text-xs leading-relaxed text-stone-300">{t('dashboard.desktopDesc')}</p>
-              <div className="mt-3 flex flex-wrap items-center gap-2">
-                <a
-                  href="https://github.com/zuiehz90-design/new/releases"
-                  className="btn-gold text-xs" target="_blank" rel="noopener"
-                >
-                  ⬇️ {t('dashboard.desktopCta')}
-                </a>
-                <button onClick={dismissDesktopBanner} className="text-xs text-stone-400 underline hover:text-stone-200">
-                  {t('dashboard.desktopDismiss')}
-                </button>
-              </div>
-              <p className="mt-2 text-[10px] text-stone-500">{t('dashboard.desktopHint')}</p>
-            </div>
-          </div>
-        </section>
-      )}
+      </div>
 
       {/* ZONE 1 — HERO : prochaine prière */}
       <section
@@ -210,6 +160,8 @@ export function DashboardView() {
           )}
         </>
       )}
+      {/* Citation du jour — affichée directement (pas un bouton), juste après le rang */}
+      <DailyVerse />
       {/* ZONE 2 — Horaires : rangée horizontale compacte (scrollable sur mobile) */}
       {pt && (
         <section className="mb-4">
@@ -241,16 +193,6 @@ export function DashboardView() {
       {/* Compte à rebours + 10 jours de Dhoul-Hijja (saisonniers) */}
       <DhulHijjahCard />
       <EventCountdown />
-
-      {/* Citation du jour + Nom du jour : tuiles compactes dépliables */}
-      <div className="mb-16 grid gap-3 md:grid-cols-2">
-        <ExpandableTile emoji="✨" title={t('dailyVerse.title')}>
-          <DailyVerse />
-        </ExpandableTile>
-        <ExpandableTile emoji="✨" title={t('names99.daily')}>
-          <NameOfTheDay />
-        </ExpandableTile>
-      </div>
 
       {/* Compte non connecté → CTA */}
       {!user && (

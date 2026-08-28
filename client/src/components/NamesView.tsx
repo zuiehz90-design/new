@@ -5,6 +5,7 @@ import { useDevotion } from '../hooks/useDevotion';
 import { useNameAudio } from '../hooks/useNameAudio';
 import { storageKey } from '../lib/storageScope';
 import { NAMES_99, type Name99 } from '../lib/names99';
+import { NameOfTheDay } from './NameOfTheDay';
 import { NameQuranLinks } from './NameQuranLinks';
 import {
   applyRating,
@@ -138,6 +139,8 @@ export function NamesView() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 pb-8 pt-6 animate-fade-in">
+      {/* Nom du jour — mis en avant chaque jour en haut de l'onglet 99 Noms */}
+      <NameOfTheDay showLink={false} />
       <div className="mb-4 text-center">
         <h2 className="text-2xl font-bold text-gold-400">{t('names99.title')}</h2>
         <p className="mt-1 text-xs text-stone-400">{t('names99.subtitle')}</p>

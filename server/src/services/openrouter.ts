@@ -24,8 +24,17 @@ export async function streamChat(opts: {
       model: opts.model,
       messages: opts.messages,
       temperature: 0.3,
-      max_tokens: 1500,
+      // Réponses plus courtes = fin du flux plus rapide. La réponse arrive déjà
+      // en streaming, donc l'utilisateur voit les tokens dès le début.
+      max_tokens: 900,
       stream: true,
+      // Ne jamais renvoyer le raisonnement interne du modèle : il ne doit pas
+      // être affiché à l'utilisateur et consomme des tokens inutilement.
+      // Désactiver le raisonnement accélère aussi le premier token.
+      // NB : include_reasoning est un alias déprécié de reasoning.exclude —
+      // on envoie les deux pour couvrir tous les modèles.
+      include_reasoning: false,
+      reasoning: { exclude: true },
     }),
     signal: opts.signal,
   });

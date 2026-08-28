@@ -2,13 +2,46 @@ export interface ApiChatMessage {
   role: 'user' | 'assistant';
   content: string;
 }
-
 export interface ModelOption {
   id: string;
   name: string;
   context_length: number | null;
 }
-
+/**
+ * Certains modèles de raisonnement écrivent leur réflexion interne en anglais
+ * (« Okay, the user just said... », « Let me recall... ») avant la vraie
+ * réponse, même avec reasoning.exclude. Ce filtre détecte ce préambule et le
+ * coupe : on ne garde que la réponse réelle.
+ */
+const THINKING_HINTS =
+  /\b(okay|alright|let me|i need to|i should|i will|i'll|i can|i think|i'm|the user|user just said|user asked|let's|to be|check if|remember|to be safe|so maybe|to answer|actually|hmm|first,|wait,|maybe|to avoid|to keep|to make|to cover|to structure|recall|guidelines|instruction|l'utilisateur me demande|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour repondre|afin de|pour eviter|comme un agent|il est important|pour structurer)\b/i;
+function isThinkingSegment(text: string): boolean {
+  return THINKING_HINTS.test(text);
+}
+/**
+ * Coupe le préambule de raisonnement d'un début de réponse.
+ * Découpe en paragraphes : tant qu'un paragraphe ressemble à du raisonnement
+ * interne, on l'ignore ; dès qu'un paragraphe « réponse » apparaît, on renvoie
+ * le texte à partir de ce point.
+ * Retourne null si TOUT le texte ressemble à du raisonnement (cas où il faut
+ * continuer d'accumuler avant de trancher), et le texte intact s'il ne
+ * ressemble pas à du raisonnement.
+ */
+export function stripThinkingPreamble(text: string): string | null {
+  if (!text) return text;
+  const paragraphs = text.split(/\n{2,}/);
+  let startIdx = 0;
+  while (startIdx < paragraphs.length && isThinkingSegment(paragraphs[startIdx])) {
+    startIdx++;
+  }
+  if (startIdx >= paragraphs.length) return null;
+  const kept: string[] = [];
+  for (let i = startIdx; i < paragraphs.length; i++) {
+    if (!isThinkingSegment(paragraphs[i])) kept.push(paragraphs[i]);
+  }
+  const result = kept.join('\n\n');
+  return result.trim() ? result : null;
+}
 /**
  * Appelle POST /api/chat (proxy Express -> OpenRouter) et reconstitue
  * le flux SSE (Server-Sent Events) token par token.
@@ -29,7 +62,6 @@ export async function chatStream(opts: {
     body: JSON.stringify({ messages: opts.messages, model: opts.model }),
     signal: opts.signal,
   });
-
   if (!res.ok) {
     let msg = `Erreur ${res.status}`;
     try {
@@ -42,18 +74,33 @@ export async function chatStream(opts: {
     err.status = res.status;
     throw err;
   }
-
   if (!res.body) throw new Error('Réponse vide du serveur.');
-
   const reader = res.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
-
+  // Préambule non encore affiché (avant détection du début de la vraie réponse).
+  let pending = '';
+  let started = false;
+  const flush = () => {
+    if (!pending) return;
+    if (!started) {
+      // Premier contenu : retire un éventuel préambule de raisonnement.
+      const cleaned = stripThinkingPreamble(pending);
+      if (cleaned !== null && cleaned.trim()) {
+        started = true;
+        opts.onDelta(cleaned);
+        pending = '';
+      }
+      // Si null : tout ressemble à du raisonnement → on continue d'accumuler.
+    } else {
+      opts.onDelta(pending);
+      pending = '';
+    }
+  };
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
     buffer += decoder.decode(value, { stream: true });
-
     let idx: number;
     while ((idx = buffer.indexOf('\n')) !== -1) {
       const line = buffer.slice(0, idx).trim();
@@ -66,18 +113,29 @@ export async function chatStream(opts: {
           choices?: Array<{ delta?: { content?: string; reasoning?: string; reasoning_details?: Array<{ text?: string }> } }>;
         };
         const delta = json.choices?.[0]?.delta;
-        // Les modèles :free raisonnent d'abord (content vide) : on affiche le
-        // raisonnement en temps réel pour éviter un écran figé pendant la réflexion.
+        // On n'affiche que le contenu final : le raisonnement interne du modèle
+        // (delta.reasoning) ne doit jamais être montré à l'utilisateur.
         const content = delta?.content || '';
-        const chunk = content || delta?.reasoning || delta?.reasoning_details?.[0]?.text || '';
-        if (typeof chunk === "string" && chunk) opts.onDelta(chunk);
+        if (content) {
+          pending += content;
+          // On accumule un peu (ou jusqu'à un saut de paragraphe) avant de
+          // trancher sur l'éventuel préambule de raisonnement.
+          if (pending.length >= 200 || pending.includes('\n\n')) flush();
+        }
       } catch {
         /* chunk partiel, on ignore */
       }
     }
   }
+  // Fin du flux : libère le contenu restant. Si le préambule n'a jamais pu
+  // être tranché (tout semblait être du raisonnement), on affiche quand même
+  // le contenu pour ne jamais rien perdre.
+  if (!started && pending.trim()) {
+    opts.onDelta(pending);
+  } else {
+    flush();
+  }
 }
-
 export async function fetchModels(): Promise<ModelOption[]> {
   try {
     const token = getToken();
@@ -91,7 +149,6 @@ export async function fetchModels(): Promise<ModelOption[]> {
     return [];
   }
 }
-
 export async function fetchHealth(): Promise<{ aiConfigured: boolean; hasUserKey: boolean; model: string } | null> {
   try {
     const token = getToken();
@@ -104,7 +161,6 @@ export async function fetchHealth(): Promise<{ aiConfigured: boolean; hasUserKey
     return null;
   }
 }
-
 export async function apiGetAchievements<T>(options: ApiFetchOptions = {}): Promise<T | null> {
   if (!getToken()) return null;
   try {
@@ -113,16 +169,13 @@ export async function apiGetAchievements<T>(options: ApiFetchOptions = {}): Prom
     return null;
   }
 }
-
 /* ---------- Comptes, salat check-in & quêtes ---------- */
-
 export interface UserProfile {
   goals?: string[];
   note?: string;
   gender?: 'male' | 'female';
   [key: string]: unknown;
 }
-
 export interface User {
   id: number;
   name: string;
@@ -131,7 +184,6 @@ export interface User {
   /** true si le profil est un fantome temporaire (cree automatiquement). */
   isAnonymous?: boolean;
 }
-
 export interface PrayerStatus {
   date: string;
   checked: string[];
@@ -139,7 +191,6 @@ export interface PrayerStatus {
   of: number;
   streak: { current: number; best: number };
 }
-
 export interface Quest {
   quest_id: string;
   title: string;
@@ -152,7 +203,6 @@ export interface Quest {
   /** Quiz associe a la quete (serveur) : null si aucun. */
   quiz: { type: string; q: string; options: string[] } | null;
 }
-
 export interface QuestsData {
   date: string;
   quests: Quest[];
@@ -160,10 +210,8 @@ export interface QuestsData {
   lifetime: number;
   completed: number;
 }
-
 const TOKEN_KEY = 'nour:token';
 const UID_KEY = 'nour:uid';
-
 /** Identifiant utilisateur mémorisé : permet de rendre l'app immédiatement
  *  au bon scope pendant le réveil de Render (sans attendre le réseau). */
 export function getCachedUid(): number | null {
@@ -172,12 +220,10 @@ export function getCachedUid(): number | null {
   const n = Number(raw);
   return Number.isFinite(n) && n > 0 ? n : null;
 }
-
 export function setCachedUid(uid: number): void {
   if (typeof localStorage === 'undefined') return;
   localStorage.setItem(UID_KEY, String(uid));
 }
-
 // Mobile cache: dynamic import (tree-shaken on web)
 let _mobileCache: typeof import('./mobileCache') | null = null;
 async function mobileCache() {
@@ -188,18 +234,15 @@ async function mobileCache() {
 }
 const DEFAULT_API_TIMEOUT_MS = 12_000;
 const AUTH_API_TIMEOUT_MS = 60_000;
-
 class ApiRequestError extends Error {
   status?: number;
 }
-
 export function isRetryableApiError(error: unknown): boolean {
   const value = error as { retryable?: boolean; status?: number } | null;
   if (value?.retryable === false) return false;
   const status = value?.status;
   return !(typeof status === 'number' && status >= 400 && status < 500 && status !== 408 && status !== 409 && status !== 429);
 }
-
 async function fetchWithTimeout(
   input: RequestInfo | URL,
   init: RequestInit = {},
@@ -224,23 +267,19 @@ async function fetchWithTimeout(
     init.signal?.removeEventListener('abort', forwardAbort);
   }
 }
-
 export function getToken(): string | null {
   return localStorage.getItem(TOKEN_KEY);
 }
-
 export function setToken(token: string | null): void {
   if (token) localStorage.setItem(TOKEN_KEY, token);
   else localStorage.removeItem(TOKEN_KEY);
 }
-
 export interface ApiFetchOptions {
   force?: boolean;
   staleIfError?: boolean;
   revalidate?: boolean;
   onFresh?: (data: unknown) => void;
 }
-
 function cacheDomains(path: string): string[] {
   const base = path.split('?')[0];
   if (base.startsWith('/api/quests')) return ['/api/quests', '/api/achievements'];
@@ -256,7 +295,6 @@ function cacheDomains(path: string): string[] {
   if (base.startsWith('/api/conversations')) return ['/api/conversations'];
   return [base];
 }
-
 async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEFAULT_API_TIMEOUT_MS, cacheOptions: ApiFetchOptions = {}): Promise<T> {
   const headers: Record<string, string> = {
     ...(opts.body ? { 'Content-Type': 'application/json' } : {}),
@@ -264,13 +302,11 @@ async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEF
   };
   const token = getToken();
   if (token) headers.Authorization = `Bearer ${token}`;
-
   // Cache partagé : le token sert seulement d'identité de cache et n'est jamais
   // écrit en clair dans la clé localStorage (mobileCache le hache).
   const isGet = !opts.method || opts.method === 'GET';
   const mc = await mobileCache();
   const scope = token ?? 'public';
-
   if (mc && isGet) {
     return mc.cachedGet<T>(path, () => fetchWithTimeout(path, { ...opts, headers }, timeoutMs), undefined, {
       scope,
@@ -280,7 +316,6 @@ async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEF
       onFresh: cacheOptions.onFresh,
     });
   }
-
   const res = await fetchWithTimeout(path, { ...opts, headers }, timeoutMs);
   const data = (await res.json().catch(() => ({}))) as { error?: string };
   if (!res.ok) {
@@ -288,15 +323,12 @@ async function apiFetch<T>(path: string, opts: RequestInit = {}, timeoutMs = DEF
     error.status = res.status;
     throw error;
   }
-
   // Invalidate all related GET domains after a successful mutation.
   if (mc && !isGet) {
     mc.invalidatePrefixes(cacheDomains(path), scope);
   }
-
   return data as T;
 }
-
 export async function apiRegister(name: string, password: string): Promise<{ token: string; user: User }> {
   const res = await apiFetch<{ token: string; user: User }>('/api/auth/register', {
     method: 'POST',
@@ -305,7 +337,6 @@ export async function apiRegister(name: string, password: string): Promise<{ tok
   setToken(res.token);
   return res;
 }
-
 export async function apiLogin(name: string, password: string): Promise<{ token: string; user: User }> {
   const res = await apiFetch<{ token: string; user: User }>('/api/auth/login', {
     method: 'POST',
@@ -314,7 +345,6 @@ export async function apiLogin(name: string, password: string): Promise<{ token:
   setToken(res.token);
   return res;
 }
-
 /** Cree (ou reutilise) un profil fantome : compte anonyme temporaire. */
 export async function apiAnonymous(options?: { persist?: boolean }): Promise<{ token: string; user: User }> {
   const res = await apiFetch<{ token: string; user: User }>('/api/auth/anonymous', {
@@ -323,7 +353,6 @@ export async function apiAnonymous(options?: { persist?: boolean }): Promise<{ t
   if (options?.persist !== false) setToken(res.token);
   return res;
 }
-
 export async function apiLogout(): Promise<void> {
   try {
     await apiFetch('/api/auth/logout', { method: 'POST' });
@@ -331,7 +360,6 @@ export async function apiLogout(): Promise<void> {
     setToken(null);
   }
 }
-
 export async function apiMe(): Promise<User | null> {
   if (!getToken()) return null;
   try {
@@ -343,12 +371,13 @@ export async function apiMe(): Promise<User | null> {
     return null;
   }
 }
-
 /** Enregistre la clé API OpenRouter sur le compte (jamais stockée côté client). */
 export async function apiSaveApiKey(key: string): Promise<void> {
   await apiFetch('/api/setup/setup-key', { method: 'POST', body: JSON.stringify({ key: key.trim() }) });
 }
-
+export async function apiClearApiKey(): Promise<void> {
+  await apiFetch('/api/setup/setup-key', { method: 'DELETE' });
+}
 export async function apiUpdateProfile(patch: { name?: string; profile?: UserProfile }, mutationId?: string): Promise<User> {
   const res = await apiFetch<{ user: User }>('/api/profile', {
     method: 'PUT',
@@ -356,23 +385,18 @@ export async function apiUpdateProfile(patch: { name?: string; profile?: UserPro
   });
   return res.user;
 }
-
 export function apiPrayers(options: ApiFetchOptions = {}): Promise<PrayerStatus> {
   return apiFetch<PrayerStatus>('/api/prayers', {}, DEFAULT_API_TIMEOUT_MS, options);
 }
-
 export function apiCheckPrayer(prayer: string, opts?: { late?: boolean; lateMinutes?: number }): Promise<{ ok: boolean; newBadges?: string[]; newRank?: any; penalty?: number }> {
   return apiFetch('/api/prayers/check', { method: 'POST', body: JSON.stringify({ prayer, ...(opts ?? {}) }) });
 }
-
 export function apiUncheckPrayer(prayer: string): Promise<{ ok: boolean; newBadges?: string[]; newRank?: any; penalty?: number }> {
   return apiFetch('/api/prayers/uncheck', { method: 'POST', body: JSON.stringify({ prayer }) });
 }
-
 export function apiQuests(options: ApiFetchOptions = {}): Promise<QuestsData> {
   return apiFetch<QuestsData>('/api/quests', {}, DEFAULT_API_TIMEOUT_MS, options);
 }
-
 export interface WeeklyChallenge {
   challenge_id: string;
   title: string;
@@ -384,16 +408,13 @@ export interface WeeklyChallenge {
   claimed: boolean;
   completed: boolean;
 }
-
 export interface ChallengesData {
   week_start: string;
   challenges: WeeklyChallenge[];
 }
-
 export function apiChallenges(options: ApiFetchOptions = {}): Promise<ChallengesData> {
   return apiFetch<ChallengesData>('/api/challenges', {}, DEFAULT_API_TIMEOUT_MS, options);
 }
-
 export interface ClaimChallengeResult {
   ok: boolean;
   claimed: boolean;
@@ -402,11 +423,9 @@ export interface ClaimChallengeResult {
   newRank?: any;
   code?: string;
 }
-
 export function apiClaimChallenge(challengeId: string): Promise<ClaimChallengeResult> {
   return apiFetch(`/api/challenges/${challengeId}/claim`, { method: 'POST' });
 }
-
 export function apiReportChallengeProgress(challengeId: string): Promise<{
   ok: boolean;
   progress: number;
@@ -416,7 +435,6 @@ export function apiReportChallengeProgress(challengeId: string): Promise<{
 }> {
   return apiFetch(`/api/challenges/${challengeId}/progress`, { method: 'POST' });
 }
-
 export interface SyncMessage {
   id: string;
   role: 'user' | 'assistant' | 'system';
@@ -424,7 +442,6 @@ export interface SyncMessage {
   createdAt: number;
   offline?: boolean;
 }
-
 export interface SyncConversation {
   id: string;
   title: string;
@@ -432,23 +449,19 @@ export interface SyncConversation {
   createdAt: number;
   updatedAt: number;
 }
-
 export async function apiGetConversations(): Promise<SyncConversation[]> {
   const res = await apiFetch<{ conversations: SyncConversation[] }>('/api/conversations');
   return res.conversations ?? [];
 }
-
 export async function apiSaveConversations(conversations: SyncConversation[]): Promise<void> {
   await apiFetch('/api/conversations', { method: 'PUT', body: JSON.stringify({ conversations }) });
 }
-
 export interface CompleteQuestOpts {
   /** Reponse au quiz de verification (index de la bonne option). */
   answer?: number;
   /** Valeur explicite : un retry ne doit jamais basculer une quête dans l'autre sens. */
   done?: boolean;
 }
-
 export interface CompleteQuestResult {
   ok: boolean;
   done: boolean;
@@ -458,11 +471,9 @@ export interface CompleteQuestResult {
   correct?: string;
   code?: string;
 }
-
 export function apiCompleteQuest(questId: string, opts?: CompleteQuestOpts): Promise<CompleteQuestResult> {
   return apiFetch(`/api/quests/${questId}/complete`, { method: 'POST', body: opts ? JSON.stringify(opts) : undefined });
 }
-
 export interface QuizResult {
   ok: boolean;
   prophet: string;
@@ -474,11 +485,9 @@ export interface QuizResult {
   newBadges?: string[];
   newRank?: any;
 }
-
 export function apiCompleteQuiz(prophet: string, score: number, total: number): Promise<QuizResult> {
   return apiFetch('/api/quiz/complete', { method: 'POST', body: JSON.stringify({ prophet, score, total }) });
 }
-
 export interface ProphetProgressEntry {
   prophet: string;
   score: number;
@@ -487,7 +496,6 @@ export interface ProphetProgressEntry {
   completed: boolean;
   completedAt: string;
 }
-
 export async function apiQuizProgress(): Promise<ProphetProgressEntry[]> {
   try {
     const res = await apiFetch<{ progress: ProphetProgressEntry[] }>('/api/quiz/progress');
@@ -496,12 +504,10 @@ export async function apiQuizProgress(): Promise<ProphetProgressEntry[]> {
     return [];
   }
 }
-
 export interface RankDistributionEntry {
   id: string; tier: string; division: number | null; name: string;
   min: number; icon: string; color: string; count: number; pct: number;
 }
-
 export function apiGetRankDistribution(): Promise<{ ranks: RankDistributionEntry[]; total: number }> {
   return apiFetch('/api/achievements/ranks/distribution');
 }

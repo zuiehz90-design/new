@@ -181,7 +181,7 @@ export function useChat() {
 
       try {
         await chatStream({
-          messages: msgs.slice(-12),
+          messages: msgs.slice(-8),
           model: settings.model,
           signal: controller.signal,
           onDelta: (d) =>
