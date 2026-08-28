@@ -138,11 +138,11 @@ export async function chatStream(opts: {
       }
     }
   }
-  // Fin du flux : libère le contenu restant. Si le préambule n'a jamais pu
-  // être tranché (tout semblait être du raisonnement), on affiche quand même
-  // le contenu pour ne jamais rien perdre.
+  // Fin du flux : libère le contenu restant. Si le modèle a terminé une
+  // réponse sans saut de paragraphe final, il faut aussi l'envoyer.
   if (!started && pending.trim()) {
-    opts.onDelta(pending);
+    const cleaned = stripThinkingPreamble(pending);
+    opts.onDelta(cleaned ?? pending);
   } else {
     flush();
   }
