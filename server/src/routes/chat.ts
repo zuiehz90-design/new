@@ -7,7 +7,7 @@ import { moderateContent } from '../services/moderation.js';
 import { streamChat, type ChatMessage } from '../services/openrouter.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 
-const THINKING_PATTERNS = /\b(okay|let me|i need to|i should|the user|user just said|user asked|first,|maybe|to answer|to structure|guidelines|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour répondre|pour repondre|afin de|pour éviter|pour eviter|comme un agent|il est important)\b/i;
+const THINKING_PATTERNS = /\b(okay|let me|i need to|i should|the user|user just said|user asked|first,|maybe|to answer|to structure|guidelines|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour répondre|pour repondre|afin de|pour éviter|pour eviter|comme un agent|il est important|maintenant|je dois|je vais|il faut|d'abord|ensuite|premièrement|deuxièmement|non couvert|ce qui a été coupé|aspects importants|le but|mon objectif|je vais restructurer|je vais utiliser|je vais ajouter|il est nécessaire|il faut que|je dois compléter|je dois reprendre|en résumé|pour conclure|en conclusion|pour résumer|je dois maintenant|je vais maintenant)\b/i;
 
 function stripThinking(text: string): string {
   const paragraphs = text.split(/\n{2,}/);

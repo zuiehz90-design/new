@@ -14,7 +14,7 @@ export interface ModelOption {
  * coupe : on ne garde que la réponse réelle.
  */
 const THINKING_HINTS =
-  /\b(okay|alright|let me|i need to|i should|i will|i'll|i can|i think|i'm|the user|user just said|user asked|let's|to be|check if|remember|to be safe|so maybe|to answer|actually|hmm|first,|wait,|maybe|to avoid|to keep|to make|to cover|to structure|recall|guidelines|instruction|l'utilisateur me demande|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour repondre|afin de|pour eviter|comme un agent|il est important|pour structurer)\b/i;
+  /\b(okay|alright|let me|i need to|i should|i will|i'll|i can|i think|i'm|the user|user just said|user asked|let's|to be|check if|remember|to be safe|so maybe|to answer|actually|hmm|first,|wait,|maybe|to avoid|to keep|to make|to cover|to structure|recall|guidelines|instruction|l'utilisateur me demande|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour repondre|afin de|pour eviter|comme un agent|il est important|pour structurer|maintenant|je dois|je vais|il faut|pour r[eé]pondre|d'abord|ensuite|premi[eè]rement|deuxi[eè]mement|il est crucial|je dois donc|je vais donc|non couvert|ce qui a [ée]t[eé] coup[eé]|aspects importants|le but|mon objectif|je dois me|je vais restructurer|je vais utiliser|je vais ajouter|je vais inclure|je vais couvrir|je vais faire|il est n[eé]cessaire|il faut que|je dois compl[eé]ter|je dois reprendre|en r[eé]sum[eé]|pour l'instant|autrement dit|en d'autres termes|pour conclure|en conclusion|pour r[eé]sumer|je dois maintenant|je vais maintenant)\b/i;
 function isThinkingSegment(text: string): boolean {
   return THINKING_HINTS.test(text);
 }
