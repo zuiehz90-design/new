@@ -285,6 +285,7 @@ function NavIcon({ name, className, style }: { name: string; className?: string;
       </div>
 
       {/* ====== BANNIÈRE COMPTE ANONYME ====== */}
+
       {user?.isAnonymous && (
         <div
           className="shrink-0 cursor-pointer transition hover:brightness-110 active:scale-[0.98]"

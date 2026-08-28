@@ -5,7 +5,7 @@ import { DEFAULT_MODEL, FREE_ROUTER_MODEL } from '../lib/modelDefaults';
 const OBSOLETE_FREE_MODELS = new Set([
   'meta-llama/llama-3.3-70b-instruct:free',
   'meta-llama/llama-3.1-8b-instruct:free',
-])
+]);
 import type { Settings } from '../lib/types';
 
 export const DEFAULT_SETTINGS: Settings = {

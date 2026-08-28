@@ -87,7 +87,7 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
           : status === 429
             ? 'Limite de requêtes OpenRouter atteinte. Réessayez dans un instant.'
             : status === 404
-              ? 'Le mod�le IA s�lectionn� n�est plus disponible gratuitement. Rechargez l�application pour utiliser le nouveau mod�le par d�faut.'
+              ? 'Le modèle IA sélectionné n’est plus disponible gratuitement. Rechargez l’application pour utiliser le nouveau modèle par défaut.'
               : 'Erreur OpenRouter (' + status + ').';
     res.status(502).json({ error: message });
     return;
