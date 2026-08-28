@@ -14,9 +14,18 @@ export interface ModelOption {
  * coupe : on ne garde que la réponse réelle.
  */
 const THINKING_HINTS =
-  /\b(okay|alright|let me|i need to|i should|i will|i'll|i can|i think|i'm|the user|user just said|user asked|let's|to be|check if|remember|to be safe|so maybe|to answer|actually|hmm|first,|wait,|maybe|to avoid|to keep|to make|to cover|to structure|recall|guidelines|instruction|l'utilisateur me demande|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour repondre|afin de|pour eviter|comme un agent|il est important|pour structurer|maintenant|je dois|je vais|il faut|pour r[eé]pondre|d'abord|ensuite|premi[eè]rement|deuxi[eè]mement|il est crucial|je dois donc|je vais donc|non couvert|ce qui a [ée]t[eé] coup[eé]|aspects importants|le but|mon objectif|je dois me|je vais restructurer|je vais utiliser|je vais ajouter|je vais inclure|je vais couvrir|je vais faire|il est n[eé]cessaire|il faut que|je dois compl[eé]ter|je dois reprendre|en r[eé]sum[eé]|pour l'instant|autrement dit|en d'autres termes|pour conclure|en conclusion|pour r[eé]sumer|je dois maintenant|je vais maintenant)\b/i;
+  /\b(okay|alright|let me|i need to|i should|i will|i'll|i can|i think|i'm|the user|user just said|user asked|let's|to be|check if|remember|to be safe|so maybe|to answer|actually|hmm|first,|wait,|maybe|to avoid|to keep|to make|to cover|to structure|recall|guidelines|instruction|l'utilisateur|l'utilisateur me demande|mon objectif|je dois répondre|je dois fournir|je dois compléter|je dois reprendre|je dois faire attention|je dois donc|je dois structurer|je dois m'assurer|je dois vérifier|je dois rester|je dois ajouter|je dois couvrir|je dois expliquer|je vais répondre|je vais structurer|je vais restructurer|je vais utiliser|je vais ajouter|je vais couvrir|je vais fournir|je vais commencer|je vais donc|je vais maintenant|je vais faire attention|je vais m'assurer|je vais vérifier|je vais expliquer|je vais présenter|je vais donner|je vais conclure|je vais terminer|il faut que je|il est nécessaire|il est important|ce qui a été coupé|ma réponse précédente|la réponse précédente|compléter ma réponse|finir ce qui a été coupé|ajouter d'autres aspects|repose la même question|repose la question|reprend la question|reprendre la question|aspects importants non couverts|aspects non couverts|non couverts|pas eu le temps de couvrir|je n'ai pas eu le temps|je n'ai pas encore|je dois donc compléter|en résumé|pour résumer|en conclusion|pour conclure|pour répondre à cette question|afin de répondre|comme un agent|je dois être clair|je dois être précis|je dois rester concis|je dois citer|je vais citer|je dois m'appuyer|je vais m'appuyer|je dois me baser|je vais me baser|je dois vérifier l'authenticité|ne pas inventer|je peux utiliser en toute confiance|je vais restructurer ma réponse|je dois structurer ma réponse|je dois inclure|je vais inclure|je dois mentionner|je vais mentionner|je dois parler|je vais parler|je dois aborder|je vais aborder|je dois détailler|je vais détailler|je dois développer|je vais développer|je dois présenter|je vais présenter|je dois donner|je vais donner|je dois terminer|je vais terminer|je dois conclure|je vais conclure)\b/i;
+/** Débuts de phrases typiques d'une planification interne (« Je dois... », « Je vais... »). */
+const PLAN_STARTS =
+  /\b(je dois|je vais|je vais devoir|je dois absolument|je dois aussi|je dois maintenant|je dois à présent|je dois d'abord|je dois tout d'abord|je vais d'abord|je vais aussi|je vais donc|je vais maintenant|je vais tout d'abord|je vais ensuite|je vais enfin|je vais à présent|mon objectif|mon but|je me propose|je vais essayer|je dois essayer|je vais tenter|je dois tenter)\b/i;
+
+/** Verbes « méta » : l'action décrit la rédaction de la réponse elle-même. */
+const META_VERBS =
+  /\b(répondre|repondre|fournir|compléter|structurer|restructurer|m'assurer|vérifier|ajouter|couvrir|expliquer|présenter|donner|conclure|terminer|utiliser|inclure|mentionner|parler|aborder|détailler|développer|citer|m'appuyer|me baser|faire attention|finir|résumer|organiser|planifier|récapituler|décrire|reprendre|commencer|essayer|tenter|être clair|être précis|rester concis)\b/i;
+
 function isThinkingSegment(text: string): boolean {
-  return THINKING_HINTS.test(text);
+  if (THINKING_HINTS.test(text)) return true;
+  return PLAN_STARTS.test(text) && META_VERBS.test(text);
 }
 /**
  * Coupe le préambule de raisonnement d'un début de réponse.
@@ -30,15 +39,17 @@ function isThinkingSegment(text: string): boolean {
 export function stripThinkingPreamble(text: string): string | null {
   if (!text) return text;
   const paragraphs = text.split(/\n{2,}/);
-  let startIdx = 0;
-  while (startIdx < paragraphs.length && isThinkingSegment(paragraphs[startIdx])) {
-    startIdx++;
-  }
-  if (startIdx >= paragraphs.length) return null;
   const kept: string[] = [];
-  for (let i = startIdx; i < paragraphs.length; i++) {
-    if (!isThinkingSegment(paragraphs[i])) kept.push(paragraphs[i]);
+  let started = false;
+  for (const paragraph of paragraphs) {
+    const p = paragraph.trim();
+    if (!p) continue;
+    if (!started && isThinkingSegment(p)) continue;
+    started = true;
+    if (isThinkingSegment(p)) continue;
+    kept.push(p);
   }
+  if (kept.length === 0) return null;
   const result = kept.join('\n\n');
   return result.trim() ? result : null;
 }

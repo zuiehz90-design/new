@@ -6,15 +6,7 @@ import { SYSTEM_PROMPT } from '../prompt.js';
 import { moderateContent } from '../services/moderation.js';
 import { streamChat, type ChatMessage } from '../services/openrouter.js';
 import { rateLimit } from '../middleware/rateLimit.js';
-
-const THINKING_PATTERNS = /\b(okay|let me|i need to|i should|the user|user just said|user asked|first,|maybe|to answer|to structure|guidelines|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour répondre|pour repondre|afin de|pour éviter|pour eviter|comme un agent|il est important|maintenant|je dois|je vais|il faut|d'abord|ensuite|premièrement|deuxièmement|non couvert|ce qui a été coupé|aspects importants|le but|mon objectif|je vais restructurer|je vais utiliser|je vais ajouter|il est nécessaire|il faut que|je dois compléter|je dois reprendre|en résumé|pour conclure|en conclusion|pour résumer|je dois maintenant|je vais maintenant)\b/i;
-
-function stripThinking(text: string): string {
-  const paragraphs = text.split(/\n{2,}/);
-  let start = 0;
-  while (start < paragraphs.length && THINKING_PATTERNS.test(paragraphs[start])) start++;
-  return paragraphs.slice(start).filter((paragraph) => !THINKING_PATTERNS.test(paragraph)).join('\n\n');
-}
+import { ThinkingStreamFilter } from '../services/thinkingFilter.js';
 
 export const chatRouter = Router();
 
@@ -107,6 +99,10 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
   const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
   let buffer = '';
+  // Filtre anti-raisonnement : accumule le flux, découpe en paragraphes et
+  // retire les paragraphes où le modèle écrit sa réflexion interne (préambule
+  // ou paragraphes au milieu de la réponse).
+  const filter = new ThinkingStreamFilter();
 
   try {
     for (;;) {
@@ -119,20 +115,30 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
         const line = event.trim();
         if (!line.startsWith('data:')) continue;
         const payload = line.slice(5).trim();
-        if (payload === '[DONE]') {
-          res.write('data: [DONE]\n\n');
-          continue;
-        }
+        if (payload === '[DONE]') continue;
         try {
           const data = JSON.parse(payload) as { choices?: Array<{ delta?: { content?: string; [key: string]: unknown } }> };
           const delta = data.choices?.[0]?.delta;
-          if (delta?.content) delta.content = stripThinking(delta.content);
-          res.write('data: ' + JSON.stringify(data) + '\n\n');
+          if (delta?.content) {
+            const clean = filter.push(delta.content);
+            if (clean) {
+              delta.content = clean;
+              res.write('data: ' + JSON.stringify(data) + '\n\n');
+            }
+          } else {
+            res.write('data: ' + JSON.stringify(data) + '\n\n');
+          }
         } catch {
           res.write(event + '\n\n');
         }
       }
     }
+    // Fin du flux : libère le contenu restant, puis signal de fin.
+    const tail = filter.flush();
+    if (tail) {
+      res.write('data: ' + JSON.stringify({ choices: [{ delta: { content: tail } }] }) + '\n\n');
+    }
+    res.write('data: [DONE]\n\n');
     res.end();
   } catch {
     if (!res.writableEnded) res.end();

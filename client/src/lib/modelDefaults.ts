@@ -7,5 +7,5 @@
  * anglais. On préfère un modèle instruct fixe, rapide et non-raisonneur.
  */
 export const DEFAULT_MODEL = 'minimax/minimax-m3:free';
-export const DEFAULT_MODEL_LABEL = 'Llama 3.1 8B (rapide — recommandé)';
+export const DEFAULT_MODEL_LABEL = 'MiniMax M3 (rapide — recommandé)';
 export const FREE_ROUTER_MODEL = 'openrouter/free';

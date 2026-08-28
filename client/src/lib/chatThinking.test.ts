@@ -32,3 +32,22 @@ test('stripThinkingPreamble : tout est du raisonnement → null', () => {
 test('stripThinkingPreamble : texte vide → vide', () => {
   assert.equal(stripThinkingPreamble(''), '');
 });
+
+test('stripThinkingPreamble : préambule de raisonnement français coupé', () => {
+  const text =
+    "Je vais répondre à cette question, en complétant ce qui a été coupé.\n\n" +
+    "Le Dhikr (الذكر) signifie « rappel » en arabe. C'est un acte d'adoration essentiel.";
+  const cleaned = stripThinkingPreamble(text);
+  assert.ok(cleaned !== null);
+  assert.equal(cleaned, "Le Dhikr (الذكر) signifie « rappel » en arabe. C'est un acte d'adoration essentiel.");
+});
+
+test('stripThinkingPreamble : raisonnement au milieu de la réponse supprimé', () => {
+  const text =
+    "Le Dhikr signifie « rappel » en arabe.\n\n" +
+    "Je dois aussi vérifier l'authenticité des hadiths avant de continuer.\n\n" +
+    "Le meilleur dhikr est « La ilaha illa Allah ».";
+  const cleaned = stripThinkingPreamble(text);
+  assert.ok(cleaned !== null);
+  assert.equal(cleaned, "Le Dhikr signifie « rappel » en arabe.\n\nLe meilleur dhikr est « La ilaha illa Allah ».");
+});
