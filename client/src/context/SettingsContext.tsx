@@ -1,11 +1,19 @@
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useLocalStorage } from '../hooks/useLocalStorage';
+import { DEFAULT_MODEL, FREE_ROUTER_MODEL } from '../lib/modelDefaults';
+
+const OBSOLETE_FREE_MODELS = new Set([
+  'meta-llama/llama-3.3-70b-instruct:free',
+  'meta-llama/llama-3.1-8b-instruct:free',
+])
 import type { Settings } from '../lib/types';
 
 export const DEFAULT_SETTINGS: Settings = {
   lang: 'fr',
   theme: 'dark',
-  model: 'openrouter/free',
+  // Modèle par défaut : instruct rapide et non-raisonneur (pas le routeur
+  // aléatoire openrouter/free qui peut choisir des reasoning models).
+  model: DEFAULT_MODEL,
   mawaqitMosqueId: null,
   mawaqitMosqueName: null,
   reciter: 'Alafasy_128kbps',
@@ -14,6 +22,16 @@ export const DEFAULT_SETTINGS: Settings = {
   prayerPauseUntil: null,
   focusMode: false,
 };
+
+/**
+ * Migration douce : les utilisateurs ayant l'ancien défaut « openrouter/free »
+ * (routeur aléatoire → reasoning models anglais) basculent sur le modèle
+ * instruct par défaut, sauf s'ils l'ont choisi explicitement… on ne peut pas
+ * distinguer, donc on migre : le routeur reste disponible dans les réglages.
+ */
+export function migrateModel(model: string): string {
+  return model === FREE_ROUTER_MODEL || OBSOLETE_FREE_MODELS.has(model) ? DEFAULT_MODEL : model;
+}
 
 interface Ctx {
   settings: Settings;
@@ -31,6 +49,16 @@ export function useSettings() {
 
 export function SettingsProvider({ children }: { children: ReactNode }) {
   const [settings, setSettings] = useLocalStorage<Settings>('nour:settings', DEFAULT_SETTINGS);
+
+  // Migration : remplace l'ancien défaut « openrouter/free » par le modèle
+  // instruct rapide (une seule fois, au montage).
+  useEffect(() => {
+    setSettings((prev) => {
+      const next = { ...prev, model: migrateModel(prev.model) };
+      return next.model === prev.model ? prev : next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const html = document.documentElement;

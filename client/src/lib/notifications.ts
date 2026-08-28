@@ -19,7 +19,8 @@ export type NotificationType =
   | 'dhikr'
   | 'sleep'
   | 'streak'
-  | 'story';
+  | 'story'
+  | 'special';
 
 export interface NotificationItem {
   id: string;
@@ -42,6 +43,7 @@ export interface NotificationPrefs {
   sleep: boolean;
   streak: boolean;
   story: boolean;
+  special: boolean;
   sound: boolean;
 }
 
@@ -55,6 +57,7 @@ export const DEFAULT_NOTIFICATION_PREFS: NotificationPrefs = {
   sleep: true,
   streak: true,
   story: true,
+  special: true,
   sound: false,
 };
 
@@ -68,6 +71,7 @@ const TYPE_ICONS: Record<NotificationType, string> = {
   sleep: '🌙',
   streak: '🔥',
   story: '📖',
+  special: '🌙',
 };
 
 const HISTORY_KEY = 'nour:notification-history';

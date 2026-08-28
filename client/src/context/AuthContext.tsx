@@ -113,14 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let cancelled = false;
     const hadTokenAtStart = Boolean(getToken());
-    // Réveil lent de Render : on rend l'app immédiatement au scope mémorisé
-    // (le cache local est keyé par token, déjà en place) pendant que apiMe
-    // rafraîchit le profil en arrière-plan.
-    const cachedUid = hadTokenAtStart ? getCachedUid() : null;
-    if (hadTokenAtStart && cachedUid != null) {
-      setUser({ id: cachedUid, name: '', profile: {}, createdAt: '' } as User);
-      setLoading(false);
-    }
     let retry = 0;
 
     const hydrate = async (): Promise<void> => {
@@ -130,29 +122,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (result) {
         if (result.token) setToken(result.token);
         claimPendingData(result.user.id);
-        setUser(result.user);
-        setLoading(false);
-        return;
       }
+      setUser(result?.user ?? null);
+      setLoading(false);
 
-      // Une session existante peut simplement être ralentie par le réveil.
-      // On réessaie sans créer de profil fantome supplémentaire.
-      if (hadTokenAtStart && getToken() && retry < 2) {
+      if (!result && hadTokenAtStart && getToken() && retry < 2) {
         retry += 1;
         window.setTimeout(() => { void hydrate(); }, 2_000);
         return;
       }
-      setUser(null);
-      setLoading(false);
+      if (!result) {
+        try {
+          const res = await apiAnonymous({ persist: false });
+          setToken(res.token);
+          claimPendingData(res.user.id);
+          setUser(res.user);
+        } catch {}
+      }
     };
 
     void hydrate();
-    // Affiche rapidement l'interface locale pendant le réveil Render.
-    const fallback = window.setTimeout(() => setLoading(false), 1_800);
-    return () => {
-      cancelled = true;
-      window.clearTimeout(fallback);
-    };
+    return () => { cancelled = true; };
   }, []);
 
   const register = useCallback(async (name: string, password: string) => {
@@ -174,16 +164,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await apiLogout();
     // Un nouveau profil fantome est cree immediatement : on garde la promesse
     // « un profil des le chargement » meme apres une deconnexion.
-    let ghost: User | null = null;
-    try {
-      const res = await apiAnonymous({ persist: false });
-      setToken(res.token);
-      claimPendingData(res.user.id);
-      ghost = res.user;
-    } catch {
-      // Hors ligne : on reste en mode invite local
-    }
-    setUser(ghost);
+    setUser(null);
   }, []);
 
   const updateProfile = useCallback(async (patch: { name?: string; profile?: UserProfile }) => {

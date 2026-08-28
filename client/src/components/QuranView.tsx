@@ -226,8 +226,15 @@ function PinsPanel({
         ) : (
           <ul className="space-y-2">
             {entries.map((e) => (
-              <li key={e.number} className="card flex items-center gap-2 border-emerald-900/40 p-2">
-                <button onClick={() => onOpen(e.number, e.verse)} className="min-w-0 flex-1 text-left">
+              <li
+                key={e.number}
+                className="card flex items-center gap-2 border-emerald-900/40 p-2 transition hover:border-gold-500/50"
+              >
+                <button
+                  onClick={() => onOpen(e.number, e.verse)}
+                  className="flex min-w-0 flex-1 items-center gap-2 text-left"
+                  aria-label={`${e.name}, ${t('quran.savedVerse', { n: e.verse })}`}
+                >
                   <span className="block truncate text-sm font-semibold">
                     {e.number} · {e.name}
                   </span>
@@ -405,7 +412,9 @@ function SearchResults({
   const [tr, setTr] = useState<Verse[] | null>(null);
   const [error, setError] = useState(false);
   const { state: audioState, play: audioPlay, stop: audioStop, toggle: audioToggle } = useAudioPlayer();
-  const [playingSurah, setPlayingSurah] = useState(false);
+  // Lecture sourate en cours (lecteur global) : reflète aussi l'enchaînement
+  // automatique vers la sourate suivante et la reprise après navigation.
+  const playingSurah = audioState?.surahMode === true && audioState.playing === true;
 
   const [jumpFlash, setJumpFlash] = useState<number | null>(null);
   const { show: showToast } = useToast();
@@ -467,13 +476,11 @@ function SearchResults({
   }, [chapter, translation]);
 
   const play = (verse: number, surahMode = false) => {
-    if (surahMode) setPlayingSurah(true);
     audioPlay(reciter, chapter, verse, ar?.length ?? 0, meta.name, surahMode);
   };
 
   const stop = () => {
     audioStop();
-    setPlayingSurah(false);
   };
 
   // Auto-scroll : suivre le verset en cours de lecture + sauver la position
@@ -563,7 +570,7 @@ if (error) return <p className="text-sm text-red-400">{t('quran.error')}</p>;
                   onClick={(e) => {
                     e.stopPropagation();
                     if (isActive) stop();
-                    else play(v.verse);
+                    else play(v.verse, true);
                   }}
                   className={`chip ${isActive ? '!border-gold-500/80 !bg-gold-500/20 !text-gold-200' : ''}`}
                 >

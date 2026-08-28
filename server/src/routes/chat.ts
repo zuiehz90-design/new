@@ -7,6 +7,15 @@ import { moderateContent } from '../services/moderation.js';
 import { streamChat, type ChatMessage } from '../services/openrouter.js';
 import { rateLimit } from '../middleware/rateLimit.js';
 
+const THINKING_PATTERNS = /\b(okay|let me|i need to|i should|the user|user just said|user asked|first,|maybe|to answer|to structure|guidelines|l'utilisateur|l'objectif|je dois fournir|je vais structurer|je vais fournir|pour répondre|pour repondre|afin de|pour éviter|pour eviter|comme un agent|il est important)\b/i;
+
+function stripThinking(text: string): string {
+  const paragraphs = text.split(/\n{2,}/);
+  let start = 0;
+  while (start < paragraphs.length && THINKING_PATTERNS.test(paragraphs[start])) start++;
+  return paragraphs.slice(start).filter((paragraph) => !THINKING_PATTERNS.test(paragraph)).join('\n\n');
+}
+
 export const chatRouter = Router();
 
 chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => {
@@ -30,7 +39,9 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
   }
 
   const clean: ChatMessage[] = [];
-  for (const m of messages.slice(-12)) {
+  // Contexte léger : 8 derniers messages seulement, 2500 caractères max chacun.
+  // Moins de tokens envoyés = premier token reçu plus vite (latence réduite).
+  for (const m of messages.slice(-8)) {
     if (!m || typeof m.content !== 'string') continue;
     if (m.role !== 'user' && m.role !== 'assistant') continue;
     const problem = moderateContent(m.content);
@@ -38,7 +49,7 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
       res.status(400).json({ error: problem });
       return;
     }
-    clean.push({ role: m.role, content: m.content.slice(0, 4000) });
+    clean.push({ role: m.role, content: m.content.slice(0, 2500) });
   }
 
   if (clean.length === 0) {
@@ -75,8 +86,10 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
           ? 'Crédit OpenRouter insuffisant. Les modèles :free restent disponibles.'
           : status === 429
             ? 'Limite de requêtes OpenRouter atteinte. Réessayez dans un instant.'
-            : 'Erreur OpenRouter (' + status + ').';
-    res.status(502).json({ error: (message + ' ' + detail).trim() });
+            : status === 404
+              ? 'Le mod�le IA s�lectionn� n�est plus disponible gratuitement. Rechargez l�application pour utiliser le nouveau mod�le par d�faut.'
+              : 'Erreur OpenRouter (' + status + ').';
+    res.status(502).json({ error: message });
     return;
   }
 
@@ -93,12 +106,32 @@ chatRouter.post('/', rateLimit(15, 60_000), authMiddleware, async (req, res) => 
 
   const reader = upstream.body.getReader();
   const decoder = new TextDecoder();
+  let buffer = '';
 
   try {
     for (;;) {
       const { done, value } = await reader.read();
       if (done) break;
-      res.write(value);
+      buffer += decoder.decode(value, { stream: true });
+      const events = buffer.split('\n\n');
+      buffer = events.pop() ?? '';
+      for (const event of events) {
+        const line = event.trim();
+        if (!line.startsWith('data:')) continue;
+        const payload = line.slice(5).trim();
+        if (payload === '[DONE]') {
+          res.write('data: [DONE]\n\n');
+          continue;
+        }
+        try {
+          const data = JSON.parse(payload) as { choices?: Array<{ delta?: { content?: string; [key: string]: unknown } }> };
+          const delta = data.choices?.[0]?.delta;
+          if (delta?.content) delta.content = stripThinking(delta.content);
+          res.write('data: ' + JSON.stringify(data) + '\n\n');
+        } catch {
+          res.write(event + '\n\n');
+        }
+      }
     }
     res.end();
   } catch {

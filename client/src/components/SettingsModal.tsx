@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useI18n } from '../i18n';
 import { useSettings } from '../context/SettingsContext';
 import { fetchModels, fetchHealth, type ModelOption } from '../lib/api';
+import { DEFAULT_MODEL, DEFAULT_MODEL_LABEL } from '../lib/modelDefaults';
 import { RECITERS } from '../lib/quran';
 import { getPrefs, setPrefs, permissionState, requestPermission, type NotificationPrefs } from '../lib/notifications';
 
@@ -196,7 +197,7 @@ export function SettingsModal({ open, onClose }: { open: boolean; onClose: () =>
                   <option key={m.id} value={m.id}>{m.name}</option>
                 ))
               ) : (
-                <option value="openrouter/free">openrouter/free</option>
+                <option value={DEFAULT_MODEL}>{DEFAULT_MODEL_LABEL}</option>
               )}
             </select>
             <p className="mt-1 text-[11px] text-stone-500">{t('settings.modelNote')}</p>

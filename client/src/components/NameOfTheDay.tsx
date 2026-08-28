@@ -10,7 +10,7 @@ import { NAMES_99 } from '../lib/names99';
  * avec sa signification, un rappel de méditation et sa prononciation.
  * Le nom change à minuit (UTC) et est le même pour tous — rituel quotidien.
  */
-export function NameOfTheDay() {
+export function NameOfTheDay({ showLink = true }: { showLink?: boolean }) {
   const { t } = useI18n();
   const audio = useNameAudio();
   const name = nameOfTheDay();
@@ -44,11 +44,13 @@ export function NameOfTheDay() {
       {/* Versets liés dans le Coran */}
       <NameQuranLinks nameIndex={NAMES_99.indexOf(name)} arabicName={name.arabic} />
 
-      <div className="mt-3 flex justify-center">
-        <Link to="/names" className="btn-ghost text-xs">
-          📿 {t('names99.allNames')}
-        </Link>
-      </div>
+      {showLink && (
+        <div className="mt-3 flex justify-center">
+          <Link to="/names" className="btn-ghost text-xs">
+            📿 {t('names99.allNames')}
+          </Link>
+        </div>
+      )}
     </section>
   );
 }

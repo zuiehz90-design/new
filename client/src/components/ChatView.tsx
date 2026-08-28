@@ -9,6 +9,7 @@ import { useSettings } from '../context/SettingsContext';
 import { Markdown, SourcesCard } from '../lib/markdown';
 import { getSuggestions, type DayPeriod } from '../lib/suggestions';
 import { MoonIcon, SendIcon, StopIcon } from './icons';
+import { ThinkingIndicator } from './ThinkingIndicator';
 import type { ChatMessage } from '../lib/types';
 
 const PERIOD_EMOJI: Record<DayPeriod, string> = {
@@ -289,9 +290,9 @@ export function ChatView() {
         ) : (
           <div className="space-y-4">
             {messages.map((m) => (
-              <MessageBubble key={m.id} message={m} />
+              <MessageBubble key={m.id} message={m} streaming={chat.streaming && m.id === messages[messages.length - 1]?.id} />
             ))}
-            {chat.streaming && <TypingIndicator />}
+            {chat.streaming && <ThinkingIndicator />}
           </div>
         )}
         <div ref={bottomRef} />
@@ -363,7 +364,7 @@ function EmptyState() {
   );
 }
 
-function MessageBubble({ message }: { message: ChatMessage }) {
+function MessageBubble({ message, streaming }: { message: ChatMessage; streaming?: boolean }) {
   const { t } = useI18n();
   const isUser = message.role === 'user';
 
@@ -404,45 +405,14 @@ function MessageBubble({ message }: { message: ChatMessage }) {
             <div className="md">
               <Markdown text={message.content} />
             </div>
+          ) : streaming ? (
+            // Pendant la génération : l'indicateur détaillé est affiché à part.
+            null
           ) : (
-            <div className="flex items-center gap-2 text-sm text-stone-400">
-              <span className="typing-dot" />
-              <span className="typing-dot" />
-              <span className="typing-dot" />
-            </div>
+            <p className="text-sm text-red-300/80">{t('chat.thinking.error')}</p>
           )}
           {message.content && <SourcesCard text={message.content} />}
         </div>
-      </div>
-    </div>
-  );
-}
-
-const TIPS = [
-  "💡 Saviez-vous ? Le Coran compte 114 sourates et 6 236 versets.",
-  "💡 Le mot « Islam » signifie « soumission à Dieu ».",
-  "💡 La sourate Al-Fatiha est récitée dans chaque rak'a de la prière.",
-  "💡 Le hadith le plus court : « L'islam est bâti sur 5 piliers. »",
-  "💡 Les 99 noms d'Allah décrivent Ses attributs divins.",
-  "💡 Le Ramadan est le mois de la révélation du Coran.",
-  "💡 La prière du vendredi est obligatoire pour les hommes.",
-  "💡 « Subhan Allah » signifie « Gloire à Allah ».",
-  "💡 L'aumône (Zakat) purifie les richesses.",
-  "💡 Le Hajj est obligatoire une fois dans la vie si possible."
-];
-
-function TypingIndicator() {
-  const [tip] = useState(() => TIPS[Math.floor(Math.random() * TIPS.length)]);
-  return (
-    <div className="flex items-start gap-2 pl-1">
-      <MoonIcon className="h-4 w-4 shrink-0 text-gold-400 mt-0.5" />
-      <div className="flex flex-col gap-1">
-        <div className="flex items-center gap-1 text-sm text-stone-500">
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-          <span className="typing-dot" />
-        </div>
-        <p className="text-[10px] text-stone-600 italic">{tip}</p>
       </div>
     </div>
   );
