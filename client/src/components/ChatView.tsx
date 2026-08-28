@@ -460,8 +460,8 @@ function ChatInput({
           <StopIcon className="h-4 w-4" /> {t('chat.stop')}
         </button>
       ) : (
-        <button type="submit" disabled={!text.trim()} className="h-11 shrink-0 rounded-xl px-5 text-[15px] font-bold text-[#1a1a1a] transition hover:shadow-[0_0_16px_rgba(212,175,55,0.35)] disabled:cursor-not-allowed disabled:opacity-50" style={{ background: '#D4AF37' }}>
-          {t('chat.send')} <SendIcon className="h-4 w-4" />
+        <button type="submit" disabled={!text.trim()} className="h-11 shrink-0 rounded-full px-5 flex items-center gap-2 text-sm font-semibold text-[#1a1a1a] transition-all duration-200 hover:scale-105 hover:shadow-[0_0_20px_rgba(212,175,55,0.4)] active:scale-95 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100" style={{ background: 'linear-gradient(135deg, #D4AF37, #C49B30)' }}>
+          {t('chat.send')} <SendIcon className="h-4 w-4" fill="currentColor" stroke="currentColor" strokeWidth={0} />
         </button>
       )}
     </form>
