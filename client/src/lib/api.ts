@@ -43,40 +43,6 @@ export function stripThinkingPreamble(text: string): string | null {
   return result.trim() ? result : null;
 }
 /**
- * Certains modèles de raisonnement écrivent leur réflexion interne en anglais
- * (« Okay, the user just said... », « Let me recall... ») avant la vraie
- * réponse, même avec reasoning.exclude. Ce filtre détecte ce préambule et le
- * coupe : on ne garde que la réponse réelle.
- */
-const THINKING_HINTS =
-  /\b(okay|alright|let me|i need to|i should|i will|i'll|i can|i think|i'm|the user|user just said|user asked|let's|to be|check if|remember|to be safe|so maybe|to answer|actually|hmm|first,|wait,|maybe|to avoid|to keep|to make|to cover|to structure|recall|guidelines|instruction)\b/i;
-
-function isThinkingSegment(text: string): boolean {
-  return THINKING_HINTS.test(text);
-}
-
-/**
- * Coupe le préambule de raisonnement d'un début de réponse.
- * Découpe en paragraphes : tant qu'un paragraphe ressemble à du raisonnement
- * interne, on l'ignore ; dès qu'un paragraphe « réponse » apparaît, on renvoie
- * le texte à partir de ce point.
- * Retourne null si TOUT le texte ressemble à du raisonnement (cas où il faut
- * continuer d'accumuler avant de trancher), et le texte intact s'il ne
- * ressemble pas à du raisonnement.
- */
-export function stripThinkingPreamble(text: string): string | null {
-  if (!text) return text;
-  const paragraphs = text.split(/\n{2,}/);
-  for (let i = 0; i < paragraphs.length; i++) {
-    if (!isThinkingSegment(paragraphs[i])) {
-      return paragraphs.slice(i).join('\n\n');
-    }
-  }
-  // Tout ressemble à du raisonnement : on ne peut pas encore trancher.
-  return null;
-}
-
-/**
  * Appelle POST /api/chat (proxy Express -> OpenRouter) et reconstitue
  * le flux SSE (Server-Sent Events) token par token.
  */
