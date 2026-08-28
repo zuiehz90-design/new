@@ -134,6 +134,19 @@ test('normalizeAssistantContent conserve les tabulations et sauts de ligne', () 
   assert.equal(normalizeAssistantContent('a\tb\nc'), 'a\tb\nc');
 });
 
+test('normalizeAssistantContent sépare un titre h2 collé au texte', () => {
+  assert.equal(
+    normalizeAssistantContent("Aperçu## Signification"),
+    "Aperçu\n\n## Signification",
+  );
+});
+
+test('un titre h2 collé est rendu avec le style des titres', () => {
+  const html = render("imprécision !## Les fondements de la foi — 6 piliers");
+  assert.match(html, /imprécision !<\/p>/);
+  assert.match(html, /<h2 class=\"text-lg font-bold text-gold-400 mt-4 mb-1\">Les fondements de la foi — 6 piliers<\/h2>/);
+});
+
 /* ------------------------------------------------------------------ */
 /* Extraction des sources (Coran + hadiths)                            */
 /* ------------------------------------------------------------------ */

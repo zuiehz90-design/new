@@ -16,6 +16,9 @@ export function normalizeAssistantContent(text: string): string {
     .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')
     // Uniformise les retours à la ligne Windows / ancien Mac
     .replace(/\r\n?/g, '\n')
+    // Certains modèles collent un titre Markdown au texte précédent :
+    // séparer le marqueur pour que ReactMarkdown l'affiche comme un titre.
+    .replace(/([^\n])\s*(#{1,6})\s+(?=\S)/g, '$1\n\n$2 ')
     .trim();
 }
 
