@@ -16,6 +16,17 @@ setupRouter.get('/setup-key', authMiddleware, (req: any, res) => {
   }
 });
 
+setupRouter.delete('/setup-key', authMiddleware, (req: any, res) => {
+  try {
+    const userId = req.user?.id;
+    if (!userId) return res.status(401).json({ error: 'Non autorisé.' });
+    db.prepare('UPDATE users SET api_key = NULL WHERE id = ?').run(userId);
+    res.json({ ok: true });
+  } catch (error) {
+    res.status(500).json({ error: (error as Error).message || 'Erreur interne.' });
+  }
+});
+
 setupRouter.post('/setup-key', authMiddleware, (req: any, res) => {
   try {
     const userId = req.user?.id;

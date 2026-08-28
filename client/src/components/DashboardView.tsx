@@ -13,8 +13,6 @@ import { PrayerCircles } from './PrayerCircles';
 import { RankCard } from './RankCard';
 import { DailyVerse } from './DailyVerse';
 import { DashboardSuggestions } from './DashboardSuggestions';
-import { NameOfTheDay } from './NameOfTheDay';
-import { ExpandableTile } from './ExpandableTile';
 import { EventCountdown } from './EventCountdown';
 import { DhulHijjahCard } from './DhulHijjahCard';
 import { isDesktop, isDesktopOnline } from '../lib/desktop';
@@ -210,6 +208,8 @@ export function DashboardView() {
           )}
         </>
       )}
+      {/* Citation du jour — affichée directement (pas un bouton), juste après le rang */}
+      <DailyVerse />
       {/* ZONE 2 — Horaires : rangée horizontale compacte (scrollable sur mobile) */}
       {pt && (
         <section className="mb-4">
@@ -241,16 +241,6 @@ export function DashboardView() {
       {/* Compte à rebours + 10 jours de Dhoul-Hijja (saisonniers) */}
       <DhulHijjahCard />
       <EventCountdown />
-
-      {/* Citation du jour + Nom du jour : tuiles compactes dépliables */}
-      <div className="mb-16 grid gap-3 md:grid-cols-2">
-        <ExpandableTile emoji="✨" title={t('dailyVerse.title')}>
-          <DailyVerse />
-        </ExpandableTile>
-        <ExpandableTile emoji="✨" title={t('names99.daily')}>
-          <NameOfTheDay />
-        </ExpandableTile>
-      </div>
 
       {/* Compte non connecté → CTA */}
       {!user && (

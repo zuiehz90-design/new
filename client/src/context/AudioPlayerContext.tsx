@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useRef, useState, type ReactNode } from 'react';
 import { audioUrl, RECITERS } from '../lib/quran';
+import { SURAHS } from '../lib/surahs';
 
 export interface AudioState {
   reciter: string;
@@ -39,11 +40,43 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
 
   const onEndedRef = useRef<(() => void) | undefined>(undefined);
 
+  // Lance une sourate entière depuis son verset 1, en jouant la bismillah
+  // d'introduction (sauf Al-Fatiha et At-Tawbah). Utilisée par le bouton
+  // « ▶ Sourate » et par l'enchaînement automatique des sourates.
+  const startSurah = useCallback((reciter: string, chapter: number) => {
+    const meta = SURAHS[chapter - 1];
+    if (!meta) {
+      // Fin du Coran (après la sourate 114) : arrêt propre.
+      stateRef.current = null;
+      setState(null);
+      return;
+    }
+    const playFirstVerse = () => {
+      const audio = createAudio(reciter, chapter, 1);
+      const newState: AudioState = { reciter, chapter, verse: 1, totalVerses: meta.ayahs, surahName: meta.name, surahMode: true, playing: true };
+      stateRef.current = newState;
+      setState(newState);
+      audio.onended = () => onEndedRef.current?.();
+      audio.onerror = () => { stateRef.current = null; setState(null); };
+      void audio.play();
+    };
+    if (chapter !== 1 && chapter !== 9) {
+      const bismillahAudio = createAudio(reciter, 1, 1);
+      const bismillahState: AudioState = { reciter, chapter: 1, verse: 1, totalVerses: 1, surahName: 'Al-Fatiha', surahMode: true, playing: true };
+      stateRef.current = bismillahState;
+      setState(bismillahState);
+      bismillahAudio.onended = playFirstVerse;
+      bismillahAudio.onerror = playFirstVerse;
+      void bismillahAudio.play();
+    } else {
+      playFirstVerse();
+    }
+  }, [createAudio]);
+
   const advanceVerse = useCallback((reciter: string, chapter: number, currentVerse: number, totalVerses: number, surahName: string) => {
     if (currentVerse < totalVerses) {
       const nextVerse = currentVerse + 1;
-      const nextAudio = new Audio(audioUrl(reciter, chapter, nextVerse));
-      audioRef.current = nextAudio;
+      const nextAudio = createAudio(reciter, chapter, nextVerse);
       const next: AudioState = { reciter, chapter, verse: nextVerse, totalVerses, surahName, surahMode: true, playing: true };
       stateRef.current = next;
       setState(next);
@@ -51,10 +84,10 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       nextAudio.onerror = () => { stateRef.current = null; setState(null); };
       void nextAudio.play();
     } else {
-      stateRef.current = stateRef.current ? { ...stateRef.current, playing: false, surahMode: false } : null;
-      setState(prev => prev ? { ...prev, playing: false, surahMode: false } : null);
+      // Sourate terminée : on enchaîne automatiquement sur la suivante.
+      startSurah(reciter, chapter + 1);
     }
-  }, []);
+  }, [createAudio, startSurah]);
 
   // onEnded handler (shared)
   onEndedRef.current = () => {
@@ -71,8 +104,7 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     audioRef.current?.pause();
 
     const startAudio = (rec: string, ch: number, v: number, tot: number, name: string, sm: boolean) => {
-      const audio = new Audio(audioUrl(rec, ch, v));
-      audioRef.current = audio;
+      const audio = createAudio(rec, ch, v);
       const newState: AudioState = { reciter: rec, chapter: ch, verse: v, totalVerses: tot, surahName: name, surahMode: sm, playing: true };
       stateRef.current = newState;
       setState(newState);
@@ -81,20 +113,15 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       void audio.play();
     };
 
-    // Jouer la bismillah avant la première lecture d'une sourate
-    if (surahMode && verse === 1 && chapter !== 1 && chapter !== 9) {
-      const bismillahAudio = new Audio(audioUrl(reciter, 1, 1));
-      audioRef.current = bismillahAudio;
-      const bismillahState: AudioState = { reciter, chapter: 1, verse: 1, totalVerses: 1, surahName: 'Al-Fatiha', surahMode: false, playing: true };
-      stateRef.current = bismillahState;
-      setState(bismillahState);
-      bismillahAudio.onended = () => { startAudio(reciter, chapter, verse, totalVerses, surahName, true); };
-      bismillahAudio.onerror = () => { startAudio(reciter, chapter, verse, totalVerses, surahName, true); };
-      void bismillahAudio.play();
-    } else {
-      startAudio(reciter, chapter, verse, totalVerses, surahName, surahMode);
+    // Lecture d'une sourate entière : on part toujours du verset 1
+    // (avec la bismillah le cas échéant).
+    if (surahMode && verse === 1) {
+      startSurah(reciter, chapter);
+      return;
     }
-  }, []);
+
+    startAudio(reciter, chapter, verse, totalVerses, surahName, surahMode);
+  }, [createAudio, startSurah]);
 
   const stop = useCallback(() => {
     audioRef.current?.pause();
@@ -134,4 +161,4 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       {children}
     </AudioPlayerContext.Provider>
   );
-}
+}
