@@ -24,9 +24,11 @@ export async function streamChat(opts: {
       model: opts.model,
       messages: opts.messages,
       temperature: 0.3,
-      // Réponses plus courtes = fin du flux plus rapide. La réponse arrive déjà
-      // en streaming, donc l'utilisateur voit les tokens dès le début.
-      max_tokens: 900,
+      // Plafond généreux : 900 tronquait les réponses détaillées en pleine
+      // phrase (finish_reason=length, invisible car le flux se termine
+      // proprement). Le streaming affiche les tokens dès le début, donc un
+      // plafond haut ne coûte que le cas où le modèle écrit vraiment long.
+      max_tokens: 3000,
       stream: true,
       // Ne jamais renvoyer le raisonnement interne du modèle : il ne doit pas
       // être affiché à l'utilisateur et consomme des tokens inutilement.
