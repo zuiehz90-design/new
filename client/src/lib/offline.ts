@@ -8,6 +8,11 @@ export interface OfflineEntry {
 
 export const OFFLINE_ENTRIES: OfflineEntry[] = [
   {
+    keywords: ['homme', 'hommes', 'l’homme', "l'homme", 'humanité', 'humanite'],
+    answer:
+      "En islam, l’être humain est une créature honorée par Allah et responsable de ses choix. Il est appelé à reconnaître son Créateur, à agir avec justice et miséricorde, à préserver la vie et à respecter les autres. Les hommes et les femmes ont la même dignité spirituelle ; chacun est jugé selon sa foi et ses œuvres. *Coran 17:70 ; Coran 49:13.*",
+  },
+  {
     keywords: ['piliers', 'cinq piliers', '5 piliers'],
     answer:
       "Les cinq piliers de l'islam sont :\n\n- **La Chahada** : l'attestation de foi (« Il n'y a de dieu qu'Allah et Muhammad est Son messager »).\n- **La Salat** : les cinq prières quotidiennes.\n- **La Zakat** : l'aumône obligatoire due par les personnes qui en ont les moyens.\n- **Le Sawm** : le jeûne du mois de Ramadan.\n- **Le Hajj** : le pèlerinage à La Mecque, une fois dans la vie, pour qui en a les moyens.\n\n*Sourate Al-Baqara (2:177) et hadith du Prophète (paix sur lui) rapporté par Boukhari et Muslim.*",
