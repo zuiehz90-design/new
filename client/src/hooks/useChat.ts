@@ -194,7 +194,6 @@ export function useChat() {
                 m.id === asstMsg.id ? { ...m, content: m.content + d } : m,
               ),
             })),
-          onComplete: () => setInterrupted(false),
         });
         patch(targetId, (c) => ({
           ...c,

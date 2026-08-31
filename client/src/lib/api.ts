@@ -62,7 +62,6 @@ export async function chatStream(opts: {
   model: string;
   onDelta: (text: string) => void;
   signal: AbortSignal;
-  onComplete?: () => void;
 }): Promise<void> {
   const token = getToken();
   const res = await fetch('/api/chat', {
@@ -140,23 +139,12 @@ export async function chatStream(opts: {
     }
   }
   buffer += decoder.decode();
-  if (buffer.trim().startsWith('data:')) {
-    const payload = buffer.trim().slice(5).trim();
-    if (payload !== '[DONE]') {
-      try {
-        const json = JSON.parse(payload) as { choices?: Array<{ delta?: { content?: string } }> };
-        const content = json.choices?.[0]?.delta?.content ?? '';
-        if (content) pending += content;
-      } catch { /* événement incomplet */ }
-    }
-  }
   if (!started && pending.trim()) {
     const cleaned = stripThinkingPreamble(pending);
     opts.onDelta(cleaned ?? pending);
   } else {
     flush();
   }
-  opts.onComplete?.();
 }
 export async function fetchModels(): Promise<ModelOption[]> {
   try {
