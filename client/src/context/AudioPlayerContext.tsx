@@ -18,6 +18,8 @@ interface AudioPlayerCtx {
   stop: () => void;
   toggle: () => void;
   prev: () => void;
+  /** Enregistre le handler « une sourate entière a été écoutée » (stable). */
+  setOnSurahCompleted: (cb: (chapter: number) => void) => void;
   next: () => void;
 }
 
@@ -39,6 +41,10 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const onEndedRef = useRef<(() => void) | undefined>(undefined);
+  // Callback déclenché quand une sourate entière a été écoutée (dernier verset
+  // terminé, avant l'enchaînement vers la suivante). Utilisé pour valider
+  // automatiquement une quête de lecture du Coran.
+  const onSurahCompletedRef = useRef<((chapter: number) => void) | undefined>(undefined);
 
   // Lance une sourate entière depuis son verset 1, en jouant la bismillah
   // d'introduction (sauf Al-Fatiha et At-Tawbah). Utilisée par le bouton
@@ -84,7 +90,9 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
       nextAudio.onerror = () => { stateRef.current = null; setState(null); };
       void nextAudio.play();
     } else {
-      // Sourate terminée : on enchaîne automatiquement sur la suivante.
+      // Sourate terminée : une sourate entière vient d'être écoutée.
+      try { onSurahCompletedRef.current?.(chapter); } catch { /* le consommateur décide */ }
+      // On enchaîne automatiquement sur la suivante.
       startSurah(reciter, chapter + 1);
     }
   }, [createAudio, startSurah]);
@@ -156,9 +164,14 @@ export function AudioPlayerProvider({ children }: { children: ReactNode }) {
     play(state.reciter, state.chapter, state.verse + 1, state.totalVerses, state.surahName, state.surahMode);
   }, [state, play]);
 
+  // Enregistrement du handler de fin de sourate (référence stable : aucun
+  // re-render des consommateurs lors de l'enregistrement).
+  const setOnSurahCompleted = useCallback((cb: (chapter: number) => void) => {
+    onSurahCompletedRef.current = cb;
+  }, []);
   return (
-    <AudioPlayerContext.Provider value={{ state, play, stop, toggle, prev, next }}>
+    <AudioPlayerContext.Provider value={{ state, play, stop, toggle, prev, next, setOnSurahCompleted }}>
       {children}
     </AudioPlayerContext.Provider>
   );
-}
+}

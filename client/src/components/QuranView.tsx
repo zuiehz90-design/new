@@ -9,6 +9,7 @@ import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 import { storageKey } from '../lib/storageScope';
 import { useAudioPlayer } from '../context/AudioPlayerContext';
+import { useDevotion } from '../hooks/useDevotion';
 import { getToken } from '../lib/api';
 import { VerseShareButton } from './VerseShareCard';
 import type { SearchResult, Verse } from '../lib/types';
@@ -41,6 +42,29 @@ export function QuranView() {
   const [pinsOpen, setPinsOpen] = useState(false);
   const { getPosition, positions, clearPosition } = useReadingPosition();
   const pinCount = Object.keys(positions).length;
+  // Enchaînement automatique des sourates : la page suit l'audio. Quand le
+  // lecteur passe à la sourate suivante, on ouvre sa page. Pas de saut au
+  // premier rendu (l'utilisateur a ouvert la page lui-même) ni quand il
+  // navigue manuellement pendant la lecture.
+  const { state: audioState, setOnSurahCompleted } = useAudioPlayer();
+  const lastAudioChapterRef = useRef<number | null>(null);
+  // Fin de sourate entière : prévient useDevotion (auto-validation des quêtes
+  // Coran liées à cette sourate).
+  const { reportSurahRead } = useDevotion();
+  useEffect(() => {
+    setOnSurahCompleted((chapter) => {
+      if (chapter >= 1) reportSurahRead(chapter);
+    });
+  }, [setOnSurahCompleted, reportSurahRead]);
+  useEffect(() => {
+    if (!audioState?.surahMode || !audioState.playing) return;
+    const ch = audioState.chapter;
+    const prev = lastAudioChapterRef.current;
+    lastAudioChapterRef.current = ch;
+    if (prev !== null && ch !== prev && selected !== ch) {
+      openSurah(ch);
+    }
+  }, [audioState?.chapter, audioState?.surahMode, audioState?.playing, selected]);
 
   useEffect(() => {
     // Naviguer vers /quran sans paramètre → retour à la liste des sourates
@@ -412,6 +436,7 @@ function SearchResults({
   const [tr, setTr] = useState<Verse[] | null>(null);
   const [error, setError] = useState(false);
   const { state: audioState, play: audioPlay, stop: audioStop, toggle: audioToggle } = useAudioPlayer();
+  const { reportSurahRead } = useDevotion();
   // Lecture sourate en cours (lecteur global) : reflète aussi l'enchaînement
   // automatique vers la sourate suivante et la reprise après navigation.
   const playingSurah = audioState?.surahMode === true && audioState.playing === true;

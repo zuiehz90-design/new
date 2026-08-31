@@ -18,23 +18,49 @@ const PRAYER_LABEL: Record<string, string> = {
   fajr: 'Fajr', dhuhr: 'Dhuhr', asr: 'Asr', maghrib: 'Maghrib', isha: 'Isha',
 };
 
+/** Persistance des declenchements du jour : sans ca, chaque rechargement de
+ *  page dans la fenetre de tir (±2 min) re-notifiait la meme priere. */
+const FIRED_KEY = 'nour:prayer-notif-fired';
+
+function readFired(today: string): Record<string, string> {
+  try {
+    const raw = localStorage.getItem(FIRED_KEY);
+    const map = raw ? (JSON.parse(raw) as Record<string, string>) : {};
+    const out: Record<string, string> = {};
+    for (const [k, v] of Object.entries(map)) {
+      if (k.startsWith(today)) out[k] = v; // purge les jours precedents
+    }
+    return out;
+  } catch {
+    return {};
+  }
+}
+
+function writeFired(map: Record<string, string>): void {
+  try { localStorage.setItem(FIRED_KEY, JSON.stringify(map)); } catch { /* quota */ }
+}
+
 /**
- * Notifications de prière :
- *   - Rappel 10 minutes avant chaque prière
- *   - Notification à l'heure de la prière
- * Chaque type ne se déclenche qu'une fois par jour et par prière.
- * Les horaires sont calculés localement à partir de la mosquée configurée.
+ * Notifications de priere, integrees au systeme unifie 🔔
+ * (historique de la cloche + toast in-app + notification native + son) :
+ *   - Rappel 10 minutes avant chaque priere
+ *   - Notification a l'heure de la priere
+ * Chaque type ne se declenche qu'une fois par jour et par priere
+ * (marqueur persistant en localStorage : aucun doublon apres rechargement).
+ * Les horaires sont ceux de la mosquee configuree (MAWAQIT).
  */
 export function usePrayerNotifications() {
   const { settings } = useSettings();
-  const lastFired = useRef<Record<string, string>>({});
+  const lastFired = useRef<Record<string, string> | null>(null);
 
   const isPaused = settings.prayerPauseUntil && settings.prayerPauseUntil > Date.now();
   const mosqueId = settings.mawaqitMosqueId;
   const focusMode = settings.focusMode === true;
 
   useEffect(() => {
-    if (!settings.prayerNotifications || !mosqueId || typeof Notification === 'undefined' || isPaused || focusMode) return;
+    // Pas de garde sur l'API Notification : le systeme unifie fonctionne aussi sans
+    // elle (cloche 🔔 + toast in-app), et le chemin natif gere son absence tout seul.
+    if (!settings.prayerNotifications || !mosqueId || isPaused || focusMode) return;
 
     let cancelled = false;
     let permissionRequested = false;
@@ -50,6 +76,8 @@ export function usePrayerNotifications() {
         if (!times) return;
         const now = new Date();
         const today = now.toISOString().slice(0, 10);
+        if (!lastFired.current) lastFired.current = readFired(today);
+        const fired = lastFired.current;
         for (const key of PRAYER_KEYS) {
           await new Promise(r => setTimeout(r, 0)); // yield pour async notify
           if (key === 'sunrise') continue;
@@ -63,26 +91,28 @@ export function usePrayerNotifications() {
           const preDiff = prayerTime.getTime() - 10 * 60_000 - now.getTime();
           if (preDiff >= -60_000 && preDiff <= 120_000) {
             const preKey = `${today}-${key}-pre`;
-            if (!lastFired.current[preKey]) {
-              lastFired.current[preKey] = now.toISOString();
+            if (!fired[preKey]) {
+              fired[preKey] = now.toISOString();
+              writeFired(fired);
               void push({
                 type: 'prayer',
                 title: `🕌 ${label} dans 10 minutes`,
-                body: "Prépare-toi : l'heure de la prière approche.",
+                body: "Prepare-toi : l'heure de la priere approche.",
                 clickUrl: '/prayer',
               });
             }
           }
 
-          // À l'heure
+          // A l'heure
           if (diff >= -60_000 && diff <= 120_000) {
             const timeKey = `${today}-${key}-time`;
-            if (!lastFired.current[timeKey]) {
-              lastFired.current[timeKey] = now.toISOString();
+            if (!fired[timeKey]) {
+              fired[timeKey] = now.toISOString();
+              writeFired(fired);
               void push({
                 type: 'prayer',
                 title: `🕌 ${label} — ${time}`,
-                body: "C'est l'heure de la prière.",
+                body: "C'est l'heure de la priere.",
                 clickUrl: '/prayer',
               });
             }

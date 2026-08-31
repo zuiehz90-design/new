@@ -4,7 +4,9 @@ import { getMosqueTimes, type PrayerTimes } from '../lib/mawaqit';
 /** Cache local des horaires (par mosquée + date) : l'accueil s'affiche
  *  instantanément même pendant le réveil lent du serveur. */
 function timesCacheKey(mosqueId: string): string {
-  const today = new Date().toISOString().slice(0, 10);
+  // 使用本地日期而非UTC：避免午夜后缓存key仍指向昨天的数据
+  const now = new Date();
+  const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
   return `nour:mawaqit:${mosqueId}:${today}`;
 }
 function readTimesCache(key: string): PrayerTimes | null {
@@ -80,9 +82,25 @@ export function useMawaqitTimes(): MawaqitTimesResult {
     return () => clearInterval(interval);
   }, [fetchTimes]);
 
+  // Rollover minuit : quand la date locale change, les horaires affiches
+  // appartiennent encore a la veille. Un tick leger re-fetch des que le jour
+  // local change, sans recharger toute la page.
+  const [localDay, setLocalDay] = useState(() => new Date().toDateString());
+  useEffect(() => {
+    const tick = setInterval(() => {
+      const day = new Date().toDateString();
+      setLocalDay((prev) => (prev === day ? prev : day));
+    }, 30_000);
+    return () => clearInterval(tick);
+  }, []);
+  useEffect(() => {
+    fetchTimes();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [localDay]);
+
   const dates = useMemo(() => {
     if (!times) return null;
-    const today = new Date().toISOString().slice(0, 10);
+    const today = times.date || new Date().toISOString().slice(0, 10);
     const out: Record<string, Date> = {};
     for (const key of ORDER) {
       const str = times[key];
@@ -104,9 +122,13 @@ export function useMawaqitTimes(): MawaqitTimesResult {
       }
     }
     // Toutes passées → Fajr de demain
-    const d = new Date(dates.fajr ?? now);
-    d.setDate(d.getDate() + 1);
-    return { key: 'fajr', date: d, time: times.fajr };
+    // 使用本地日期构造明天的Fajr，避免UTC偏移导致的日期错误
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = `${tomorrow.getFullYear()}-${String(tomorrow.getMonth() + 1).padStart(2, '0')}-${String(tomorrow.getDate()).padStart(2, '0')}`;
+    const [fh, fm] = (times.fajr || '05:00').split(':').map(Number);
+    const fajrTomorrow = new Date(`${tomorrowStr}T${String(fh).padStart(2, '0')}:${String(fm).padStart(2, '0')}:00`);
+    return { key: 'fajr', date: fajrTomorrow, time: times.fajr };
   }, [times, dates]);
 
   return { times, dates, next, loading, error, refresh: fetchTimes };

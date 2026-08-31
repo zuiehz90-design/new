@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { SURAHS } from '../lib/surahs';
 import { useToast } from '../context/ToastContext';
 import {
   apiChallenges,
@@ -80,6 +81,8 @@ export interface DevotionStore {
   refresh: () => Promise<void>;
   togglePrayer: (prayer: string, opts?: { late?: boolean; lateMinutes?: number }) => Promise<void>;
   toggleQuest: (questId: string, opts?: { answer?: number }) => Promise<Record<string, unknown> | null>;
+  /** Signale qu'une sourate entière a été lue/écoutée (auto-validation des quêtes Coran). */
+  reportSurahRead: (chapter: number) => void;
 }
 
 const DevotionContext = createContext<DevotionStore | null>(null);
@@ -207,6 +210,38 @@ export function DevotionProvider({ children }: { children: ReactNode }) {
     }
   }, [user, quests, applyServerMeta, load, showToast]);
 
+  /**
+   * Validation automatique des quêtes « lecture du Coran » :
+   * - sourate entière écoutée (Al-Mulk, Al-Kahf…) → quête dont le titre
+   *   mentionne cette sourate → cochée directement ;
+   * - toute lecture terminée → une quête « lis une page » non cochée → cochée.
+   * L'utilisateur voit la quête se valider toute seule après sa lecture.
+   */
+  const [lastReadSurah, setLastReadSurah] = useState<number | null>(null);
+  const reportSurahRead = useCallback((chapter: number) => {
+    setLastReadSurah(chapter);
+  }, []);
+
+  useEffect(() => {
+    if (!user || !quests || lastReadSurah == null) return;
+    const chapter = lastReadSurah;
+    setLastReadSurah(null); // consommé
+    const surah = SURAHS[chapter - 1];
+    if (!surah) return;
+    const pending = quests.quests.filter((q) => q.done === 0);
+    if (pending.length === 0) return;
+    // 1) Quête qui cite explicitement la sourate écoutée (ex. « Lis la sourate Al-Mulk »).
+    const named = pending.find((q) => q.type === 'quran' && q.title.toLowerCase().includes(surah.name.toLowerCase()));
+    // 2) Sinon : une quête de lecture générique (« lis une page du Coran »…).
+    const generic = pending.find((q) => q.type === 'quran' && /page|verset|sourate|coran/i.test(q.title));
+    const target = named ?? generic;
+    if (!target) return;
+    // toggleQuest gère l'optimisme, le serveur, le toast et le rechargement.
+    void toggleQuest(target.quest_id);
+  // Délibérément déclenché par lastReadSurah uniquement (pas par quests,
+  // sinon chaque rechargement re-déclencherait la validation).
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [lastReadSurah]);
   const value = useMemo<DevotionStore>(() => ({
     prayers,
     quests,
@@ -214,10 +249,11 @@ export function DevotionProvider({ children }: { children: ReactNode }) {
     challenges,
     togglePrayer,
     toggleQuest,
+    reportSurahRead,
     claimChallenge,
     reportChallengeProgress,
     refresh: load,
-  }), [prayers, quests, achievements, challenges, togglePrayer, toggleQuest, claimChallenge, reportChallengeProgress, load]);
+  }), [prayers, quests, achievements, challenges, togglePrayer, toggleQuest, claimChallenge, reportChallengeProgress, load, reportSurahRead]);
 
   return <DevotionContext.Provider value={value}>{children}</DevotionContext.Provider>;
 }
