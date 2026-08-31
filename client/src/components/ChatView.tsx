@@ -293,6 +293,9 @@ export function ChatView() {
               <MessageBubble key={m.id} message={m} streaming={chat.streaming && m.id === messages[messages.length - 1]?.id} />
             ))}
             {chat.streaming && <ThinkingIndicator />}
+            {chat.interrupted && (
+              <p className="text-xs text-gold-300">Réponse interrompue — le texte reçu a été conservé.</p>
+            )}
           </div>
         )}
         <div ref={bottomRef} />

@@ -26,6 +26,7 @@ export function useChat() {
   const [activeId, setActiveId] = useLocalStorage<string | null>(isAnon ? null : storageKey(scope, 'activeChat'), null);
   const [streaming, setStreaming] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [interrupted, setInterrupted] = useState(false);
   const abortRef = useRef<AbortController | null>(null);
   const { settings } = useSettings();
 
@@ -170,6 +171,7 @@ export function useChat() {
       }));
 
       setError(null);
+      setInterrupted(false);
       setStreaming(true);
       const controller = new AbortController();
       abortRef.current = controller;
@@ -192,6 +194,7 @@ export function useChat() {
                 m.id === asstMsg.id ? { ...m, content: m.content + d } : m,
               ),
             })),
+          onComplete: () => setInterrupted(false),
         });
         patch(targetId, (c) => ({
           ...c,
@@ -204,6 +207,7 @@ export function useChat() {
         }));
       } catch (err) {
         const aborted = (err as Error)?.name === 'AbortError';
+        if (aborted) setInterrupted(true);
         if (!aborted) {
           const status = (err as { status?: number })?.status;
           // Erreur HTTP renvoyee par le serveur : afficher la vraie cause,
@@ -273,6 +277,7 @@ export function useChat() {
     activeId,
     streaming,
     error,
+    interrupted,
     setError,
     send,
     stop,
