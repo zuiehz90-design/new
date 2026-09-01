@@ -154,6 +154,32 @@ export function DashboardView() {
             />
           </section>
 
+          {/* Quêtes du jour — tuile mise en avant */}
+          {quests && quests.quests.length > 0 && (
+            <Link
+              to="/quests"
+              className="card card-clickable mb-4 flex items-center gap-3 border-gold-500/40 p-4"
+              style={{ background: 'linear-gradient(135deg, rgba(212,175,55,0.10), transparent 60%), var(--bg-card)' }}
+            >
+              <span className="text-3xl">⚔️</span>
+              <div className="min-w-0 flex-1">
+                <p className="font-display text-sm font-bold text-gold-400">{t('dashboard.quests')}</p>
+                <p className="text-[11px] text-stone-400">
+                  {quests.completed}/{quests.quests.length} terminées · ⭐ {quests.score} pts
+                </p>
+              </div>
+              <div className="w-20 shrink-0">
+                <div className="h-2 overflow-hidden rounded-full bg-[#2A4A43]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#F4D03F] transition-all duration-500"
+                    style={{ width: (quests.quests.length > 0 ? Math.round((quests.completed / quests.quests.length) * 100) : 0) + '%' }}
+                  />
+                </div>
+              </div>
+              <span className="shrink-0 text-gold-400">→</span>
+            </Link>
+          )}
+
           {/* Rang façon jeu vidéo */}
           {achievements && (
             <RankCard achievements={achievements} />

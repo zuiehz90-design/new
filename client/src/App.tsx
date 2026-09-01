@@ -120,6 +120,7 @@ function Shell() {
   const primaryNav = [
     { to: '/', label: 'Accueil', icon: 'home' },
     { to: '/chat', label: 'Nour IA', icon: 'chat', featured: true },
+    { to: '/quests', label: 'Quêtes', icon: 'quests' },
     { to: '/quran', label: 'Coran', icon: 'quran' },
     { to: '/prayer', label: 'Prières', icon: 'prayer' },
   ];
